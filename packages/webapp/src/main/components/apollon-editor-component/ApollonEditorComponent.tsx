@@ -1,4 +1,4 @@
-import { ApollonEditor, UMLModel } from '@ls1intum/apollon';
+import { ApollonEditor, UMLModel } from '@besser/besser-wme';
 import React, { useEffect, useRef, useContext } from 'react';
 import styled from 'styled-components';
 import { uuid } from '../../utils/uuid';
@@ -38,8 +38,8 @@ export const ApollonEditorComponent: React.FC = () => {
         editorRef.current = new ApollonEditor(containerRef.current, options);
         await editorRef.current.nextRender;
 
-        // Load diagram model if available
-        if (reduxDiagram.model) {
+        // Only load the model if we're not changing diagram type
+        if (reduxDiagram.model && reduxDiagram.model.type === options.type) {
           editorRef.current.model = reduxDiagram.model;
         }
 
@@ -66,7 +66,7 @@ export const ApollonEditorComponent: React.FC = () => {
     };
 
     setupEditor();
-  }, [createNewEditor, previewedDiagramIndex]);
+  }, [createNewEditor, previewedDiagramIndex, options.type]);
 
   const key = reduxDiagram?.id || uuid();
 

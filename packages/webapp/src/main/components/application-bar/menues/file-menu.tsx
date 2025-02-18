@@ -10,6 +10,8 @@ import { useExportJSON } from '../../../services/export/useExportJson';
 import { useExportPDF } from '../../../services/export/useExportPdf';
 import { useExportPNG } from '../../../services/export/useExportPng';
 import { useExportSVG } from '../../../services/export/useExportSvg';
+import { useExportBUML } from '../../../services/export/useExportBuml';
+import { toast } from 'react-toastify';
 
 export const FileMenu: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
@@ -21,25 +23,38 @@ export const FileMenu: React.FC = () => {
   const exportAsPNG = useExportPNG();
   const exportAsPDF = useExportPDF();
   const exportAsJSON = useExportJSON();
+  const exportAsBUML = useExportBUML();
 
-  const exportDiagram = (exportType: 'PNG' | 'PNG_WHITE' | 'SVG' | 'JSON' | 'PDF'): void => {
-    if (editor && diagram?.title) {
+  const exportDiagram = async (exportType: 'PNG' | 'PNG_WHITE' | 'SVG' | 'JSON' | 'PDF' | 'BUML'): Promise<void> => {
+    if (!editor || !diagram?.title) {
+      toast.error('No diagram available to export');
+      return;
+    }
+
+    try {
       switch (exportType) {
         case 'SVG':
-          exportAsSVG(editor, diagram?.title);
+          await exportAsSVG(editor, diagram.title);
           break;
         case 'PNG_WHITE':
-          exportAsPNG(editor, diagram?.title, true);
+          await exportAsPNG(editor, diagram.title, true);
           break;
         case 'PNG':
-          exportAsPNG(editor, diagram?.title, false);
+          await exportAsPNG(editor, diagram.title, false);
           break;
         case 'PDF':
-          exportAsPDF(editor, diagram?.title);
+          await exportAsPDF(editor, diagram.title);
           break;
         case 'JSON':
-          exportAsJSON(editor, diagram);
+          await exportAsJSON(editor, diagram);
+          break;
+        case 'BUML':
+          await exportAsBUML(editor, diagram.title);
+          break;
       }
+    } catch (error) {
+      console.error('Error in exportDiagram:', error);
+      toast.error('Export failed. Check console for details.');
     }
   };
 
@@ -73,6 +88,7 @@ export const FileMenu: React.FC = () => {
           <Dropdown.Item onClick={() => exportDiagram('PNG')}>As PNG (Transparent Background)</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('JSON')}>As JSON</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item>
+          <Dropdown.Item onClick={() => exportDiagram('BUML')}>Export as BUML</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
     </NavDropdown>

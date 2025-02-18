@@ -1,4 +1,4 @@
-import { ApollonEditor } from '@ls1intum/apollon';
+import { ApollonEditor } from '@besser/besser-wme';
 import { createContext } from 'react';
 
 export type ApollonEditorContextType = {

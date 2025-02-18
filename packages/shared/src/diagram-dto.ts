@@ -1,4 +1,4 @@
-import { UMLModel } from '@ls1intum/apollon';
+import { UMLModel } from '@besser/besser-wme';
 
 export class DiagramDTO {
   id: string;

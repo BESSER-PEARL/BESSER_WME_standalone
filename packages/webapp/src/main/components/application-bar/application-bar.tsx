@@ -13,6 +13,7 @@ import { updateDiagramThunk } from '../../services/diagram/diagramSlice';
 import { showModal } from '../../services/modal/modalSlice';
 import { LayoutTextSidebarReverse } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
+import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 
 const DiagramTitle = styled.input`
   font-size: x-large;
@@ -66,14 +67,15 @@ export const ApplicationBar: React.FC = () => {
       <Navbar className="navbar" variant="dark" expand="lg">
         <Navbar.Brand>
           <img alt="" src="images/logo.png" width="60" height="30" className="d-inline-block align-top" />{' '}
-          <span className="fw-bold ms-2">Apollon</span>
+          <span className="fw-bold ms-2">BESSER</span>
         </Navbar.Brand>
         <ApplicationVersion>{appVersion}</ApplicationVersion>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <FileMenu />
-            {/*<ViewMenu />*/}
+            <DiagramTypeSelector />
+            {/* <ViewMenu /> */}
             {APPLICATION_SERVER_VERSION && (
               <Nav.Item>
                 <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>

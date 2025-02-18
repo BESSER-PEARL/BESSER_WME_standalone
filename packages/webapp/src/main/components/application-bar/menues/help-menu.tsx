@@ -14,7 +14,7 @@ export const HelpMenu: React.FC = () => {
         How does this Editor work?
       </NavDropdown.Item>
       <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.InformationModal }))}>
-        About Apollon
+        About BESSER
       </NavDropdown.Item>
       <a href={bugReportURL} target="_blank" className="dropdown-item">
         Report a Problem

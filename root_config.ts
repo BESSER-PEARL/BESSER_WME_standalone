@@ -1,6 +1,6 @@
 import rootPackageJson from './package.json';
 
-export const apollonLibraryVersion = rootPackageJson.dependencies['@ls1intum/apollon'];
+export const besserLibraryVersion = '2.2.0'; // Latest version from PyPI do a fetch call on pypi
 export const appVersion = rootPackageJson.version;
-export const apollonStandaloneRepositoryLink = 'https://github.com/ls1intum/Apollon_standalone';
-export const apollonLibraryRepositoryLink = 'https://github.com/ls1intum/Apollon';
+export const besserStandaloneRepositoryLink = 'https://github.com/BESSER-PEARL/BESSER_WME_Standalone';
+export const besserLibraryRepositoryLink = 'https://pypi.org/project/besser/';

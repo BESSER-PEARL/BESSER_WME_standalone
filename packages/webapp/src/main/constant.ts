@@ -26,4 +26,4 @@ export const longDate = 'MMMM Do YYYY, h:mm:ss a';
 export const toastAutohideDelay = 2000;
 
 // bug report url
-export const bugReportURL = 'https://github.com/ls1intum/Apollon/issues/new?labels=bug&template=bug-report.md';
+export const bugReportURL = 'https://github.com/BESSER-PEARL/BESSER/issues/new?template=bug-report.md';

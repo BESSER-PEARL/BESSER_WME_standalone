@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ApplicationBar } from './components/application-bar/application-bar';
 import { ApollonEditorComponent } from './components/apollon-editor-component/ApollonEditorComponent';
-import { ApollonEditor } from '@ls1intum/apollon';
+import { ApollonEditor } from '@besser/besser-wme';
 import { POSTHOG_HOST, POSTHOG_KEY } from './constant';
 import { ApollonEditorProvider } from './components/apollon-editor-component/apollon-editor-context';
 import { FirefoxIncompatibilityHint } from './components/incompatability-hints/firefox-incompatibility-hint';
@@ -33,7 +33,7 @@ export function RoutedApplication() {
             <ApplicationBar />
             <ApplicationModal />
             <VersionManagementSidebar />
-            {isFirefox && <FirefoxIncompatibilityHint />}
+            {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
             <Routes>
               <Route path={'/:token'} element={<ApollonEditorComponentWithConnection />} />
               <Route path={'/'} element={<ApollonEditorComponent />} />

@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import { randomString } from '../../utils';
 import { DiagramStorageFactory, DiagramStorageService } from '../diagram-storage';
 import { Collaborator, SelectionChange } from 'shared';
-import { Patch } from '@ls1intum/apollon';
+import { Patch } from '@besser/besser-wme';
 
 type Client = { token: string; collaborator: Collaborator };
 

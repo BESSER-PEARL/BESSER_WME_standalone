@@ -1,8 +1,8 @@
 import {
-  apollonLibraryVersion,
+  besserLibraryVersion,
   appVersion,
-  apollonStandaloneRepositoryLink,
-  apollonLibraryRepositoryLink,
+  besserStandaloneRepositoryLink,
+  besserLibraryRepositoryLink,
 } from '../../../../root_config';
 
-export { apollonLibraryVersion, appVersion, apollonStandaloneRepositoryLink, apollonLibraryRepositoryLink };
+export { besserLibraryRepositoryLink, appVersion, besserStandaloneRepositoryLink, besserLibraryVersion };

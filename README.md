@@ -1,6 +1,6 @@
-# Apollon Standalone
+# BESSER WME Standalone
 
-Apollon Standalone is the Standalone version of the [Apollon Editor](https://github.com/ls1intum/Apollon)
+BESSER WME Standalone is the Standalone version of the BESSER WME Editor for creating and editing diagrams.
 
 There are two variants how you can use this editor:
 
@@ -14,11 +14,11 @@ It consists of following features:
 ### No account needed to use
 
 Users can use all the features of Standalone without the necessity of creating an account.
-All you have to do is go to the [URL](https://apollon.ase.in.tum.de/) and start drawing.
+All you have to do is open the application and start drawing.
 
 ### Easy to use editor
 
-The user interface of Apollon is simple to use.
+The user interface of BESSER WME is simple to use.
 It works just like any other office and drawing tool that most users are familiar with.
 
 - Select the diagram type you want to draw by clicking on the `File > New` menu. This selection determines the availability of elements that the user can use while drawing their diagram, making it easier for users who are newly introduced to modeling.
@@ -30,26 +30,26 @@ It works just like any other office and drawing tool that most users are familia
 
 ### Import and Export your diagrams
 
-Users can easily import the existing Apollon diagram to any editor that uses the Apollon library and continue editing.
+Users can easily import existing BESSER WME diagrams to any editor that uses the BESSER WME library and continue editing.
 
 ![Import Diagram](/docs/images/Import.gif 'Import Diagram')
 
 Exporting the diagrams is as easy as importing them.
 Click on `File > Export` and select the format of the diagram to be exported as.
-Currently, Apollon standalone supports five different formats: `SVG`, `PNG (White Background)`, `PNG (Transparent Background)`, `JSON`, and `PDF`.
+Currently, BESSER WME standalone supports five different formats: `SVG`, `PNG (White Background)`, `PNG (Transparent Background)`, `JSON`, and `PDF`.
 
-![Export Diagram](/docs/images/Export.png 'Export Diagram')
+<!-- ![Export Diagram](/docs/images/Export.png 'Export Diagram') -->
 
 ### Create diagram from template
 
-Users in Apollon Standalone can also create a diagram from a template if they do not want to draw a diagram from scratch.
+Users in BESSER WME Standalone can also create a diagram from a template if they do not want to draw a diagram from scratch.
 To do that, all they have to do is click on `File > Start from Template` and select one of the templates from the list of available templates.
 
-![Start from Template](/docs/images/StartFromTemplate.gif 'Start from Template')
+<!-- ![Start from Template](/docs/images/StartFromTemplate.gif 'Start from Template') -->
 
 ### Share your diagram with others
 
-Users can share the diagram in Apollon Standalone in four different types.
+Users can share the diagram in BESSER WME Standalone in four different types.
 
 - `Edit`: In this mode of sharing, the user will be able to make changes to the shared diagram.
 - `Collaborate`: In this mode of sharing, users joining the collaboration session will be able to work on the diagram collaboratively with other users.
@@ -57,15 +57,15 @@ Users can share the diagram in Apollon Standalone in four different types.
 - `Give Feedback`: In this mode of sharing, the user will not be able to make changes to the shared diagram, but can only provide feedback to it.
 - `See Feedback`: In this mode of sharing, the user can view feedback provided to the shared diagram.
 
-![Real-time collaboration](/docs/images/ShareDialog.png 'Real-time collaboration')
+<!-- ![Real-time collaboration](/docs/images/ShareDialog.png 'Real-time collaboration') -->
 
 ### Collaborate in real-time
 
-Apollon Standalone can be used as a collaborative modeling canvas, where multiple users can work collaboratively.
+BESSER WME Standalone can be used as a collaborative modeling canvas, where multiple users can work collaboratively.
 Any changes made by one user will be visible throughout the canvas of all other users that are in collaboration sessions in real-time.
 Active elements that are interacted with by users in a session are highlighted in the canvas.
 
-![Real-time collaboration](/docs/images/RealTimeCollaboration.gif 'Real-time collaboration')
+<!-- ![Real-time collaboration](/docs/images/RealTimeCollaboration.gif 'Real-time collaboration') -->
 
 ## Build the application
 
@@ -73,7 +73,7 @@ Active elements that are interacted with by users in a session are highlighted i
 
 ```
 # clone the repository
-git clone https://github.com/ls1intum/Apollon_standalone
+git clone https://github.com/yourusername/BESSER_WME_standalone
 
 # install the dependencies
 npm install
@@ -109,7 +109,7 @@ There are two variants to set this up:
 
 ```
 # clone the repository
-git clone https://github.com/ls1intum/Apollon_standalone
+git clone https://github.com/yourusername/BESSER_WME_standalone
 
 # install the dependencies
 npm install
@@ -127,10 +127,10 @@ npm run build
 Add a user for the application:
 
 ```
-sudo useradd -r -s /bin/false apollon_standalone
+sudo useradd -r -s /bin/false besser_wme_standalone
 
 # give ownage of files to application user
-chown -R apollon_standalone path/to/application
+chown -R besser_wme_standalone path/to/application
 ```
 
 Make a directory for the shared diagrams to be stored
@@ -140,7 +140,7 @@ Make a directory for the shared diagrams to be stored
 mkdir path/to/diagrams
 
 # give ownage to application user
-chown apollon_standalone path/to/diagrams
+chown besser_wme_standalone path/to/diagrams
 ```
 
 Add the path to the created directory to:
@@ -150,28 +150,28 @@ Add the path to the created directory to:
 
 #### Install as a service
 
-Configure the apollon_standalone.service file so that the paths
+Configure the besser_wme_standalone.service file so that the paths
 match the paths to your installation folder
 
 ```
-# After adjusting the service file, copy the service file apollon_standalone.service
-# into the /etc/systemd/system directory service apollon_standalone start
-cp apollon_standalone.service /etc/systemd/system/
+# After adjusting the service file, copy the service file besser_wme_standalone.service
+# into the /etc/systemd/system directory service besser_wme_standalone start
+cp besser_wme_standalone.service /etc/systemd/system/
 
 # make sure the server.js file is executable by application user
 cd path/to/application/build/server
 chmod +x server.js
 
 # Start the service
-sudo service apollon_standalone start
+sudo service besser_wme_standalone start
 
 # Status of the service
-service apollon_standalone status
+service besser_wme_standalone status
 ```
 
 Error codes on server start:
 
-- (code=exited, status=217/USER) -> apollon_standalone user does not exist
+- (code=exited, status=217/USER) -> besser_wme_standalone user does not exist
 - (code=exited, status=203/USER) -> script not executable
 
 #### Install the cronjob for deleting stale diagrams
@@ -188,12 +188,12 @@ chmod 622 /var/log/cron.log
 # default: delete stale diagrams after 12 weeks
 
 # installs cronjob with application user
-crontab -u apollon_standalone delete-stale-diagrams.cronjob.txt
+crontab -u besser_wme_standalone delete-stale-diagrams.cronjob.txt
 ```
 
 Remove cronjob
 
-`crontab -r -u apollon_standalone`
+`crontab -r -u besser_wme_standalone`
 
 ### Docker Container
 
@@ -201,13 +201,13 @@ Caveat: cronjob to clean the diagrams after 12 weeks is currently not running in
 
 ```
 # clone the repository
-git clone https://github.com/ls1intum/Apollon_standalone
+git clone https://github.com/yourusername/BESSER_WME_standalone
 
 # build docker container
-docker build -t apollon_standalone .
+docker build -t besser_wme_standalone .
 
 run docker container
-docker run -d --name apollon_standalone -p 8080:8080 apollon_standalone
+docker run -d --name besser_wme_standalone -p 8080:8080 besser_wme_standalone
 
 # build the web application and the application server
 npm run build
@@ -219,7 +219,7 @@ useful command to debug:
 
 ```
 # start bash in running docker container to look at internal files
-docker run -it --entrypoint /bin/bash apollon_standalone
+docker run -it --entrypoint /bin/bash besser_wme_standalone
 ```
 
 ## Redis Storage
@@ -228,7 +228,7 @@ Alternative to a filesystem, the application server can use a Redis database to 
 To use Redis, set the environment variable `APOLLON_REDIS_URL` to the URL of the Redis database.
 
 > [!IMPORTANT]
-> Apollon Standalone requires the Redis JSON module to be enabled. [Read the documents](https://redis.io/docs/latest/develop/data-types/json/) to learn how to enable the JSON module.
+> BESSER WME Standalone requires the Redis JSON module to be enabled. [Read the documents](https://redis.io/docs/latest/develop/data-types/json/) to learn how to enable the JSON module.
 
 ```bash
 APOLLON_REDIS_URL=redis://[[username]:[password]@][host][:port]
@@ -254,12 +254,12 @@ export APOLLON_REDIS_DIAGRAM_TTL="30d"
 
 ### Deploying with Redis and Docker
 
-Apollon Standalone, using Redis as its storage, can be deployed using Docker. To do that, follow these steps:
+BESSER WME Standalone, using Redis as its storage, can be deployed using Docker. To do that, follow these steps:
 
 #### STEP 1: Clone the code
 
 ```bash
-git clone https://github.com/ls1intum/Apollon_standalone.git
+git clone https://github.com/yourusername/BESSER_WME_standalone.git
 ```
 
 #### STEP 2: Configure the environment
@@ -271,7 +271,7 @@ Add a `.env` file in the root folder of the code. Add the following variables:
 
 ```toml
 # The URL of the server, e.g. the address at which
-# Apollon Standalone would be accessible after deployment.
+# BESSER WME Standalone would be accessible after deployment.
 DEPLOYMENT_URL=https://my.server/apollon/
 
 # The duration for which shared diagrams will be stored
@@ -285,7 +285,7 @@ APOLLON_REDIS_DIAGRAM_TTL=30d
 docker compose up -d
 ```
 
-Apollon Standalone will be running on `localhost:8080`, using a private network bridge to connect to Redis, and storing shared images on a specific Docker volume.
+BESSER WME Standalone will be running on `localhost:8080`, using a private network bridge to connect to Redis, and storing shared images on a specific Docker volume.
 
 ## Developer Setup
 
@@ -313,19 +313,19 @@ npm install -g npm-check-updates
 npm run update
 ```
 
-### Link local project of Apollon
+### Link local project of BESSER WME
 
-While developing the Standalone project, it is often required to make changes in the Apollon project.
+While developing the Standalone project, it is often required to make changes in the BESSER WME project.
 This can be achieved by executing the following workflow.
 
-1.  In the _Apollon_ project: Generate a symlink by executing `npm link` command.
-2.  In the _Standalone_ project: Link the generated symlink of Apollon _(from step 1)_ by executing `npm link "@ls1intum/apollon"` command.
+1.  In the _BESSER WME_ project: Generate a symlink by executing `npm link` command.
+2.  In the _Standalone_ project: Link the generated symlink of BESSER WME _(from step 1)_ by executing `npm link "@yourusername/besser-wme"` command.
 
 For more information please refer to the [documentation](https://docs.npmjs.com/cli/v9/commands/npm-link) of npm.
 
-> **_Note_**: While making changes in the _Apollon_ project, for the changes to get reflected in _Standalone_, execute the following workflow:
+> **_Note_**: While making changes in the _BESSER WME_ project, for the changes to get reflected in _Standalone_, execute the following workflow:
 >
-> - Recompile the Apollon project by executing `npm run prepare`
+> - Recompile the BESSER WME project by executing `npm run prepare`
 > - Rebuild the Standalone project by executing `npm run build`
 
 ### Using Redis in Development
@@ -337,7 +337,7 @@ docker run -p 6379:6379 -it redis/redis-stack-server:latest
 ```
 
 This runs the Redis stack, which also includes the Redis JSON module. You can now instruct
-Apollon Standalone to use Redis by setting the `APOLLON_REDIS_URL` environment variable.
+BESSER WME Standalone to use Redis by setting the `APOLLON_REDIS_URL` environment variable.
 
 ```bash
 APOLLON_REDIS_URL="" npm start
