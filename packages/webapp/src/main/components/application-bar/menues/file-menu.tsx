@@ -16,7 +16,6 @@ import { toast } from 'react-toastify';
 export const FileMenu: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
   const dispatch = useAppDispatch();
-
   const editor = apollonEditor?.editor;
   const diagram = useAppSelector((state) => state.diagram.diagram);
   const exportAsSVG = useExportSVG();

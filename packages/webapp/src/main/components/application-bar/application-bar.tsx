@@ -67,8 +67,8 @@ export const ApplicationBar: React.FC = () => {
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
         <Navbar.Brand>
-          <img alt="" src="images/logo.png" width="60" height="30" className="d-inline-block align-top" />{' '}
-          <span className="fw-bold ms-2">BESSER</span>
+          <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
+          {/* <span className="fw-bold ms-2">BESSER</span> */}
         </Navbar.Brand>
         <ApplicationVersion>{appVersion}</ApplicationVersion>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
