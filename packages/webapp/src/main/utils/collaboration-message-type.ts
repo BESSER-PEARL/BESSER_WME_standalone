@@ -1,5 +1,5 @@
 import { CollaboratorType, SelectionChangeType } from 'shared';
-import { Patch } from '@ls1intum/apollon';
+import { Patch } from '@besser/besser-wme';
 import { Diagram } from '../services/diagram/diagramSlice';
 
 export type CollaborationMessage = {

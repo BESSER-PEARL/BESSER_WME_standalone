@@ -1,4 +1,4 @@
-import { UMLDiagramType } from '@ls1intum/apollon';
+import { UMLDiagramType } from '@besser/besser-wme';
 import React, { useState } from 'react';
 import { Badge, Button, Card, FormControl, InputGroup, ListGroup, Modal } from 'react-bootstrap';
 import { ModalContentProps } from '../application-modal-types';
@@ -12,6 +12,7 @@ const diagramsInBeta: string[] = ['BPMN'];
 
 const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   ClassDiagram: 'Class Diagram',
+  StateMachineDiagram: 'State Machine Diagram',
   ObjectDiagram: 'Object Diagram',
   ActivityDiagram: 'Activity Diagram',
   UseCaseDiagram: 'Use Case Diagram',

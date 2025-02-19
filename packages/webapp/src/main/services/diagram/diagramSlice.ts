@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@ls1intum/apollon';
+import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@besser/besser-wme';
 import { uuid } from '../../utils/uuid';
 import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 

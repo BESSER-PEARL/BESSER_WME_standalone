@@ -3,8 +3,8 @@ import {
   SoftwarePatternTemplate,
   SoftwarePatternType,
 } from './software-pattern/software-pattern-types';
-import { UMLDiagramType } from '@ls1intum/apollon';
-import adapterModel from '../../../templates/pattern/structural/adapter.json';
+import { UMLDiagramType } from '@besser/besser-wme';
+import libraryModel from '../../../templates/pattern/structural/Library.json';
 import bridgeModel from '../../../templates/pattern/structural/bridge.json';
 import commandModel from '../../../templates/pattern/behavioral/command.json';
 import factoryModel from '../../../templates/pattern/creational/factory.json';
@@ -15,11 +15,11 @@ import observerModel from '../../../templates/pattern/behavioral/observer.json';
 export class TemplateFactory {
   static createSoftwarePattern(softwarePatternType: SoftwarePatternType): SoftwarePatternTemplate {
     switch (softwarePatternType) {
-      case SoftwarePatternType.ADAPTER:
+      case SoftwarePatternType.LIBRARY:
         return new SoftwarePatternTemplate(
           softwarePatternType,
           UMLDiagramType.ClassDiagram,
-          adapterModel as any,
+          libraryModel as any,
           SoftwarePatternCategory.STRUCTURAL,
         );
       case SoftwarePatternType.BRIDGE:

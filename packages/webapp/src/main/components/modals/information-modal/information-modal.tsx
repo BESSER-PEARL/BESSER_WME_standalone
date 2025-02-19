@@ -2,9 +2,9 @@ import React from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 import {
-  apollonLibraryRepositoryLink,
-  apollonLibraryVersion,
-  apollonStandaloneRepositoryLink,
+  besserLibraryRepositoryLink,
+  besserLibraryVersion,
+  besserStandaloneRepositoryLink,
   appVersion,
 } from '../../../application-constants';
 import { ModalContentProps } from '../application-modal-types';
@@ -13,7 +13,7 @@ export const InformationModal: React.FC<ModalContentProps> = ({ close }) => {
   return (
     <>
       <Modal.Header closeButton>
-        <Modal.Title>Information about Apollon</Modal.Title>
+        <Modal.Title>Information about BESSER</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <table style={{ width: '100%' }}>
@@ -21,19 +21,19 @@ export const InformationModal: React.FC<ModalContentProps> = ({ close }) => {
             <tr>
               <td>Version:</td>
               <td>
-                <a href={apollonStandaloneRepositoryLink} target="_blank">
-                  Apollon Standalone{' '}
+                <a href={besserStandaloneRepositoryLink} target="_blank">
+                  BESSER WME Standalone{' '}
                 </a>
                 {appVersion}
               </td>
             </tr>
             <tr>
-              <td>Apollon Library:</td>
+              <td>BESSER Library:</td>
               <td>
-                <a href={apollonLibraryRepositoryLink} target="_blank">
-                  Apollon library
+                <a href={besserLibraryRepositoryLink} target="_blank">
+                  BESSER library
                 </a>{' '}
-                {apollonLibraryVersion}
+                {besserLibraryVersion}
               </td>
             </tr>
           </tbody>

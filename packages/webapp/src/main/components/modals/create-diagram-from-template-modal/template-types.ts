@@ -1,4 +1,4 @@
-import { UMLDiagramType, UMLModel } from '@ls1intum/apollon';
+import { UMLDiagramType, UMLModel } from '@besser/besser-wme';
 import { SoftwarePatternType } from './software-pattern/software-pattern-types';
 
 export enum TemplateCategory {

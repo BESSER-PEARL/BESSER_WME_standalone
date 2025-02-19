@@ -9,7 +9,7 @@ import {
   localStorageUserThemePreference,
 } from '../../constant';
 import { Diagram } from '../diagram/diagramSlice';
-import { UMLDiagramType } from '@ls1intum/apollon';
+import { UMLDiagramType } from '@besser/besser-wme';
 
 type LocalDiagramEntry = {
   id: string;
@@ -95,4 +95,19 @@ export const LocalStorageRepository = {
   removeUserThemePreference: () => {
     window.localStorage.removeItem(localStorageUserThemePreference);
   },
+
+  storeDiagramByType: (type: UMLDiagramType, diagram: Diagram) => {
+    const key = `${localStorageDiagramPrefix}type_${type}`;
+    localStorage.setItem(key, JSON.stringify(diagram));
+  },
+
+  loadDiagramByType: (type: UMLDiagramType): Diagram | null => {
+    const key = `${localStorageDiagramPrefix}type_${type}`;
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return null;
+  }
 };
+

@@ -10,7 +10,7 @@ import { createDiagram } from '../../../services/diagram/diagramSlice';
 
 export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(
-    TemplateFactory.createSoftwarePattern(SoftwarePatternType.ADAPTER),
+    TemplateFactory.createSoftwarePattern(SoftwarePatternType.LIBRARY),
   );
   const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<TemplateCategory>(
     TemplateCategory.SOFTWARE_PATTERN,

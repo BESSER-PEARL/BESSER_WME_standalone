@@ -1,4 +1,4 @@
-import { UMLDiagramType } from '@ls1intum/apollon';
+import { UMLDiagramType } from '@besser/besser-wme';
 
 export type LocalStorageDiagramListItem = {
   id: string;

@@ -1,5 +1,5 @@
 import { Template, TemplateType } from '../template-types';
-import { UMLDiagramType, UMLModel } from '@ls1intum/apollon';
+import { UMLDiagramType, UMLModel } from '@besser/besser-wme';
 
 export enum SoftwarePatternCategory {
   CREATIONAL = 'Creational',
@@ -9,7 +9,7 @@ export enum SoftwarePatternCategory {
 
 export enum SoftwarePatternType {
   // Structural patterns
-  ADAPTER = 'Adapter',
+  LIBRARY = 'Library',
   BRIDGE = 'Bridge',
   // Behavioral pattern
   COMMAND = 'Command',
