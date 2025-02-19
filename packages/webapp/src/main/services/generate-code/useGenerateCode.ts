@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ApollonEditor } from '@besser/besser-wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
+import { validateDiagram } from '../validation/diagramValidation';
 
 const BESSER_BACKEND_URL = 'http://localhost:8000';
 
@@ -24,6 +25,13 @@ export const useGenerateCode = () => {
     async (editor: ApollonEditor, generatorType: string, config?: GeneratorConfig[keyof GeneratorConfig]) => {
       console.log('Starting code generation...'); 
       
+      // Validate diagram before generation
+      const validationResult = validateDiagram(editor);
+      if (!validationResult.isValid) {
+        toast.error(validationResult.message);
+        return;
+      }
+
       if (!editor || !editor.model) {
         console.error('No editor or model available');
         toast.error('No diagram to generate code from');

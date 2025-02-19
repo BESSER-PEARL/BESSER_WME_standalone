@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { ApollonEditor } from '@besser/besser-wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
+import { validateDiagram } from '../validation/diagramValidation';
 
 const BESSER_BACKEND_URL = 'http://localhost:8000';
 
@@ -12,6 +13,13 @@ export const useExportBUML = () => {
     async (editor: ApollonEditor, diagramTitle: string) => {
       console.log('Starting BUML export...'); // Debug log
       
+      // Add validation before export
+      const validationResult = validateDiagram(editor);
+      if (!validationResult.isValid) {
+        toast.error(validationResult.message);
+        return;
+      }
+
       if (!editor || !editor.model) {
         console.error('No editor or model available'); // Debug log
         toast.error('No diagram to export');
@@ -64,4 +72,4 @@ export const useExportBUML = () => {
   );
 
   return exportBUML;
-}; 
+};
