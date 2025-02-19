@@ -32,7 +32,7 @@ It works just like any other office and drawing tool that most users are familia
 
 Users can easily import existing BESSER WME diagrams to any editor that uses the BESSER WME library and continue editing.
 
-![Import Diagram](/docs/images/Import.gif 'Import Diagram')
+<!-- ![Import Diagram](/docs/images/Import.gif 'Import Diagram') -->
 
 Exporting the diagrams is as easy as importing them.
 Click on `File > Export` and select the format of the diagram to be exported as.

@@ -14,6 +14,7 @@ import { showModal } from '../../services/modal/modalSlice';
 import { LayoutTextSidebarReverse } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
+import { GenerateCodeMenu } from './menues/generate-code-menu';
 
 const DiagramTitle = styled.input`
   font-size: x-large;
@@ -75,6 +76,7 @@ export const ApplicationBar: React.FC = () => {
           <Nav className="me-auto">
             <FileMenu />
             <DiagramTypeSelector />
+            <GenerateCodeMenu />
             {/* <ViewMenu /> */}
             {APPLICATION_SERVER_VERSION && (
               <Nav.Item>
