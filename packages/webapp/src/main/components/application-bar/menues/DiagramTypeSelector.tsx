@@ -10,6 +10,16 @@ import {
 } from '../../../services/diagram/diagramSlice';
 import { LocalStorageRepository } from '../../../services/local-storage/local-storage-repository';
 
+const formatDiagramType = (type: string): string => {
+  return type.replace(/([A-Z])/g, ' $1').trim();
+};
+
+// Define allowed diagram types
+const ALLOWED_DIAGRAM_TYPES = [
+  UMLDiagramType.ClassDiagram,
+  UMLDiagramType.StateMachineDiagram
+];
+
 export const DiagramTypeSelector: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentType = useAppSelector((state) => state.diagram.editorOptions.type);
@@ -43,16 +53,16 @@ export const DiagramTypeSelector: React.FC = () => {
   return (
     <NavDropdown 
       id="diagram-type-menu" 
-      title="Diagram Type" 
+      title={formatDiagramType(currentType)}
       style={{ paddingTop: 0, paddingBottom: 0 }}
     >
-      {Object.values(UMLDiagramType).map((type) => (
+      {ALLOWED_DIAGRAM_TYPES.map((type) => (
         <NavDropdown.Item
           key={type}
           onClick={() => handleTypeChange(type)}
           active={currentType === type}
         >
-          {type.replace(/([A-Z])/g, ' $1').trim()}
+          {formatDiagramType(type)}
         </NavDropdown.Item>
       ))}
     </NavDropdown>

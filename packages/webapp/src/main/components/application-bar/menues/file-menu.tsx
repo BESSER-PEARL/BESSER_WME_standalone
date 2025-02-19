@@ -88,7 +88,7 @@ export const FileMenu: React.FC = () => {
           <Dropdown.Item onClick={() => exportDiagram('PNG')}>As PNG (Transparent Background)</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('JSON')}>As JSON</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('BUML')}>Export as BUML</Dropdown.Item>
+          <Dropdown.Item onClick={() => exportDiagram('BUML')}>As BUML</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
     </NavDropdown>

@@ -84,8 +84,8 @@ export const GenerateCodeMenu: React.FC = () => {
             <span className="flex-grow-1">Python</span>
           </Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={() => handleGenerateCode('python')}>Basic Python</Dropdown.Item>
-            <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Models</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
             <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
             <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy Models</Dropdown.Item>
           </Dropdown.Menu>
