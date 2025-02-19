@@ -15,6 +15,7 @@ import { LayoutTextSidebarReverse } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
+import { checkOclConstraints } from '../../services/validation/checkOCL';
 
 const DiagramTitle = styled.input`
   font-size: x-large;
@@ -63,6 +64,12 @@ export const ApplicationBar: React.FC = () => {
     dispatch(showModal({ type: ModalContentType.ShareModal, size: 'lg' }));
   };
 
+  const handleOclCheck = async () => {
+    if (diagram) {
+      await checkOclConstraints(diagram);
+    }
+  };
+
   return (
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
@@ -79,9 +86,14 @@ export const ApplicationBar: React.FC = () => {
             <GenerateCodeMenu />
             {/* <ViewMenu /> */}
             {APPLICATION_SERVER_VERSION && (
-              <Nav.Item>
-                <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
-              </Nav.Item>
+              <>
+                <Nav.Item>
+                  <Nav.Link onClick={handleOclCheck}>Diagram Verification</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
+                </Nav.Item>
+              </>
             )}
             <HelpMenu />
             <DiagramTitle

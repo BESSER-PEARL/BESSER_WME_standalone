@@ -82,12 +82,12 @@ export const FileMenu: React.FC = () => {
           <span className="flex-grow-1">Export</span>
         </Dropdown.Toggle>
         <Dropdown.Menu>
+          <Dropdown.Item onClick={() => exportDiagram('BUML')}>As BUML</Dropdown.Item>
+          <Dropdown.Item onClick={() => exportDiagram('JSON')}>As JSON</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('SVG')}>As SVG</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PNG_WHITE')}>As PNG (White Background)</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PNG')}>As PNG (Transparent Background)</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('JSON')}>As JSON</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('BUML')}>As BUML</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
     </NavDropdown>
