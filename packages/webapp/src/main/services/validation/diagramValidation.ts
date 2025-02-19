@@ -78,7 +78,7 @@ export function validateClassNames(editor: ApollonEditor): ValidationResult {
         const element = elements[id];
         return `(${Math.round(element.bounds.x)}, ${Math.round(element.bounds.y)})`;
       });
-      return `Class "${name}" appears ${ids.length} times at positions: ${positions.join(', ')}`;
+      return `Class "${name}" appears ${ids.length} times`; // at ${positions.join(', ')}`;
     });
 
   return duplicates.length > 0
