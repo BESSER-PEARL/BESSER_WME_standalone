@@ -1,5 +1,5 @@
 import 'global-jsdom/register';
-import { ApollonEditor, SVG, UMLModel } from '@besser/besser-wme';
+import { ApollonEditor, SVG, UMLModel } from '@besser/wme';
 
 export class ConversionService {
   convertToSvg = async (model: UMLModel): Promise<SVG> => {

@@ -3,7 +3,7 @@ import {
   SoftwarePatternTemplate,
   SoftwarePatternType,
 } from './software-pattern/software-pattern-types';
-import { UMLDiagramType } from '@besser/besser-wme';
+import { UMLDiagramType } from '@besser/wme';
 import libraryModel from '../../../templates/pattern/structural/Library.json';
 import bridgeModel from '../../../templates/pattern/structural/bridge.json';
 import commandModel from '../../../templates/pattern/behavioral/command.json';

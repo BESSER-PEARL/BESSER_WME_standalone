@@ -1,4 +1,4 @@
-import { ApollonEditor, ApollonMode, Patch, UMLModel } from '@besser/besser-wme';
+import { ApollonEditor, ApollonMode, Patch, UMLModel } from '@besser/wme';
 import React, { useEffect, useRef, useContext } from 'react';
 import styled from 'styled-components';
 import { DiagramView } from 'shared';

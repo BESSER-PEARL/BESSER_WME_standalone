@@ -1,4 +1,4 @@
-import { UMLDiagramType, UMLModel } from '@besser/besser-wme';
+import { UMLDiagramType, UMLModel } from '@besser/wme';
 import { SoftwarePatternType } from './software-pattern/software-pattern-types';
 
 export enum TemplateCategory {

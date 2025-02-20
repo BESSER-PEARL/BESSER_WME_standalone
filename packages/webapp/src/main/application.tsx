@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ApplicationBar } from './components/application-bar/application-bar';
 import { ApollonEditorComponent } from './components/apollon-editor-component/ApollonEditorComponent';
-import { ApollonEditor } from '@besser/besser-wme';
+import { ApollonEditor } from '@besser/wme';
 import { POSTHOG_HOST, POSTHOG_KEY } from './constant';
 import { ApollonEditorProvider } from './components/apollon-editor-component/apollon-editor-context';
 import { FirefoxIncompatibilityHint } from './components/incompatability-hints/firefox-incompatibility-hint';

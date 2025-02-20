@@ -9,7 +9,7 @@ import {
   localStorageUserThemePreference,
 } from '../../constant';
 import { Diagram } from '../diagram/diagramSlice';
-import { UMLDiagramType } from '@besser/besser-wme';
+import { UMLDiagramType } from '@besser/wme';
 
 type LocalDiagramEntry = {
   id: string;

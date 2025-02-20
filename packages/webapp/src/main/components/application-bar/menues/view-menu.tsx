@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavDropdown } from 'react-bootstrap';
-import { ApollonMode } from '@besser/besser-wme';
+import { ApollonMode } from '@besser/wme';
 import { useAppDispatch } from '../../store/hooks';
 import { changeEditorMode } from '../../../services/diagram/diagramSlice';
 

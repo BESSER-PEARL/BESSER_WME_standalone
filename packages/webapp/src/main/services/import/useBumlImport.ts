@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAppDispatch } from '../../components/store/hooks';
 import { displayError } from '../error-management/errorManagementSlice';
 import { createDiagram } from '../diagram/diagramSlice';
-import { UMLDiagramType, UMLModel } from '@besser/besser-wme';
+import { UMLDiagramType, UMLModel } from '@besser/wme';
 
 const BESSER_BACKEND_URL = 'http://localhost:8000';
 
@@ -25,7 +25,7 @@ export const useBumlImport = () => {
 
       const data = await response.json();
       const modelType = data.model.type === 'StateMachine' ? 
-        UMLDiagramType.StateMachineDiagram : 
+        UMLDiagramType.StateMachineDiagram :// UMLDiagramType.StateMachineDiagram : 
         UMLDiagramType.ClassDiagram;
       
       // Create template model with proper type

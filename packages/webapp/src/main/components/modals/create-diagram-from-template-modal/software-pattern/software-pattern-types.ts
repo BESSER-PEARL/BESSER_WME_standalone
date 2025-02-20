@@ -1,5 +1,5 @@
 import { Template, TemplateType } from '../template-types';
-import { UMLDiagramType, UMLModel } from '@besser/besser-wme';
+import { UMLDiagramType, UMLModel } from '@besser/wme';
 
 export enum SoftwarePatternCategory {
   CREATIONAL = 'Creational',

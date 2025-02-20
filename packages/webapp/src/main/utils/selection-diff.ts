@@ -1,4 +1,4 @@
-import { Selection } from '@besser/besser-wme';
+import { Selection } from '@besser/wme';
 import { SelectionChangeType } from 'shared';
 
 export function selectionDiff(src: Selection, dest: Selection): SelectionChangeType {

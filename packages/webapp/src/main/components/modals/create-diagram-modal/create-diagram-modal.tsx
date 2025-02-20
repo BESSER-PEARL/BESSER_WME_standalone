@@ -1,4 +1,4 @@
-import { UMLDiagramType } from '@besser/besser-wme';
+import { UMLDiagramType } from '@besser/wme';
 import React, { useState } from 'react';
 import { Badge, Button, Card, FormControl, InputGroup, ListGroup, Modal } from 'react-bootstrap';
 import { ModalContentProps } from '../application-modal-types';

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ApollonEditor } from '@besser/besser-wme';
+import { ApollonEditor } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { DiagramRepository } from '../diagram/diagram-repository';
 

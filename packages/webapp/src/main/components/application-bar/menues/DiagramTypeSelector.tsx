@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavDropdown } from 'react-bootstrap';
-import { UMLDiagramType } from '@besser/besser-wme';
+import { UMLDiagramType } from '@besser/wme';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
   changeDiagramType, 

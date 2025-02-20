@@ -1,4 +1,4 @@
-import { UMLModel } from '@besser/besser-wme';
+import { UMLModel } from '@besser/wme';
 
 export class DiagramDTO {
   id: string;

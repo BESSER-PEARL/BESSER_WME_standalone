@@ -1,4 +1,4 @@
-import { UMLDiagramType } from '@besser/besser-wme';
+import { UMLDiagramType } from '@besser/wme';
 
 export type LocalStorageDiagramListItem = {
   id: string;

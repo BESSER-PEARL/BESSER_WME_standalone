@@ -1,4 +1,4 @@
-import { ApollonEditor, UMLAssociation, UMLElement } from '@besser/besser-wme';
+import { ApollonEditor, UMLAssociation, UMLElement } from '@besser/wme';
 
 interface ValidationResult {
   isValid: boolean;

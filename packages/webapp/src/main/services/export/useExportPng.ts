@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ApollonEditor, SVG } from '@besser/besser-wme';
+import { ApollonEditor, SVG } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 
 export const useExportPNG = () => {
