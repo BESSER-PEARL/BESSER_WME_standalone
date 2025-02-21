@@ -4,7 +4,7 @@ import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 
-const BESSER_BACKEND_URL = 'http://localhost:8000';
+const BESSER_BACKEND_URL = process.env.BACKEND_URL || 'http://besser-wme-backend:8000';
 
 export const useExportBUML = () => {
   const downloadFile = useFileDownload();

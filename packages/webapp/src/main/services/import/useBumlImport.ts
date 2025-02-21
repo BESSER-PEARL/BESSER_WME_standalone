@@ -4,7 +4,7 @@ import { displayError } from '../error-management/errorManagementSlice';
 import { createDiagram } from '../diagram/diagramSlice';
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 
-const BESSER_BACKEND_URL = 'http://localhost:8000';
+const BESSER_BACKEND_URL = process.env.BACKEND_URL || 'http://besser-wme-backend:8000';
 
 export const useBumlImport = () => {
   const dispatch = useAppDispatch();
