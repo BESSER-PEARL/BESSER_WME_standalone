@@ -26,7 +26,8 @@ const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   BPMN: 'BPMN Diagram',
 };
 
-// Separating diagrams into Behavioral and Structural categories
+// Commenting out behavioral diagrams
+/*
 const behavioralDiagrams = [
   'ActivityDiagram',
   'UseCaseDiagram',
@@ -35,14 +36,16 @@ const behavioralDiagrams = [
   'ReachabilityGraph',
   'BPMN',
 ] as UMLDiagramType[];
+*/
 
 const structuralDiagrams = [
   'ClassDiagram',
-  'ObjectDiagram',
-  'ComponentDiagram',
-  'DeploymentDiagram',
-  'Flowchart',
-  'SyntaxTree',
+  'StateMachineDiagram',
+  // 'ObjectDiagram',
+  // 'ComponentDiagram',
+  // 'DeploymentDiagram',
+  // 'Flowchart',
+  // 'SyntaxTree',
 ] as UMLDiagramType[];
 
 export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
@@ -87,7 +90,7 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
         </label>
         {/* Structural Diagrams */}
         <Card className="mb-3">
-          <Card.Header as="h5">Structural Diagrams</Card.Header>
+          <Card.Header as="h5">Available Diagrams</Card.Header>
           <ListGroup variant="flush">
             {structuralDiagrams.map((diagramType) => (
               <ListGroup.Item
@@ -110,7 +113,7 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
           </ListGroup>
         </Card>
 
-        {/* Behavioral Diagrams */}
+        {/* Commenting out Behavioral Diagrams section
         <Card className="mb-3">
           <Card.Header as="h5">Behavioral Diagrams</Card.Header>
           <ListGroup variant="flush">
@@ -134,6 +137,7 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
             ))}
           </ListGroup>
         </Card>
+        */}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={close}>

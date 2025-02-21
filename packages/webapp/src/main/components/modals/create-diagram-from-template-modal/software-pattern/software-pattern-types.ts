@@ -10,6 +10,7 @@ export enum SoftwarePatternCategory {
 export enum SoftwarePatternType {
   // Structural patterns
   LIBRARY = 'Library',
+  TEAMOCL = 'Team Player with OCL',
   BRIDGE = 'Bridge',
   // Behavioral pattern
   COMMAND = 'Command',

@@ -6,9 +6,20 @@ export async function checkOclConstraints(diagramData: any) {
     // Validate the diagram first
     const validationResult = validateDiagram(diagramData);
     if (!validationResult.isValid) {
-        toast.error(`Cannot check OCL constraints: ${validationResult.message}`);
-        return;
-        }
+      toast.error(`Cannot check OCL constraints: ${validationResult.message}`);
+      return;
+    } else {
+      toast.success(validationResult.message, {
+        position: "top-right",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark"
+      });
+    }
 
     const response = await fetch('http://localhost:8000/check-ocl', {
       method: 'POST',
@@ -37,8 +48,13 @@ export async function checkOclConstraints(diagramData: any) {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "dark"
-        });
+        theme: "dark",
+        style: {
+          fontSize: "18px",   // increases text size
+          padding: "20px",    // increases padding around the text
+          width: "350px"      // sets a custom width
+        }
+      });
     } else {
       toast.error(result.message, {
         position: "top-right",
@@ -48,8 +64,13 @@ export async function checkOclConstraints(diagramData: any) {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "dark"
-        });;
+        theme: "dark",
+        style: {
+          fontSize: "18px",
+          padding: "20px",
+          width: "350px"
+        }
+      });
     }
 
     return result;

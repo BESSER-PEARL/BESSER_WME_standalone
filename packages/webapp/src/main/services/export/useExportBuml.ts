@@ -58,13 +58,15 @@ export const useExportBUML = () => {
         const blob = await response.blob();
         const filename = 'domain_model.py';
 
-        console.log('Download starting...'); // Debug log
+        // console.log('Download starting...'); // Debug log
         downloadFile({ file: blob, filename });
-        console.log('Download completed'); // Debug log
+        // console.log('Download completed'); // Debug log
         toast.success('BUML export completed successfully');
       } catch (error) {
         console.error('Error during BUML export:', error);
-        toast.error('Failed to export as BUML. Check console for details.');
+        // toast.error('Failed to export as BUML. Check console for details.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Failed to export as BUML: ${errorMessage}`);
         return;
       }
     },

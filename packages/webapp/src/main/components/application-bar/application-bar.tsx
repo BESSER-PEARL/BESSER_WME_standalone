@@ -16,6 +16,7 @@ import { selectDisplaySidebar, toggleSidebar } from '../../services/version-mana
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
 import { checkOclConstraints } from '../../services/validation/checkOCL';
+import { UMLDiagramType } from '@besser/wme';
 
 const DiagramTitle = styled.input`
   font-size: x-large;
@@ -43,6 +44,7 @@ export const ApplicationBar: React.FC = () => {
   const isSidebarOpen = useAppSelector(selectDisplaySidebar);
   const urlPath = window.location.pathname;
   const tokenInUrl = urlPath.substring(1); // This removes the leading "/"
+  const currentType = useAppSelector((state) => state.diagram.editorOptions.type);
 
   useEffect(() => {
     if (diagram?.title) {
@@ -83,17 +85,20 @@ export const ApplicationBar: React.FC = () => {
           <Nav className="me-auto">
             <FileMenu />
             <DiagramTypeSelector />
-            <GenerateCodeMenu />
-            {/* <ViewMenu /> */}
-            {APPLICATION_SERVER_VERSION && (
+            {currentType === UMLDiagramType.ClassDiagram && (
               <>
-                <Nav.Item>
-                  <Nav.Link onClick={handleOclCheck}>Diagram Verification</Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
-                </Nav.Item>
+                <GenerateCodeMenu />
+                {APPLICATION_SERVER_VERSION && (
+                  <Nav.Item>
+                    <Nav.Link onClick={handleOclCheck}>Diagram Verification</Nav.Link>
+                  </Nav.Item>
+                )}
               </>
+            )}
+            {APPLICATION_SERVER_VERSION && (
+              <Nav.Item>
+                <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
+              </Nav.Item>
             )}
             <HelpMenu />
             <DiagramTitle

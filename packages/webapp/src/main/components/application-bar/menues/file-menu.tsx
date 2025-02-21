@@ -53,7 +53,9 @@ export const FileMenu: React.FC = () => {
       }
     } catch (error) {
       console.error('Error in exportDiagram:', error);
-      toast.error('Export failed. Check console for details.');
+      // toast.error('Export failed. Check console for details.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to export as BUML: ${errorMessage}`);
     }
   };
 

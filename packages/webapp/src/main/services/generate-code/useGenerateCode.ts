@@ -70,7 +70,9 @@ export const useGenerateCode = () => {
         toast.success('Code generation completed successfully');
       } catch (error) {
         console.error('Error during code generation:', error);
-        toast.error('Failed to generate code. Check console for details.');
+        // toast.error('Failed to generate code. Check console for details.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Failed to export as BUML: ${errorMessage}`);
         return;
       }
     },
