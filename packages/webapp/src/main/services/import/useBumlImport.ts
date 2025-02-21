@@ -3,8 +3,9 @@ import { useAppDispatch } from '../../components/store/hooks';
 import { displayError } from '../error-management/errorManagementSlice';
 import { createDiagram } from '../diagram/diagramSlice';
 import { UMLDiagramType, UMLModel } from '@besser/wme';
+import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = process.env.BACKEND_URL || 'http://besser-wme-backend:8000';
+const BESSER_BACKEND_URL = BACKEND_URL || 'http://besser-wme-backend:8000';
 
 export const useBumlImport = () => {
   const dispatch = useAppDispatch();

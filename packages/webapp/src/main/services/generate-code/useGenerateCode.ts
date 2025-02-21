@@ -3,8 +3,10 @@ import { ApollonEditor } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
+import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = process.env.BACKEND_URL || 'http://besser-wme-backend:8000';
+const BESSER_BACKEND_URL = BACKEND_URL || 'http://besser-wme-backend:8000';
+
 
 // Add type definitions
 export interface DjangoConfig {
