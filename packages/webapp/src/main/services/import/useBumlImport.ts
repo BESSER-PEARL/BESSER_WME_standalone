@@ -5,7 +5,7 @@ import { createDiagram } from '../diagram/diagramSlice';
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = BACKEND_URL || 'http://besser-wme-backend:8000';
+const BESSER_BACKEND_URL = BACKEND_URL;
 
 export const useBumlImport = () => {
   const dispatch = useAppDispatch();
