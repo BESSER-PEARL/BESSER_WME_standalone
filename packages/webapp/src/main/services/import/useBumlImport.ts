@@ -5,7 +5,6 @@ import { createDiagram } from '../diagram/diagramSlice';
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = BACKEND_URL;
 
 export const useBumlImport = () => {
   const dispatch = useAppDispatch();
@@ -15,7 +14,7 @@ export const useBumlImport = () => {
     formData.append('buml_file', file);
 
     try {
-      const response = await fetch(`${BESSER_BACKEND_URL}/get-json-model`, {
+      const response = await fetch(`${BACKEND_URL}/get-json-model`, {
         method: 'POST',
         body: formData,
       });

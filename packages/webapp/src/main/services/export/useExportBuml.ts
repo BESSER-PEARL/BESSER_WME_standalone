@@ -5,14 +5,12 @@ import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = BACKEND_URL;
 
 export const useExportBUML = () => {
   const downloadFile = useFileDownload();
 
   const exportBUML = useCallback(
     async (editor: ApollonEditor, diagramTitle: string) => {
-      console.log('Starting BUML export...'); // Debug log
       
       // Add validation before export
       const validationResult = validateDiagram(editor);
@@ -28,10 +26,7 @@ export const useExportBUML = () => {
       }
 
       try {
-        console.log('Sending request to:', BESSER_BACKEND_URL + '/export-buml'); // Debug log
-        console.log('Model data:', editor.model); // Debug log
-
-        const response = await fetch(`${BESSER_BACKEND_URL}/export-buml`, {
+        const response = await fetch(`${BACKEND_URL}/export-buml`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

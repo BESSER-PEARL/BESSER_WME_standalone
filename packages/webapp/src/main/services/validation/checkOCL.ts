@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify';
 import { validateDiagram } from './diagramValidation';
+import { BACKEND_URL } from '../../constant';
 
 export async function checkOclConstraints(diagramData: any) {
   try {
@@ -21,7 +22,7 @@ export async function checkOclConstraints(diagramData: any) {
       });
     }
 
-    const response = await fetch('http://localhost:8000/check-ocl', {
+    const response = await fetch(`${BACKEND_URL}/check-ocl`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

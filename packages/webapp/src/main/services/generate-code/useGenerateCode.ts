@@ -5,9 +5,6 @@ import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
 
-const BESSER_BACKEND_URL = BACKEND_URL;
-
-
 // Add type definitions
 export interface DjangoConfig {
   project_name: string;  // Changed from projectName
@@ -41,7 +38,7 @@ export const useGenerateCode = () => {
       }
 
       try {
-        const response = await fetch(`${BESSER_BACKEND_URL}/generate-output`, {
+        const response = await fetch(`${BACKEND_URL}/generate-output`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
