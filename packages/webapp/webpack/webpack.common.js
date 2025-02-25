@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 const outputDir = path.resolve(__dirname, '../../../build/webapp');
 
@@ -61,6 +62,12 @@ module.exports = {
     },
   },
   plugins: [
+    new Dotenv({
+      path: path.resolve(__dirname, '.env'),
+      systemvars: true,
+      debug: true,
+      safe: false
+    }),
     new CircularDependencyPlugin({ exclude: /node_modules/ }),
     new HtmlWebpackPlugin({
       template: './src/main/index.html',
