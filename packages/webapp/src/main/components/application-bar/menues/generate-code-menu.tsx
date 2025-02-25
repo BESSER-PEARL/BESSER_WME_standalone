@@ -78,6 +78,7 @@ export const GenerateCodeMenu: React.FC = () => {
       <NavDropdown title="Generate Code" className="pt-0 pb-0">
         <Dropdown drop="end">
           <Dropdown.Toggle
+            id="dropdown-basic"
             split
             className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
           >

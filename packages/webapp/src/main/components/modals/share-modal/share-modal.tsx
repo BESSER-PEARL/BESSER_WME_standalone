@@ -53,23 +53,67 @@ export const ShareModal: React.FC<ModalContentProps> = ({ close }) => {
     return 'edit';
   };
 
+  const fallbackCopyToClipboard = (text: string) => { //new fix
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+    }
+    document.body.removeChild(textArea);
+  };
+
   const copyLink = (view?: DiagramView, token?: string) => {
     const link = getLinkForView(token);
-    navigator.clipboard.writeText(link);
-    const lastPublishedTypeLocalStorage = LocalStorageRepository.getLastPublishedType();
-    const viewUsedInMessage = view
-      ? getMessageForView(view)
-      : getMessageForView(lastPublishedTypeLocalStorage || DiagramView.EDIT);
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link);
+      } else {
+        fallbackCopyToClipboard(link);
+      }
+      const lastPublishedTypeLocalStorage = LocalStorageRepository.getLastPublishedType();
+      const viewUsedInMessage = view
+        ? getMessageForView(view)
+        : getMessageForView(lastPublishedTypeLocalStorage || DiagramView.EDIT);
 
-    toast.success(
-      'The link has been copied to your clipboard and can be shared to ' +
-        viewUsedInMessage +
-        ', simply by pasting the link. You can re-access the link by going to share menu.',
-      {
-        autoClose: 10000,
-      },
-    );
+      toast.success(
+        'The link has been copied to your clipboard and can be shared to ' +
+          viewUsedInMessage +
+          ', simply by pasting the link. You can re-access the link by going to share menu.',
+        {
+          autoClose: 10000,
+        },
+      );
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      toast.error('Failed to copy to clipboard. Please try again.');
+    }
   };
+  
+
+  
+
+  // const copyLink = (view?: DiagramView, token?: string) => {
+  //   const link = getLinkForView(token);
+  //   navigator.clipboard.writeText(link);
+  //   const lastPublishedTypeLocalStorage = LocalStorageRepository.getLastPublishedType();
+  //   const viewUsedInMessage = view
+  //     ? getMessageForView(view)
+  //     : getMessageForView(lastPublishedTypeLocalStorage || DiagramView.EDIT);
+
+  //   toast.success(
+  //     'The link has been copied to your clipboard and can be shared to ' +
+  //       viewUsedInMessage +
+  //       ', simply by pasting the link. You can re-access the link by going to share menu.',
+  //     {
+  //       autoClose: 10000,
+  //     },
+  //   );
+  // };
+
 
   const handleShareButtonPress = async (view: DiagramView) => {
     const token = tokenInUrl.length > 0 ? tokenInUrl : await publishDiagram();
@@ -82,12 +126,11 @@ export const ShareModal: React.FC<ModalContentProps> = ({ close }) => {
     copyLink(view, token);
     close();
 
-    if (view === DiagramView.COLLABORATE) {
-      if (isSidebarDisplayed) {
-        dispatch(toggleSidebar());
-      }
-
-      navigate(`/${token || LocalStorageRepository.getLastPublishedToken()}?view=${view}`);
+    // Close sidebar if it's open and we're switching to collaborate view
+    if (view === DiagramView.COLLABORATE && isSidebarDisplayed) {
+      dispatch(toggleSidebar());
+    
+    navigate(`/${token || LocalStorageRepository.getLastPublishedToken()}?view=${view}`);
     }
   };
 
