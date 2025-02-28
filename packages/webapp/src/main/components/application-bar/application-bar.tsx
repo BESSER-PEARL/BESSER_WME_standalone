@@ -75,7 +75,7 @@ export const ApplicationBar: React.FC = () => {
   return (
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
-        <Navbar.Brand>
+        <Navbar.Brand href="https://besser-pearl.org" target="_blank" rel="noopener noreferrer">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
           {/* <span className="fw-bold ms-2">BESSER</span> */}
         </Navbar.Brand>
