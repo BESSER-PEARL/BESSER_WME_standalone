@@ -49,8 +49,11 @@ export const ShareModal: React.FC<ModalContentProps> = ({ close }) => {
 
       case DiagramView.EMBED:
         return 'embed';
+
+      case DiagramView.EDIT:
+        return 'edit';
     }
-    return 'edit';
+    return 'collaborate'; //edit
   };
 
   const fallbackCopyToClipboard = (text: string) => { //new fix
@@ -77,7 +80,7 @@ export const ShareModal: React.FC<ModalContentProps> = ({ close }) => {
       const lastPublishedTypeLocalStorage = LocalStorageRepository.getLastPublishedType();
       const viewUsedInMessage = view
         ? getMessageForView(view)
-        : getMessageForView(lastPublishedTypeLocalStorage || DiagramView.EDIT);
+        : getMessageForView(lastPublishedTypeLocalStorage || DiagramView.COLLABORATE); //maybe put edit as default
 
       toast.success(
         'The link has been copied to your clipboard and can be shared to ' +
@@ -87,6 +90,9 @@ export const ShareModal: React.FC<ModalContentProps> = ({ close }) => {
           autoClose: 10000,
         },
       );
+      // Navigate to the generated link
+      window.location.href = link;
+
     } catch (err) {
       console.error('Failed to copy text: ', err);
       toast.error('Failed to copy to clipboard. Please try again.');

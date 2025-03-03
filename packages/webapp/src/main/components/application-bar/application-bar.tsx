@@ -11,7 +11,7 @@ import { ConnectClientsComponent } from './connected-clients-component';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { updateDiagramThunk } from '../../services/diagram/diagramSlice';
 import { showModal } from '../../services/modal/modalSlice';
-import { LayoutTextSidebarReverse } from 'react-bootstrap-icons';
+import { LayoutTextSidebarReverse, Github } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
@@ -72,6 +72,10 @@ export const ApplicationBar: React.FC = () => {
     }
   };
 
+  const openGitHubRepo = () => {
+    window.open('https://github.com/BESSER-PEARL/BESSER', '_blank');
+  };
+
   return (
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
@@ -90,7 +94,7 @@ export const ApplicationBar: React.FC = () => {
                 <GenerateCodeMenu />
                 {APPLICATION_SERVER_VERSION && (
                   <Nav.Item>
-                    <Nav.Link onClick={handleOclCheck}>Diagram Verification</Nav.Link>
+                    <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
                   </Nav.Item>
                 )}
               </>
@@ -109,7 +113,7 @@ export const ApplicationBar: React.FC = () => {
             />
           </Nav>
         </Navbar.Collapse>
-        {!tokenInUrl && (
+        {/* {!tokenInUrl && (
           <Nav.Item
             onClick={() => {
               dispatch(toggleSidebar());
@@ -119,7 +123,12 @@ export const ApplicationBar: React.FC = () => {
               <LayoutTextSidebarReverse size={20} color="#AEB1B5" />
             </div>
           </Nav.Item>
-        )}
+        )} */}
+        <Nav.Item className="me-3">
+          <Nav.Link onClick={openGitHubRepo} title="View on GitHub">
+            <Github size={24} color="#FFF" />
+          </Nav.Link>
+        </Nav.Item>
         {tokenInUrl && <ConnectClientsComponent />}
         <ThemeSwitcherMenu />
       </Navbar>
