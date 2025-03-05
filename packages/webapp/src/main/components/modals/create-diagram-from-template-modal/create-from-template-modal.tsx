@@ -45,7 +45,7 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
       <Modal.Body>
         <Tab.Container id="left-tabs-example" defaultActiveKey={selectedTemplateCategory}>
           <Row>
-            <Col sm={3} className="border-end border-secondary">
+            {/* <Col sm={3} className="border-end border-secondary">
               <Nav variant="pills" className="flex-column">
                 <Nav.Item>
                   <Nav.Link
@@ -59,12 +59,12 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
                   </Nav.Link>
                 </Nav.Item>
               </Nav>
-            </Col>
-            <Col sm={9}>
-              <label htmlFor="selected-template">Selected Template</label>
-              <InputGroup className="mb-3">
+            </Col> */}
+            <Col sm={15}>
+              {/* <label htmlFor="selected-template">Selected Template</label> */}
+              {/* <InputGroup className="mb-3">
                 <FormControl id="selected-template" value={selectedTemplate.type} disabled />
-              </InputGroup>
+              </InputGroup> */}
               <Tab.Content>
                 <Tab.Pane eventKey={TemplateCategory.SOFTWARE_PATTERN}>
                   <CreateFromSoftwarePatternModalTab

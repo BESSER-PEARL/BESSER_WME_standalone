@@ -182,8 +182,8 @@ export const ApplicationBar: React.FC = () => {
                   <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
                 </Nav.Item> */}
                 <Nav.Item>
-                  <Nav.Link onClick={handleQuickShare} title="Store and share your diagram">
-                    Store & Share
+                  <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
+                    Save & Share
                   </Nav.Link>
                 </Nav.Item>
               </>
@@ -199,7 +199,7 @@ export const ApplicationBar: React.FC = () => {
         </Navbar.Collapse>
         <Nav.Item className="me-3">
           <Nav.Link onClick={openGitHubRepo} title="View on GitHub">
-            <Github size={24} color="#FFF" />
+            <Github size={20} color="#FFF" />
           </Nav.Link>
         </Nav.Item>
         {tokenInUrl && <ConnectClientsComponent />}
