@@ -122,8 +122,11 @@ export const ApollonEditorComponentWithConnection: React.FC = () => {
 
   useEffect(() => {
     const initializeEditor = async () => {
+      // Default to COLLABORATE view if no view parameter is specified
+      const effectiveView = view || DiagramView.COLLABORATE;
+      
       const shouldConnectToServer =
-        view === DiagramView.COLLABORATE || view === DiagramView.GIVE_FEEDBACK || view === DiagramView.SEE_FEEDBACK;
+        effectiveView === DiagramView.COLLABORATE || effectiveView === DiagramView.GIVE_FEEDBACK || effectiveView === DiagramView.SEE_FEEDBACK;
       const haveConnectionData = collaborationName && collaborationColor;
 
       if (shouldConnectToServer && !haveConnectionData) {
@@ -135,8 +138,8 @@ export const ApollonEditorComponentWithConnection: React.FC = () => {
       if (token && APPLICATION_SERVER_VERSION && DEPLOYMENT_URL && containerRef.current && createNewEditor) {
         const editorOptions = structuredClone(options);
 
-        if (view) {
-          switch (view) {
+        if (effectiveView) {
+          switch (effectiveView) {
             case DiagramView.SEE_FEEDBACK:
               editorOptions.mode = ApollonMode.Assessment;
               editorOptions.readonly = true;
