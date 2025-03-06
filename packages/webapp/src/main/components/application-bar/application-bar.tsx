@@ -110,8 +110,8 @@ export const ApplicationBar: React.FC = () => {
       LocalStorageRepository.setLastPublishedType(DiagramView.COLLABORATE);
       LocalStorageRepository.setLastPublishedToken(token);
       
-      // Generate and copy the link
-      const link = `${DEPLOYMENT_URL}/${token}?view=${DiagramView.COLLABORATE}`;
+      // Generate and copy the link without the view parameter
+      const link = `${DEPLOYMENT_URL}/${token}`;
       try {
         if (navigator.clipboard) {
           navigator.clipboard.writeText(link);
@@ -140,8 +140,8 @@ export const ApplicationBar: React.FC = () => {
           dispatch(toggleSidebar());
         }
         
-        // Navigate to the collaboration view
-        navigate(`/${token}?view=${DiagramView.COLLABORATE}`);
+        // Navigate to the collaboration view using just the token
+        navigate(`/${token}`);
       } catch (err) {
         console.error('Failed to copy text: ', err);
         toast.error('Failed to copy to clipboard. Please try again.');
