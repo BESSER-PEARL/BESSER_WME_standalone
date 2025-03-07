@@ -98,6 +98,11 @@ export const ApplicationBar: React.FC = () => {
     const diagramCopy = Object.assign({}, diagram);
     diagramCopy.title = 'New shared version ';
     diagramCopy.description = 'Your auto-generated version for sharing';
+    
+    // Make sure the model type is preserved
+    if (diagramCopy.model) {
+      diagramCopy.model.type = currentType;
+    }
 
     try {
       const res = await DiagramRepository.publishDiagramVersionOnServer(diagramCopy, diagram.token);
