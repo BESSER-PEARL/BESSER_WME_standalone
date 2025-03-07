@@ -21,7 +21,7 @@ export const useGenerateCode = () => {
   const downloadFile = useFileDownload();
 
   const generateCode = useCallback(
-    async (editor: ApollonEditor, generatorType: string, config?: GeneratorConfig[keyof GeneratorConfig]) => {
+    async (editor: ApollonEditor, generatorType: string, diagramTitle: string, config?: GeneratorConfig[keyof GeneratorConfig]) => {
       console.log('Starting code generation...'); 
       
       // Validate diagram before generation
@@ -45,6 +45,7 @@ export const useGenerateCode = () => {
             'Accept': 'application/json, text/plain, */*',
           },
           body: JSON.stringify({
+            diagramTitle: diagramTitle,
             elements: editor.model,
             generator: generatorType,
             config: config // Add configuration object

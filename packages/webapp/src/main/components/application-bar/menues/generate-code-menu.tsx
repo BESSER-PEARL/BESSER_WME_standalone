@@ -28,7 +28,7 @@ export const GenerateCodeMenu: React.FC = () => {
     }
 
     try {
-      await generateCode(editor, generatorType);
+      await generateCode(editor, generatorType, diagram.title);
     } catch (error) {
       console.error('Error in code generation:', error);
       toast.error('Code generation failed. Check console for details.');
@@ -65,7 +65,7 @@ export const GenerateCodeMenu: React.FC = () => {
         app_name: appName,
         containerization: useDocker
       };
-      await generateCode(editor!, 'django', djangoConfig);
+      await generateCode(editor!, 'django', diagram.title, djangoConfig);
       setShowDjangoConfig(false);
     } catch (error) {
       console.error('Error in Django code generation:', error);

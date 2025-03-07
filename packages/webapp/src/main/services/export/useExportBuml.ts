@@ -11,7 +11,7 @@ export const useExportBUML = () => {
 
   const exportBUML = useCallback(
     async (editor: ApollonEditor, diagramTitle: string) => {
-      
+
       // Add validation before export
       const validationResult = validateDiagram(editor);
       if (!validationResult.isValid) {
@@ -35,6 +35,7 @@ export const useExportBUML = () => {
           body: JSON.stringify({
             elements: editor.model,
             generator: 'buml',
+            diagramTitle: diagramTitle
           }),
         }).catch(error => {
           console.error('Fetch error:', error); // Debug log
