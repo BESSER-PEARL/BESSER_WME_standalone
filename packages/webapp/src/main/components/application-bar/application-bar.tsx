@@ -98,6 +98,7 @@ export const ApplicationBar: React.FC = () => {
     const diagramCopy = Object.assign({}, diagram);
     diagramCopy.title = 'New shared version ';
     diagramCopy.description = 'Your auto-generated version for sharing';
+    
 
     try {
       const res = await DiagramRepository.publishDiagramVersionOnServer(diagramCopy, diagram.token);
