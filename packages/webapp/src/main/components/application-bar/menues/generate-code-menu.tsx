@@ -88,10 +88,10 @@ export const GenerateCodeMenu: React.FC = () => {
             <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
             <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
             <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
-            <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy Models</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy DDL</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL Schema</Dropdown.Item>
+        <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL DDL</Dropdown.Item>
         <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
         <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
       </NavDropdown>
