@@ -219,7 +219,7 @@ export function validateDiagram(editor: ApollonEditor): ValidationResult {
   // Run all validations
   const validations = [
     validateClassNames(editor),
-    validateAssociationEnds(editor),
+    // validateAssociationEnds(editor),
     // validateClassStructure(editor),
     validateInheritanceCycles(editor),
     validateMultiplicities(editor)

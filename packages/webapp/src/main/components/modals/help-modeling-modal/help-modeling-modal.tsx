@@ -14,7 +14,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             <th>Add Class</th>
             <td>
               To add a class, simply drag and drop one of the elements on the right side into the editor area on the
-              left side.
+              left side. 
             </td>
             <td>
               <img width="300" src="/images/help/help-create-element.png" alt="Image not found" />
@@ -23,9 +23,10 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
           <tr>
             <th>Add Association</th>
             <td>
-              To add an association, select the source class with a single click and you will see four blue circles.
+              To add an association, select the source class with a single click and you will see blue circles.
               Those are the possible connection points for associations. Click and hold on one of those and drag it to
-              another blue circle to create an association.
+              another blue circle to create an association. Define multiplicity using the following format:
+               1, 0..1, 0..*, 1..*, 2..4, etc. (Default is 1).
             </td>
             <td>
               <img width="300" src="/images/help/help-create-relationship.jpg" alt="Image not found" />
@@ -34,8 +35,17 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
           <tr>
             <th>Edit Class</th>
             <td>
-              To edit a class, double click it and a popup will open up, in which you can edit its components, e.g.
-              name, attributes, methods, etc.
+            To edit a class, double-click on it to open a popup where you can modify its components, such as the name, 
+            attributes, and methods. For attributes, specify the type using formats like <code>+ attribute : 
+              type</code>, <code>+ attribute</code>, or simply <code>attribute</code>, where the type can be a 
+              primitive data type (int, float, string) or a class/enum type. The default type is string. 
+              Visibility can be set using <code>+</code> (public), <code>-</code> (private), or <code>#</code> (protected),
+              with public as the default. For methods, specify the return type in a format like <code>+ notify(sms: str = 'message')</code>,
+              which translates to a public method named <code>notify</code> with a parameter <code>sms</code> 
+              of type <code>str</code> and a default value of <code>'message'</code>. Another example, <code>- findBook(title: str): Book</code>,
+              represents a private method named <code>findBook</code> that takes a title parameter of type <code>str</code> and 
+              returns a <code>Book</code>. A method without parameters, such as <code>validate()</code>, would be defined 
+              as public by default.
             </td>
             <td>
               <img width="300" src="/images/help/help-update-element.jpg" alt="Image not found" />
