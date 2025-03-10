@@ -59,26 +59,29 @@ export function validateClassNames(editor: ApollonEditor): ValidationResult {
   }
 
   const elements = editor.model.elements;
-  const classNames = new Map<string, string[]>();
+  const classNameMap = new Map<string, { ids: string[], originalNames: string[] }>();
 
   for (const [id, element] of Object.entries(elements)) {
     if (element.type === 'Class') {
-      const name = element.name.toLowerCase();
-      if (!classNames.has(name)) {
-        classNames.set(name, []);
+      const lowerCaseName = element.name.toLowerCase();
+      const originalName = element.name;
+      
+      if (!classNameMap.has(lowerCaseName)) {
+        classNameMap.set(lowerCaseName, { ids: [], originalNames: [] });
       }
-      classNames.get(name)?.push(id);
+      
+      const entry = classNameMap.get(lowerCaseName)!;
+      entry.ids.push(id);
+      entry.originalNames.push(originalName);
     }
   }
 
-  const duplicates = Array.from(classNames.entries())
-    .filter(([, ids]) => ids.length > 1)
-    .map(([name, ids]) => {
-      const positions = ids.map(id => {
-        const element = elements[id];
-        return `(${Math.round(element.bounds.x)}, ${Math.round(element.bounds.y)})`;
-      });
-      return `Class "${name}" appears ${ids.length} times`; // at ${positions.join(', ')}`;
+  const duplicates = Array.from(classNameMap.entries())
+    .filter(([, { ids }]) => ids.length > 1)
+    .map(([, { ids, originalNames }]) => {
+      // Use first original name for the message (they're all case-insensitively equal)
+      const representativeName = originalNames[0];
+      return `Class "${representativeName}" appears ${ids.length} times`;
     });
 
   return duplicates.length > 0
