@@ -74,9 +74,9 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             </td>
           </tr>
           <tr>
-            <th>More info/th>
+            <th>More info</th>
             <td colSpan={2}>
-              You can access to more info to the read the docs of besser <href="https://besser.readthedocs.io/en/latest/">here</href>
+              You can access more info by <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">clicking here</a> to read the BESSER documentation.
             </td>
           </tr>
         </tbody>
