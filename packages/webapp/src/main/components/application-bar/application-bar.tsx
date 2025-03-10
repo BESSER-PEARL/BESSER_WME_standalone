@@ -96,8 +96,7 @@ export const ApplicationBar: React.FC = () => {
 
     let token = diagram.token;
     const diagramCopy = Object.assign({}, diagram);
-    diagramCopy.title = 'New shared version ';
-    diagramCopy.description = 'Your auto-generated version for sharing';
+    diagramCopy.description = diagramCopy.description || 'Shared diagram';
     
 
     try {
