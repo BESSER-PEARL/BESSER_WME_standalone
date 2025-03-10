@@ -38,7 +38,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             To edit a class, double-click on it to open a popup where you can modify its components, such as the name, 
             attributes, and methods. For attributes, specify the type using formats like <code>+ attribute : 
               type</code>, <code>+ attribute</code>, or simply <code>attribute</code>, where the type can be a 
-              primitive data type (int, float, string) or a class/enum type. The default type is string. 
+              primitive data type (int, float, str, bool, time, date, datetime, timedelta, or any) or a class/enum type. The default type is string. 
               Visibility can be set using <code>+</code> (public), <code>-</code> (private), or <code>#</code> (protected),
               with public as the default. For methods, specify the return type in a format like <code>+ notify(sms: str = 'message')</code>,
               which translates to a public method named <code>notify</code> with a parameter <code>sms</code> 
@@ -71,6 +71,12 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             <th>Undo & Redo</th>
             <td colSpan={2}>
               With <code>Ctrl+Z</code> and <code>Ctrl+Y</code> you can undo and redo your changes.
+            </td>
+          </tr>
+          <tr>
+            <th>More info/th>
+            <td colSpan={2}>
+              You can access to more info to the read the docs of besser <href="https://besser.readthedocs.io/en/latest/">here</href>
             </td>
           </tr>
         </tbody>
