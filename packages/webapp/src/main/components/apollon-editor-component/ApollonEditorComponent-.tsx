@@ -26,7 +26,6 @@ export const ApollonEditorComponent: React.FC = () => {
   const { setEditor } = useContext(ApollonEditorContext);
 
   useEffect(() => {
-    let isSubscribed = true;
     const setupEditor = async () => {
       if (!containerRef.current) return;
 
@@ -44,20 +43,9 @@ export const ApollonEditorComponent: React.FC = () => {
           editorRef.current.model = reduxDiagram.model;
         }
 
-        // Debounced model change handler
-        let timeoutId: NodeJS.Timeout;
         editorRef.current.subscribeToModelChange((model: UMLModel) => {
-          if (!isSubscribed) return;
-          
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            if (JSON.stringify(model) !== JSON.stringify(reduxDiagram?.model)) {
-              dispatch(updateDiagramThunk({
-                model,
-                lastUpdate: new Date().toISOString()
-              }));
-            }
-          }, 500); // 500ms debounce
+          const diagram = { ...reduxDiagram, model };
+          dispatch(updateDiagramThunk(diagram));
         });
 
         setEditor!(editorRef.current);
@@ -78,9 +66,6 @@ export const ApollonEditorComponent: React.FC = () => {
     };
 
     setupEditor();
-    return () => {
-      isSubscribed = false;
-    };
   }, [createNewEditor, previewedDiagramIndex, options.type]);
 
   const key = reduxDiagram?.id || uuid();

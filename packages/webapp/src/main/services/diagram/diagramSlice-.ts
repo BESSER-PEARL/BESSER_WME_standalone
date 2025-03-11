@@ -73,25 +73,9 @@ const initialState = {
 
 export const updateDiagramThunk = createAsyncThunk(
   'diagram/updateWithLocalStorage',
-  async (diagram: Partial<Diagram>, { getState }) => {
-    const state = getState() as any;
-    const currentDiagram = state.diagram.diagram;
-    
-    // Merge changes carefully
-    const updatedDiagram = {
-      ...currentDiagram,
-      ...diagram,
-      lastUpdate: new Date().toISOString(),
-      // Keep existing model if not explicitly provided
-      model: diagram.model || currentDiagram.model
-    };
-
-    // Store in localStorage
-    LocalStorageRepository.storeDiagram(updatedDiagram);
-    window.localStorage.setItem(localStorageLatest, updatedDiagram.id);
-
-    return updatedDiagram;
-  }
+  async (diagram: Partial<Diagram>, { dispatch }) => {
+    dispatch(updateDiagram(diagram));
+  },
 );
 
 const diagramSlice = createSlice({
@@ -100,13 +84,7 @@ const diagramSlice = createSlice({
   reducers: {
     updateDiagram: (state, action: PayloadAction<Partial<Diagram>>) => {
       if (state.diagram) {
-        // Preserve existing model if not provided in update
-        const model = action.payload.model || state.diagram.model;
-        state.diagram = {
-          ...state.diagram,
-          ...action.payload,
-          model
-        };
+        state.diagram = { ...state.diagram, ...action.payload };
       }
 
       if (!state.displayUnpublishedVersion) {
@@ -148,9 +126,11 @@ const diagramSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(updateDiagramThunk.fulfilled, (state, action) => {
-      state.diagram = action.payload;
-      state.loading = false;
+    builder.addCase(updateDiagramThunk.fulfilled, (state) => {
+      if (state.diagram) {
+        LocalStorageRepository.storeDiagram(state.diagram);
+        state.loading = false;
+      }
     });
   },
 
