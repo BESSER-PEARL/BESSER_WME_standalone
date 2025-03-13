@@ -74,6 +74,19 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             </td>
           </tr>
           <tr>
+            <th>OCL Constraint</th>
+            <td>
+              You can add OCL constraints to validate your model's quality. Begin your constraint 
+              with <code>Context "class name"</code>. Once defined, you can link the constraint to your class 
+              and test it using the Quality Check button. This feature is powered 
+              by <a href="https://b-ocl-interpreter.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">B-OCL</a>, 
+              our OCL interpreter.
+            </td>
+            <td>
+              <img width="300" src="/images/help/help-ocl-constraint.png" alt="Image not found" />
+            </td>
+          </tr>
+          <tr>
             <th>More info</th>
             <td colSpan={2}>
               You can access more info by <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">clicking here</a> to read the BESSER documentation.
