@@ -3,7 +3,7 @@ import { UMLDiagramType, UMLModel } from '@besser/wme';
 
 export enum SoftwarePatternCategory {
   CREATIONAL = 'Creational',
-  STRUCTURAL = 'Structural',
+  STRUCTURAL = 'Class Diagram',
   BEHAVIORAL = 'Behavioral',
 }
 
@@ -11,7 +11,7 @@ export enum SoftwarePatternType {
   // Structural patterns
   LIBRARY = 'Library',
   TEAMOCL = 'Team Player with OCL',
-  BRIDGE = 'Bridge',
+  DPP = 'Digital Product Passport ',
   // Behavioral pattern
   COMMAND = 'Command',
   OBSERVER = 'Observer',

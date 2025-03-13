@@ -89,7 +89,7 @@ export const FileMenu: React.FC = () => {
           <Dropdown.Item onClick={() => exportDiagram('SVG')}>As SVG</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PNG_WHITE')}>As PNG (White Background)</Dropdown.Item>
           <Dropdown.Item onClick={() => exportDiagram('PNG')}>As PNG (Transparent Background)</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item>
+          {/* <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item> */}
         </Dropdown.Menu>
       </Dropdown>
     </NavDropdown>
