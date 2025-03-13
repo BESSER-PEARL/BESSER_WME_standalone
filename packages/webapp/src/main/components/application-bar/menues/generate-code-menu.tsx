@@ -1,15 +1,17 @@
 import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { useGenerateCode, DjangoConfig } from '../../../services/generate-code/useGenerateCode';
+import { useGenerateCode, DjangoConfig, SQLConfig } from '../../../services/generate-code/useGenerateCode';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
 
 export const GenerateCodeMenu: React.FC = () => {
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
+  const [showSqlConfig, setShowSqlConfig] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [appName, setAppName] = useState('');
   const [useDocker, setUseDocker] = useState(false);
+  const [sqlDialect, setSqlDialect] = useState<'standard' | 'postgresql' | 'mysql'>('standard');
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -24,6 +26,11 @@ export const GenerateCodeMenu: React.FC = () => {
 
     if (generatorType === 'django') {
       setShowDjangoConfig(true);
+      return;
+    }
+
+    if (generatorType === 'sql') {
+      setShowSqlConfig(true);
       return;
     }
 
@@ -73,6 +80,19 @@ export const GenerateCodeMenu: React.FC = () => {
     }
   };
 
+  const handleSqlGenerate = async () => {
+    try {
+      const sqlConfig: SQLConfig = {
+        dialect: sqlDialect
+      };
+      await generateCode(editor!, 'sql', diagram.title, sqlConfig);
+      setShowSqlConfig(false);
+    } catch (error) {
+      console.error('Error in SQL code generation:', error);
+      toast.error('SQL code generation failed');
+    }
+  };
+
   return (
     <>
       <NavDropdown title="Generate Code" className="pt-0 pb-0">
@@ -96,6 +116,7 @@ export const GenerateCodeMenu: React.FC = () => {
         <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
       </NavDropdown>
 
+      {/* Django Configuration Modal */}
       <Modal show={showDjangoConfig} onHide={() => setShowDjangoConfig(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Django Project Configuration</Modal.Title>
@@ -153,6 +174,39 @@ export const GenerateCodeMenu: React.FC = () => {
             Cancel
           </Button>
           <Button variant="primary" onClick={handleDjangoGenerate}>
+            Generate
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* SQL Configuration Modal */}
+      <Modal show={showSqlConfig} onHide={() => setShowSqlConfig(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>SQL Dialect Selection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Select SQL Dialect</Form.Label>
+              <Form.Select 
+                value={sqlDialect} 
+                onChange={(e) => setSqlDialect(e.target.value as 'standard' | 'postgresql' | 'mysql')}
+              >
+                <option value="standard">Standard SQL</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="mysql">MySQL</option>
+              </Form.Select>
+              <Form.Text className="text-muted">
+                Choose the SQL dialect for your generated DDL statements
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSqlConfig(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSqlGenerate}>
             Generate
           </Button>
         </Modal.Footer>

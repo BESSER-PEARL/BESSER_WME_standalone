@@ -12,8 +12,13 @@ export interface DjangoConfig {
   containerization: boolean;  // Changed from useDocker
 }
 
+export interface SQLConfig {
+  dialect: 'standard' | 'postgresql' | 'mysql';
+}
+
 export type GeneratorConfig = {
   django: DjangoConfig;
+  sql: SQLConfig;
   [key: string]: any;
 };
 
