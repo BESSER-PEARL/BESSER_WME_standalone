@@ -21,7 +21,7 @@ export async function checkOclConstraints(diagramData: any) {
         elements: diagramData.model
       }),
     });
-    console.log(diagramData);
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
@@ -41,9 +41,9 @@ export async function checkOclConstraints(diagramData: any) {
         progress: undefined,
         theme: "dark",
         style: {
-          fontSize: "18px",   // increases text size
-          padding: "20px",    // increases padding around the text
-          width: "350px"      // sets a custom width
+          fontSize: "18px",
+          padding: "20px",
+          width: "350px"
         }
       });
 

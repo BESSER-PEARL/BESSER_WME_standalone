@@ -54,12 +54,22 @@ export const useGenerateCode = () => {
 
         if (!response.ok) {
           const errorData = await response.json().catch(e => ({ detail: 'Could not parse error response' }));
+          console.error('Response not OK:', response.status, errorData); // Debug log
+          
           if (response.status === 400 && errorData.detail) {
-            toast.error(`Error: ${errorData.detail}`);
+            toast.error(`${errorData.detail}`);
             return;
           }
+          
+
+          if (response.status === 500 && errorData.detail) {
+            toast.error(`${errorData.detail}`);
+            return;
+          }
+
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
 
         const blob = await response.blob();
         const filename = getFilenameForGenerator(generatorType);
@@ -69,11 +79,13 @@ export const useGenerateCode = () => {
         console.log('Download completed');
         toast.success('Code generation completed successfully');
       } catch (error) {
-        console.error('Error during code generation:', error);
-        // toast.error('Failed to generate code. Check console for details.');
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        toast.error(`Failed to export as BUML: ${errorMessage}`);
-        return;
+
+        let errorMessage = 'Unknown error occurred';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+      
+        toast.error(`${errorMessage}`);
       }
     },
     [downloadFile],

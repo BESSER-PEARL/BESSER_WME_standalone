@@ -45,26 +45,34 @@ export const useExportBUML = () => {
         if (!response.ok) {
           const errorData = await response.json().catch(e => ({ detail: 'Could not parse error response' }));
           console.error('Response not OK:', response.status, errorData); // Debug log
+
           if (response.status === 400 && errorData.detail) {
-            toast.error(`Error: ${errorData.detail}`);
+            toast.error(`${errorData.detail}`);
             return;
           }
+          
+
+          if (response.status === 500 && errorData.detail) {
+            toast.error(`${errorData.detail}`);
+            return;
+          }
+
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const blob = await response.blob();
         const filename = 'domain_model.py';
 
-        // console.log('Download starting...'); // Debug log
         downloadFile({ file: blob, filename });
-        // console.log('Download completed'); // Debug log
         toast.success('BUML export completed successfully');
       } catch (error) {
-        console.error('Error during BUML export:', error);
-        // toast.error('Failed to export as BUML. Check console for details.');
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        toast.error(`Failed to export as BUML: ${errorMessage}`);
-        return;
+
+        let errorMessage = 'Unknown error occurred';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+      
+        toast.error(`${errorMessage}`);
       }
     },
     [downloadFile],
