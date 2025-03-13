@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useAppDispatch } from '../../components/store/hooks';
 import { displayError } from '../error-management/errorManagementSlice';
 import { createDiagram } from '../diagram/diagramSlice';
+import { toast } from 'react-toastify';
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 import { BACKEND_URL } from '../../constant';
 
@@ -19,9 +20,23 @@ export const useBumlImport = () => {
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        if (!response.ok) {
+          const errorData = await response.json().catch(e => ({ detail: 'Could not parse error response' }));
+          console.error('Response not OK:', response.status, errorData); // Debug log
+
+          if (response.status === 400 && errorData.detail) {
+            toast.error(`${errorData.detail}`);
+            return;
+          }
+          
+
+          if (response.status === 500 && errorData.detail) {
+            dispatch(displayError('Import failed', errorData.detail));
+            return;
+          }
+
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
       const data = await response.json();
       const modelType = data.model.type === 'StateMachine' ? 
@@ -41,8 +56,16 @@ export const useBumlImport = () => {
       }));
 
     } catch (error) {
+
       console.error('Error importing BUML:', error);
-      dispatch(displayError('Import failed', 'Could not import BUML file. Please check the file format.'));
+      
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      dispatch(displayError('Import failed', errorMessage));
+        
+      // toast.error(`${errorMessage}`);
     }
   }, [dispatch]);
 
