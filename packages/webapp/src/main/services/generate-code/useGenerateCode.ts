@@ -16,9 +16,14 @@ export interface SQLConfig {
   dialect: 'standard' | 'postgresql' | 'mysql';
 }
 
+export interface SQLAlchemyConfig {
+  dbms: 'sqlite' | 'postgresql' | 'mysql';
+}
+
 export type GeneratorConfig = {
   django: DjangoConfig;
   sql: SQLConfig;
+  sqlalchemy: SQLAlchemyConfig;
   [key: string]: any;
 };
 

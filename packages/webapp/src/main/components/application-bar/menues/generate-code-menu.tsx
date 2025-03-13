@@ -1,17 +1,19 @@
 import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { useGenerateCode, DjangoConfig, SQLConfig } from '../../../services/generate-code/useGenerateCode';
+import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig } from '../../../services/generate-code/useGenerateCode';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
 
 export const GenerateCodeMenu: React.FC = () => {
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
   const [showSqlConfig, setShowSqlConfig] = useState(false);
+  const [showSqlAlchemyConfig, setShowSqlAlchemyConfig] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [appName, setAppName] = useState('');
   const [useDocker, setUseDocker] = useState(false);
   const [sqlDialect, setSqlDialect] = useState<'standard' | 'postgresql' | 'mysql'>('standard');
+  const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql'>('sqlite');
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -31,6 +33,11 @@ export const GenerateCodeMenu: React.FC = () => {
 
     if (generatorType === 'sql') {
       setShowSqlConfig(true);
+      return;
+    }
+
+    if (generatorType === 'sqlalchemy') {
+      setShowSqlAlchemyConfig(true);
       return;
     }
 
@@ -90,6 +97,19 @@ export const GenerateCodeMenu: React.FC = () => {
     } catch (error) {
       console.error('Error in SQL code generation:', error);
       toast.error('SQL code generation failed');
+    }
+  };
+
+  const handleSqlAlchemyGenerate = async () => {
+    try {
+      const sqlAlchemyConfig: SQLAlchemyConfig = {
+        dbms: sqlAlchemyDbms
+      };
+      await generateCode(editor!, 'sqlalchemy', diagram.title, sqlAlchemyConfig);
+      setShowSqlAlchemyConfig(false);
+    } catch (error) {
+      console.error('Error in SQLAlchemy code generation:', error);
+      toast.error('SQLAlchemy code generation failed');
     }
   };
 
@@ -207,6 +227,39 @@ export const GenerateCodeMenu: React.FC = () => {
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSqlGenerate}>
+            Generate
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* SQLAlchemy Configuration Modal */}
+      <Modal show={showSqlAlchemyConfig} onHide={() => setShowSqlAlchemyConfig(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>SQLAlchemy DBMS Selection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Select Database System</Form.Label>
+              <Form.Select 
+                value={sqlAlchemyDbms} 
+                onChange={(e) => setSqlAlchemyDbms(e.target.value as 'sqlite' | 'postgresql' | 'mysql')}
+              >
+                <option value="sqlite">SQLite</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="mysql">MySQL</option>
+              </Form.Select>
+              <Form.Text className="text-muted">
+                Choose the database system for your generated SQLAlchemy code
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSqlAlchemyConfig(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSqlAlchemyGenerate}>
             Generate
           </Button>
         </Modal.Footer>
