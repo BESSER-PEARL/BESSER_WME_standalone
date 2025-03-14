@@ -16,8 +16,8 @@
         "type": "Class",
         "owner": null,
         "bounds": {
-            "x": -630,
-            "y": 0,
+            "x": -510,
+            "y": -40,
             "width": 160,
             "height": 70
         },
@@ -32,8 +32,8 @@
         "type": "ClassAttribute",
         "owner": "5101d9d5-7741-47dc-b374-8f31b481977b",
         "bounds": {
-            "x": -629.5,
-            "y": 40.5,
+            "x": -509.5,
+            "y": 0.5,
             "width": 159,
             "height": 30
         }
@@ -86,7 +86,7 @@
         "owner": null,
         "bounds": {
             "x": -540,
-            "y": 260,
+            "y": 220,
             "width": 160,
             "height": 40
         },
@@ -99,8 +99,8 @@
         "type": "Class",
         "owner": null,
         "bounds": {
-            "x": 350,
-            "y": -20,
+            "x": 300,
+            "y": -30,
             "width": 160,
             "height": 100
         },
@@ -116,8 +116,8 @@
         "type": "ClassAttribute",
         "owner": "e809cf0e-9a3e-4054-9ecf-6f8279b3e1d1",
         "bounds": {
-            "x": 350.5,
-            "y": 20.5,
+            "x": 300.5,
+            "y": 10.5,
             "width": 159,
             "height": 30
         }
@@ -128,8 +128,8 @@
         "type": "ClassAttribute",
         "owner": "e809cf0e-9a3e-4054-9ecf-6f8279b3e1d1",
         "bounds": {
-            "x": 350.5,
-            "y": 50.5,
+            "x": 300.5,
+            "y": 40.5,
             "width": 159,
             "height": 30
         }
@@ -141,7 +141,7 @@
         "owner": null,
         "bounds": {
             "x": -130,
-            "y": -340,
+            "y": -330,
             "width": 160,
             "height": 130
         },
@@ -159,7 +159,7 @@
         "owner": "660b100c-850b-4b0a-8e40-34587b2e26f6",
         "bounds": {
             "x": -129.5,
-            "y": -299.5,
+            "y": -289.5,
             "width": 159,
             "height": 30
         }
@@ -171,7 +171,7 @@
         "owner": "660b100c-850b-4b0a-8e40-34587b2e26f6",
         "bounds": {
             "x": -129.5,
-            "y": -269.5,
+            "y": -259.5,
             "width": 159,
             "height": 30
         }
@@ -183,7 +183,7 @@
         "owner": "660b100c-850b-4b0a-8e40-34587b2e26f6",
         "bounds": {
             "x": -129.5,
-            "y": -239.5,
+            "y": -229.5,
             "width": 159,
             "height": 30
         }
@@ -195,7 +195,7 @@
         "owner": null,
         "bounds": {
             "x": -120,
-            "y": 260,
+            "y": 220,
             "width": 160,
             "height": 40
         },
@@ -209,7 +209,7 @@
         "owner": null,
         "bounds": {
             "x": -310,
-            "y": 260,
+            "y": 220,
             "width": 160,
             "height": 40
         },
@@ -223,7 +223,7 @@
         "owner": null,
         "bounds": {
             "x": 90,
-            "y": 260,
+            "y": 220,
             "width": 160,
             "height": 40
         },
@@ -234,30 +234,30 @@
 "relationships": {
     "f497993c-4607-4858-9ffb-6adc5869a784": {
         "id": "f497993c-4607-4858-9ffb-6adc5869a784",
-        "name": "stage",
+        "name": "product_lifecycle",
         "type": "ClassUnidirectional",
         "owner": null,
         "bounds": {
-            "x": -89.1500015258789,
-            "y": -210,
-            "width": 73.18333435058594,
-            "height": 150
+            "x": -103.38333511352539,
+            "y": -200,
+            "width": 87.41666793823242,
+            "height": 140
         },
         "path": [
             {
-                "x": 44.150001525878906,
+                "x": 58.38333511352539,
                 "y": 0
             },
             {
-                "x": 44.150001525878906,
-                "y": 150
+                "x": 58.38333511352539,
+                "y": 140
             }
         ],
         "source": {
             "direction": "Down",
             "element": "660b100c-850b-4b0a-8e40-34587b2e26f6",
             "multiplicity": "0..*",
-            "role": "stage",
+            "role": "product",
             "bounds": {
                 "x": -220,
                 "y": -100,
@@ -269,7 +269,7 @@
             "direction": "Up",
             "element": "02393d14-1c7f-46ed-ac34-edfdb15a0a11",
             "multiplicity": "1..*",
-            "role": "stage",
+            "role": "stages",
             "bounds": {
                 "x": -220,
                 "y": -200,
@@ -281,26 +281,26 @@
     },
     "afcc1027-4651-4ccf-8fd3-8771ca20e721": {
         "id": "afcc1027-4651-4ccf-8fd3-8771ca20e721",
-        "name": "reparations",
+        "name": "product_reparations",
         "type": "ClassUnidirectional",
         "owner": null,
         "bounds": {
             "x": 250,
-            "y": 80,
-            "width": 209.03333282470703,
-            "height": 248.60000038146973
+            "y": 70,
+            "width": 159.03333282470703,
+            "height": 218.60000038146973
         },
         "path": [
             {
                 "x": 0,
-                "y": 210
+                "y": 180
             },
             {
-                "x": 180,
-                "y": 210
+                "x": 130,
+                "y": 180
             },
             {
-                "x": 180,
+                "x": 130,
                 "y": 0
             }
         ],
@@ -308,7 +308,7 @@
             "direction": "Downright",
             "element": "408d2eed-bff8-4749-9cfb-63156d692f93",
             "multiplicity": "1..1",
-            "role": "reparations",
+            "role": "stage",
             "bounds": {
                 "x": -300,
                 "y": 150,
@@ -332,18 +332,18 @@
     },
     "013e68a9-aecd-440c-ad74-7bbd60e60546": {
         "id": "013e68a9-aecd-440c-ad74-7bbd60e60546",
-        "name": "composition",
+        "name": "material_spend",
         "type": "ClassUnidirectional",
         "owner": null,
         "bounds": {
-            "x": -470,
-            "y": 10,
-            "width": 350,
+            "x": -350,
+            "y": -15,
+            "width": 230,
             "height": 48.60000038146973
         },
         "path": [
             {
-                "x": 350,
+                "x": 230,
                 "y": 10
             },
             {
@@ -355,7 +355,7 @@
             "direction": "Left",
             "element": "02393d14-1c7f-46ed-ac34-edfdb15a0a11",
             "multiplicity": "0..*",
-            "role": "composition",
+            "role": "used_for",
             "bounds": {
                 "x": -300,
                 "y": -250,
@@ -367,7 +367,7 @@
             "direction": "Downright",
             "element": "5101d9d5-7741-47dc-b374-8f31b481977b",
             "multiplicity": "1..*",
-            "role": "composition",
+            "role": "use",
             "bounds": {
                 "x": -440,
                 "y": -250,
@@ -386,20 +386,20 @@
             "x": -465,
             "y": 40,
             "width": 430,
-            "height": 220
+            "height": 180
         },
         "path": [
             {
                 "x": 5,
-                "y": 220
+                "y": 180
             },
             {
                 "x": 5,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 425,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 425,
@@ -441,12 +441,12 @@
             "x": -45,
             "y": 40,
             "width": 10,
-            "height": 220
+            "height": 180
         },
         "path": [
             {
                 "x": 5,
-                "y": 220
+                "y": 180
             },
             {
                 "x": 5,
@@ -488,20 +488,20 @@
             "x": -45,
             "y": 40,
             "width": 220,
-            "height": 220
+            "height": 180
         },
         "path": [
             {
                 "x": 215,
-                "y": 220
+                "y": 180
             },
             {
                 "x": 215,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 5,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 5,
@@ -543,20 +543,20 @@
             "x": -235,
             "y": 40,
             "width": 200,
-            "height": 220
+            "height": 180
         },
         "path": [
             {
                 "x": 5,
-                "y": 220
+                "y": 180
             },
             {
                 "x": 5,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 195,
-                "y": 110
+                "y": 90
             },
             {
                 "x": 195,
@@ -588,7 +588,7 @@
             }
         },
         "isManuallyLayouted": false
-        }
-    },
+    }
+},
 "assessments": {}
 }

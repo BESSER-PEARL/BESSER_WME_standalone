@@ -109,13 +109,15 @@ function getFilenameForGenerator(generatorType: string): string {
     case 'python':
       return 'classes.py';
     case 'django':
-      return 'django_project.zip';  // Changed from 'models.py' to zip
+      return 'django_project.zip'; 
     case 'pydantic':
       return 'pydantic_classes.py';
     case 'sqlalchemy':
       return 'sql_alchemy.py';
     case 'sql':
       return 'tables.sql';
+      case 'jsonschema':
+        return 'json_schema.json';
     case 'backend':
     case 'java':
       return `${generatorType}_output.zip`;
