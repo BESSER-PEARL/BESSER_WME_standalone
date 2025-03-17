@@ -160,7 +160,7 @@ export const ApplicationBar: React.FC = () => {
         <Navbar.Brand href="https://besser-pearl.org" target="_blank" rel="noopener noreferrer">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
         </Navbar.Brand>
-        <ApplicationVersion>{appVersion}</ApplicationVersion>
+        {/* <ApplicationVersion>{appVersion}</ApplicationVersion> */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
