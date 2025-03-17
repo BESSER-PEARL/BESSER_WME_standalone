@@ -1,5 +1,5 @@
 [Unit]
-Description=Apollon Standalone
+Description=BESSER WME Standalone
 
 [Service]
 Type=simple

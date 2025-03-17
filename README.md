@@ -4,7 +4,7 @@ BESSER WME Standalone is the Standalone version of the BESSER WME Editor for cre
 
 There are two variants how you can use this editor:
 
-1. As web application which only runs in the users environment (modeling functionality).
+1. As an online web application – Now available at [BESSER WME Online](https://editor.besser-pearl.org), providing seamless access without installation.
 2. With an application server which enables some extra features, like sharing of diagrams.
 
 It consists of following features:
@@ -67,6 +67,26 @@ Active elements that are interacted with by users in a session are highlighted i
 
 <!-- ![Real-time collaboration](/docs/images/RealTimeCollaboration.gif 'Real-time collaboration') -->
 
+
+## Contributing
+
+We encourage contributions from the community and any comment is welcome!
+
+If you are interested in contributing to this project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+
+## Code of Conduct
+
+At BESSER, our commitment is centered on establishing and maintaining development environments that are welcoming, inclusive, safe and free from all forms of harassment. All participants are expected to voluntarily respect and support our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Governance
+
+The development of this project follows the governance rules described in the [GOVERNANCE.md](GOVERNANCE.md) document.
+
+## Contact
+You can reach us at: [info@besser-pearl.org](mailto:info@besser-pearl-org)
+
+
 ## Build the application
 
 ### Web application only
@@ -116,7 +136,7 @@ npm install
 
 # set environment variable
 export APPLICATION_SERVER_VERSION=1
-export DEPLOYMENT_URL=https://apollon.ase.in.tum.de
+export DEPLOYMENT_URL=https://BESSER_WME_standalone.de
 
 # build the web application and the application server
 npm run build
@@ -342,3 +362,7 @@ BESSER WME Standalone to use Redis by setting the `APOLLON_REDIS_URL` environmen
 ```bash
 APOLLON_REDIS_URL="" npm start
 ```
+
+## License
+
+This project is licensed under the [MIT](https://mit-license.org/) license
