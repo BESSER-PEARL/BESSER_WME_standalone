@@ -13,11 +13,11 @@ export interface DjangoConfig {
 }
 
 export interface SQLConfig {
-  dialect: 'standard' | 'postgresql' | 'mysql';
+  dialect: 'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb';
 }
 
 export interface SQLAlchemyConfig {
-  dbms: 'sqlite' | 'postgresql' | 'mysql';
+  dbms: 'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb';
 }
 
 export type GeneratorConfig = {

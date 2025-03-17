@@ -12,8 +12,8 @@ export const GenerateCodeMenu: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [appName, setAppName] = useState('');
   const [useDocker, setUseDocker] = useState(false);
-  const [sqlDialect, setSqlDialect] = useState<'standard' | 'postgresql' | 'mysql'>('standard');
-  const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql'>('sqlite');
+  const [sqlDialect, setSqlDialect] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
+  const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -251,11 +251,13 @@ export const GenerateCodeMenu: React.FC = () => {
               <Form.Label>Select SQL Dialect</Form.Label>
               <Form.Select 
                 value={sqlDialect} 
-                onChange={(e) => setSqlDialect(e.target.value as 'standard' | 'postgresql' | 'mysql')}
+                onChange={(e) => setSqlDialect(e.target.value as 'sqlite' | 'postgresql' | 'mysql'| 'mssql' | 'mariadb')}
               >
-                <option value="standard">Standard SQL</option>
+                <option value="sqlite">SQLite</option>
                 <option value="postgresql">PostgreSQL</option>
                 <option value="mysql">MySQL</option>
+                <option value="mssql">MS SQL Server</option>
+                <option value="mariadb">MariaDB</option>;
               </Form.Select>
               <Form.Text className="text-muted">
                 Choose the SQL dialect for your generated DDL statements
@@ -284,11 +286,13 @@ export const GenerateCodeMenu: React.FC = () => {
               <Form.Label>Select Database System</Form.Label>
               <Form.Select 
                 value={sqlAlchemyDbms} 
-                onChange={(e) => setSqlAlchemyDbms(e.target.value as 'sqlite' | 'postgresql' | 'mysql')}
+                onChange={(e) => setSqlAlchemyDbms(e.target.value as 'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb')}
               >
                 <option value="sqlite">SQLite</option>
                 <option value="postgresql">PostgreSQL</option>
                 <option value="mysql">MySQL</option>
+                <option value="mssql">MS SQL Server</option>
+                <option value="mariadb">MariaDB</option>
               </Form.Select>
               <Form.Text className="text-muted">
                 Choose the database system for your generated SQLAlchemy code
