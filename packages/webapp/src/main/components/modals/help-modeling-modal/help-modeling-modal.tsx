@@ -13,8 +13,8 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
           <tr>
             <th>Add Class</th>
             <td>
-              To add a class, simply drag and drop one of the elements on the right side into the editor area on the
-              left side. 
+              To add a class, simply drag and drop one of the elements on the left side into the editor area on the
+              right side. 
             </td>
             <td>
               <img width="300" src="/images/help/help-create-element.png" alt="Image not found" />
@@ -54,9 +54,9 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
           <tr>
             <th>Edit Association or Generalization</th>
             <td>
-              To edit an Association, double-click on it to open a popup where you can modify its properties. 
-              You can change the type of association (Association, Composition, Generalization), add a name to the association, 
-              set source and target end names, and modify the multiplicity at both ends of the relationship.
+            To edit an Association or Generalization, double-click on it to open a popup where you can modify its properties. You can change the
+            association type (Unidirectional, Bidirectional, Composition) or switch to Generalization. For associations, you can assign a name, set 
+            source and target end names, and modify the multiplicity at both ends.
             </td>
             <td>
               <img width="300" src="/images/help/help-update-asso.jpg" alt="Image not found" />
