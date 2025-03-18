@@ -21,7 +21,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             </td>
           </tr>
           <tr>
-            <th>Add Association</th>
+            <th>Add Association or Generalization</th>
             <td>
               To add an association, select the source class with a single click and you will see blue circles.
               Those are the possible connection points for associations. Click and hold on one of those and drag it to
@@ -49,6 +49,17 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             </td>
             <td>
               <img width="300" src="/images/help/help-update-element.jpg" alt="Image not found" />
+            </td>
+          </tr>
+          <tr>
+            <th>Edit Association or Generalization</th>
+            <td>
+              To edit an Association, double-click on it to open a popup where you can modify its properties. 
+              You can change the type of association (Association, Composition, Generalization), add a name to the association, 
+              set source and target end names, and modify the multiplicity at both ends of the relationship.
+            </td>
+            <td>
+              <img width="300" src="/images/help/help-update-asso.jpg" alt="Image not found" />
             </td>
           </tr>
           <tr>

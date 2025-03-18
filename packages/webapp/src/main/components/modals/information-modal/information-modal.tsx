@@ -18,24 +18,25 @@ export const InformationModal: React.FC<ModalContentProps> = ({ close }) => {
       <Modal.Body>
         <table style={{ width: '100%' }}>
           <tbody>
+          <tr>
+              <td>BESSER Library:</td>
+              <td>
+                <a href={besserLibraryRepositoryLink} target="_blank">
+                  BESSER library
+                </a>{' '}
+                {/* {besserLibraryVersion} */}
+              </td>
+            </tr>
             <tr>
               <td>Version:</td>
               <td>
                 <a href={besserStandaloneRepositoryLink} target="_blank">
                   BESSER WME Standalone{' '}
                 </a>
-                {appVersion}
+                {/* {appVersion} */}
               </td>
             </tr>
-            <tr>
-              <td>BESSER Library:</td>
-              <td>
-                <a href={besserLibraryRepositoryLink} target="_blank">
-                  BESSER library
-                </a>{' '}
-                {besserLibraryVersion}
-              </td>
-            </tr>
+
           </tbody>
         </table>
       </Modal.Body>
