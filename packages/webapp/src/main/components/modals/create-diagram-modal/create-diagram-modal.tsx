@@ -96,7 +96,14 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
               <ListGroup.Item
                 key={diagramType}
                 action
-                onClick={() => setSelectedDiagramType(diagramType)}
+                onClick={() => {
+                  setSelectedDiagramType(diagramType);
+                  // Only update title if it matches one of the predefined diagram names
+                  const isDefaultTitle = Object.values(diagramNamesMap).includes(title);
+                  if (isDefaultTitle) {
+                    setTitle(diagramNamesMap[diagramType]);
+                  }
+                }}
                 onDoubleClick={() => {
                   createNewDiagram(diagramType); // Automatically trigger diagram creation on double-click
                 }}
