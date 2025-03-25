@@ -39,7 +39,7 @@ export const useBumlImport = () => {
         }
 
       const data = await response.json();
-      const modelType = data.model.type === 'StateMachine' ? 
+      const modelType = data.model.type === 'StateMachineDiagram' ? 
         UMLDiagramType.StateMachineDiagram :// UMLDiagramType.StateMachineDiagram : 
         UMLDiagramType.ClassDiagram;
       
