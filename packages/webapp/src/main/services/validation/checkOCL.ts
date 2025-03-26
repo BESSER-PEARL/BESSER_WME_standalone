@@ -7,7 +7,7 @@ export async function checkOclConstraints(diagramData: any) {
     // Validate the diagram first
     const validationResult = validateDiagram(diagramData);
     if (!validationResult.isValid) {
-      toast.error(`Cannot check OCL constraints: ${validationResult.message}`);
+      toast.error(`${validationResult.message}`);
       return;
     } 
 
