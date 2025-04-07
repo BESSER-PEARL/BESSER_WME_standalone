@@ -2,8 +2,10 @@ import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
 import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig } from '../../../services/generate-code/useGenerateCode';
+import { useDeployLocally } from '../../../services/generate-code/useDeployLocally';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
+import { BACKEND_URL } from '../../../constant';
 
 export const GenerateCodeMenu: React.FC = () => {
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
@@ -17,8 +19,14 @@ export const GenerateCodeMenu: React.FC = () => {
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
+  const deployLocally = useDeployLocally();
   const diagram = useAppSelector((state) => state.diagram.diagram);
   const editor = apollonEditor?.editor;
+
+  // Check if we're running locally (not on AWS)
+  const isLocalEnvironment = BACKEND_URL === undefined || 
+                            (BACKEND_URL ?? '').includes('localhost') || 
+                            (BACKEND_URL ?? '').includes('127.0.0.1');
 
   const handleGenerateCode = async (generatorType: string) => {
     if (!editor || !diagram?.title) {
@@ -84,6 +92,36 @@ export const GenerateCodeMenu: React.FC = () => {
     } catch (error) {
       console.error('Error in Django code generation:', error);
       toast.error('Django code generation failed');
+    }
+  };
+
+  const handleDjangoDeployLocally = async () => {
+    if (!projectName || !appName) {
+      toast.error('Project and app names are required');
+      return;
+    }
+
+    if (projectName === appName) {
+      toast.error('Project and app names must be different');
+      return;
+    }
+
+    if (!validateDjangoName(projectName) || !validateDjangoName(appName)) {
+      toast.error('Names must start with a letter/underscore and contain only letters, numbers, and underscores');
+      return;
+    }
+
+    try {
+      const djangoConfig: DjangoConfig = {
+        project_name: projectName,
+        app_name: appName,
+        containerization: useDocker
+      };
+      await deployLocally(editor!, 'django', diagram.title, djangoConfig);
+      setShowDjangoConfig(false);
+    } catch (error) {
+      console.error('Error in Django local deployment:', error);
+      toast.error('Django local deployment failed');
     }
   };
 
@@ -237,6 +275,11 @@ export const GenerateCodeMenu: React.FC = () => {
           <Button variant="primary" onClick={handleDjangoGenerate}>
             Generate
           </Button>
+          {isLocalEnvironment && (
+            <Button variant="success" onClick={handleDjangoDeployLocally}>
+              Deploy
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
 
