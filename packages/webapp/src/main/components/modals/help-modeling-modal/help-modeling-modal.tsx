@@ -101,7 +101,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
           <tr>
             <th>More info</th>
             <td colSpan={2}>
-              You can access more info by <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">clicking here</a> to read the BESSER documentation.
+              You can access more info into the <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">BESSER documentation</a> or in the <a href="https://github.com/BESSER-PEARL/BESSER_WME_standalone" target="_blank" rel="noopener noreferrer" className="text-link">WME GitHub repository</a>.
             </td>
           </tr>
         </tbody>
