@@ -144,41 +144,73 @@ export function validateAssociationClassConstraints(editor: ApollonEditor): Vali
       const sourceId = rel.source.element;
       const targetId = rel.target.element;
       
-      // Check if the source is a relationship (should be an association)
+      // Check if one side is a relationship (should be an association) and the other is a class
+      // This handles both orientations (association→class and class→association)
       const sourceIsAssociation = relationships[sourceId] !== undefined;
-      
-      // Check if the target is a class
+      const targetIsAssociation = relationships[targetId] !== undefined;
+      const sourceIsClass = elements[sourceId]?.type === 'Class';
       const targetIsClass = elements[targetId]?.type === 'Class';
       
-      if (!sourceIsAssociation) {
-        const sourceName = elements[sourceId]?.name || 'Unknown';
-        issues.push(
-          `Invalid link relationship: source "${sourceName}" must be an association, not a class`
-        );
-      }
+      // Valid cases: (association→class) or (class→association)
+      const isValid = (sourceIsAssociation && targetIsClass) || (sourceIsClass && targetIsAssociation);
       
-      if (!targetIsClass) {
-        const targetType = relationships[targetId]?.type || 'Unknown';
-        issues.push(
-          `Invalid link relationship: target must be a class, not a ${targetType}`
-        );
+      if (!isValid) {
+        if (!sourceIsAssociation && !sourceIsClass) {
+          issues.push(`Invalid link relationship: source element is neither a class nor an association`);
+        }
+        if (!targetIsAssociation && !targetIsClass) {
+          issues.push(`Invalid link relationship: target element is neither a class nor an association`);
+        }
+        if ((sourceIsClass && targetIsClass) || (sourceIsAssociation && targetIsAssociation)) {
+          issues.push(`Invalid link relationship: must connect an association to a class, not ${
+            sourceIsClass && targetIsClass ? 'class to class' : 'association to association'
+          }`);
+        }
       }
     }
   }
   
   // Step 1: Find all association classes (classes linked to associations via ClassLinkRel)
   const associationClasses = new Map<string, string>(); // Map<associationId, classId>
+  // Track associations that have multiple association classes linked to them
+  const associationLinkCount = new Map<string, number>();
   
   for (const [id, rel] of Object.entries(relationships)) {
     if (rel.type === 'ClassLinkRel') {
-      // This is a link between an association and a class, making the class an association class
       const sourceId = rel.source.element;
       const targetId = rel.target.element;
       
-      // Usually source is the association and target is the class
-      if (relationships[sourceId]) {
-        associationClasses.set(sourceId, targetId);
+      // Handle both orientations: association→class or class→association
+      let associationId, classId;
+      
+      if (relationships[sourceId] && elements[targetId]?.type === 'Class') {
+        // Case: association→class
+        associationId = sourceId;
+        classId = targetId;
+      } else if (relationships[targetId] && elements[sourceId]?.type === 'Class') {
+        // Case: class→association
+        associationId = targetId;
+        classId = sourceId;
+      } else {
+        // Not a valid association-class link
+        continue;
       }
+      
+      // Count associations with multiple links
+      associationLinkCount.set(associationId, (associationLinkCount.get(associationId) || 0) + 1);
+      
+      // Store the association class relationship
+      associationClasses.set(associationId, classId);
+    }
+  }
+  
+  // Check for associations with multiple association classes
+  for (const [associationId, count] of associationLinkCount.entries()) {
+    if (count > 1) {
+      const associationName = relationships[associationId]?.name || 'Unknown';
+      issues.push(
+        `Association "${associationName}"  has ${count} association classes. An association can only have one association class.`
+      );
     }
   }
   
