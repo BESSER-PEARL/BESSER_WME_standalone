@@ -1,6 +1,6 @@
 # BESSER WME Standalone
 
-BESSER WME Standalone is the Standalone version of the BESSER WME Editor for creating and editing diagrams. 
+BESSER WME Standalone is the Standalone version of the BESSER WME Editor for creating and editing diagrams. It can be used as graphical front-end for the [BESSER low-code platform](https://github.com/BESSER-PEARL/BESSER).
 
 There are two variants how you can use this editor:
 
