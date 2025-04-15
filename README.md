@@ -1,10 +1,10 @@
 # BESSER WME Standalone
 
-BESSER WME Standalone is the Standalone version of the BESSER WME Editor for creating and editing diagrams.
+BESSER WME Standalone is the Standalone version of the BESSER WME Editor for creating and editing diagrams. 
 
 There are two variants how you can use this editor:
 
-1. As an online web application – Now available at [BESSER WME Online](https://editor.besser-pearl.org), providing seamless access without installation.
+1. As an online web application – Now freely available and ready-to-use at [BESSER WME Online](https://editor.besser-pearl.org), providing seamless access without installation.
 2. With an application server which enables some extra features, like sharing of diagrams.
 
 It consists of following features:
