@@ -209,7 +209,7 @@ export function validateAssociationClassConstraints(editor: ApollonEditor): Vali
     if (count > 1) {
       const associationName = relationships[associationId]?.name || 'Unknown';
       issues.push(
-        `Association "${associationName}"  has ${count} association classes. An association can only have one association class.`
+        `Association "${associationName}" has ${count} association classes. An association can only have one association class.`
       );
     }
   }
