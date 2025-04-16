@@ -117,8 +117,9 @@ export const GenerateCodeMenu: React.FC = () => {
         app_name: appName,
         containerization: useDocker
       };
-      await deployLocally(editor!, 'django', diagram.title, djangoConfig);
+      // Close the modal first, then start deployment
       setShowDjangoConfig(false);
+      await deployLocally(editor!, 'django', diagram.title, djangoConfig);
     } catch (error) {
       console.error('Error in Django local deployment:', error);
       toast.error('Django local deployment failed');
