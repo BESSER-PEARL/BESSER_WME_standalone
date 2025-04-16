@@ -3,6 +3,7 @@ import { ApollonEditor } from '@besser/wme';
 import { toast, Id } from 'react-toastify'; // Import Id type
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
+import React from 'react';
 
 // Add type definitions
 export interface DjangoConfig {
@@ -94,12 +95,28 @@ export const useDeployLocally = () => {
           return;
         }
 
-        // Update the toast to success when deployment is complete
-        toast.update(toastId, { 
-          render: 'Local deployment completed successfully!', 
-          type: "success", 
+        toast.update(toastId, {
+          render: React.createElement('div', null,
+            React.createElement('p', null, 'Local deployment completed successfully!'),
+            React.createElement(
+              'p',
+              null,
+              'You can now access your application at: ',
+              React.createElement(
+                'a',
+                {
+                  href: 'http://localhost:8000/admin',
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  style: { color: '#4caf50', textDecoration: 'underline' }
+                },
+                'http://localhost:8000/admin'
+              )
+            )
+          ),
+          type: 'success',
           isLoading: false,
-          autoClose: 5000
+          autoClose: 5000,
         });
       } catch (error) {
         let errorMessage = 'Unknown error occurred during deployment';
