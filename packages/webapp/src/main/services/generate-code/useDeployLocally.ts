@@ -97,7 +97,7 @@ export const useDeployLocally = () => {
 
         toast.update(toastId, {
           render: React.createElement('div', null,
-            React.createElement('p', null, 'Local deployment completed !'),
+            React.createElement('p', null, 'Local deployment completed!'),
             React.createElement(
               'p',
               null,
