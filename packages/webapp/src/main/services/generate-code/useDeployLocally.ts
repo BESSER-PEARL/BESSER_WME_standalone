@@ -1,16 +1,15 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { ApollonEditor } from '@besser/wme';
-import { toast } from 'react-toastify';
+import { toast, Id } from 'react-toastify'; // Import Id type
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
 
 // Add type definitions
 export interface DjangoConfig {
-  project_name: string;  // Changed from projectName
-  app_name: string;      // Changed from appName
-  containerization: boolean;  // Changed from useDocker
+  project_name: string;
+  app_name: string;
+  containerization: boolean;
 }
-
 
 export type GeneratorConfig = {
   django: DjangoConfig;
@@ -34,10 +33,18 @@ export const useDeployLocally = () => {
         return;
       }
 
-      try {
-        // Show loading toast
-        toast.info('Deployement, please wait...');
+      // Create a persistent loading toast
+      const toastId = toast.loading('Local deployment in progress... This may take a few minutes.', {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        progress: undefined,
+      });
 
+      try {
         const response = await fetch(`${BACKEND_URL}/deploy-app`, {
           method: 'POST',
           headers: {
@@ -52,32 +59,61 @@ export const useDeployLocally = () => {
           }),
         });
 
+        // Update the toast based on the response
         if (!response.ok) {
           const errorData = await response.json().catch(e => ({ detail: 'Could not parse error response' }));
           console.error('Response not OK:', response.status, errorData);
           
+          // Update the toast to an error state
           if (response.status === 400 && errorData.detail) {
-            toast.error(`${errorData.detail}`);
+            toast.update(toastId, { 
+              render: `${errorData.detail}`, 
+              type: "error", 
+              isLoading: false,
+              autoClose: 5000
+            });
             return;
           }
           
           if (response.status === 500 && errorData.detail) {
-            toast.error(`${errorData.detail}`);
+            toast.update(toastId, { 
+              render: `${errorData.detail}`, 
+              type: "error", 
+              isLoading: false,
+              autoClose: 5000
+            });
             return;
           }
 
-          toast.error(`HTTP error! status: ${response.status}`);
+          toast.update(toastId, { 
+            render: `HTTP error! status: ${response.status}`, 
+            type: "error", 
+            isLoading: false,
+            autoClose: 5000
+          });
           return;
         }
 
-        toast.success('Local Deployement completed successfully');
+        // Update the toast to success when deployment is complete
+        toast.update(toastId, { 
+          render: 'Local deployment completed successfully!', 
+          type: "success", 
+          isLoading: false,
+          autoClose: 5000
+        });
       } catch (error) {
-        let errorMessage = 'Unknown error occurred during code generation';
+        let errorMessage = 'Unknown error occurred during deployment';
         if (error instanceof Error) {
           errorMessage = error.message;
         }
         
-        toast.error(`${errorMessage}`);
+        // Update the toast to error
+        toast.update(toastId, { 
+          render: errorMessage, 
+          type: "error", 
+          isLoading: false,
+          autoClose: 5000
+        });
       }
     },
     []
