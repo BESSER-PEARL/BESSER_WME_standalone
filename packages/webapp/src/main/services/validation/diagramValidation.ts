@@ -129,6 +129,135 @@ export function validateClassStructure(editor: ApollonEditor): ValidationResult 
     : { isValid: true, message: "✅ All classes are properly structured" };
 }
 
+export function validateAssociationClassConstraints(editor: ApollonEditor): ValidationResult {
+  if (!editor?.model) {
+    return { isValid: false, message: "❌ Editor not initialized" };
+  }
+
+  const relationships = editor.model.relationships;
+  const elements = editor.model.elements;
+  const issues: string[] = [];
+  
+  // First, check that ClassLinkRel only connects an association to a class
+  for (const [id, rel] of Object.entries(relationships)) {
+    if (rel.type === 'ClassLinkRel') {
+      const sourceId = rel.source.element;
+      const targetId = rel.target.element;
+      
+      // Check if one side is a relationship (should be an association) and the other is a class
+      // This handles both orientations (association→class and class→association)
+      const sourceIsAssociation = relationships[sourceId] !== undefined;
+      const targetIsAssociation = relationships[targetId] !== undefined;
+      const sourceIsClass = elements[sourceId]?.type === 'Class';
+      const targetIsClass = elements[targetId]?.type === 'Class';
+      
+      // Valid cases: (association→class) or (class→association)
+      const isValid = (sourceIsAssociation && targetIsClass) || (sourceIsClass && targetIsAssociation);
+      
+      if (!isValid) {
+        if (!sourceIsAssociation && !sourceIsClass) {
+          issues.push(`Invalid link relationship: source element is neither a class nor an association`);
+        }
+        if (!targetIsAssociation && !targetIsClass) {
+          issues.push(`Invalid link relationship: target element is neither a class nor an association`);
+        }
+        if ((sourceIsClass && targetIsClass) || (sourceIsAssociation && targetIsAssociation)) {
+          issues.push(`Invalid link relationship: must connect an association to a class, not ${
+            sourceIsClass && targetIsClass ? 'class to class' : 'association to association'
+          }`);
+        }
+      }
+    }
+  }
+  
+  // Step 1: Find all association classes (classes linked to associations via ClassLinkRel)
+  const associationClasses = new Map<string, string>(); // Map<associationId, classId>
+  // Track associations that have multiple association classes linked to them
+  const associationLinkCount = new Map<string, number>();
+  
+  for (const [id, rel] of Object.entries(relationships)) {
+    if (rel.type === 'ClassLinkRel') {
+      const sourceId = rel.source.element;
+      const targetId = rel.target.element;
+      
+      // Handle both orientations: association→class or class→association
+      let associationId, classId;
+      
+      if (relationships[sourceId] && elements[targetId]?.type === 'Class') {
+        // Case: association→class
+        associationId = sourceId;
+        classId = targetId;
+      } else if (relationships[targetId] && elements[sourceId]?.type === 'Class') {
+        // Case: class→association
+        associationId = targetId;
+        classId = sourceId;
+      } else {
+        // Not a valid association-class link
+        continue;
+      }
+      
+      // Count associations with multiple links
+      associationLinkCount.set(associationId, (associationLinkCount.get(associationId) || 0) + 1);
+      
+      // Store the association class relationship
+      associationClasses.set(associationId, classId);
+    }
+  }
+  
+  // Check for associations with multiple association classes
+  for (const [associationId, count] of associationLinkCount.entries()) {
+    if (count > 1) {
+      const associationName = relationships[associationId]?.name || 'Unknown';
+      issues.push(
+        `Association "${associationName}" has ${count} association classes. An association can only have one association class.`
+      );
+    }
+  }
+  
+  // Step 2: For each association class, get the connected regular classes
+  for (const [associationId, classId] of associationClasses.entries()) {
+    const association = relationships[associationId];
+    if (!association) continue;
+    
+    // Get the elements connected by this association
+    const connectedClasses = new Set<string>([
+      association.source.element,
+      association.target.element
+    ]);
+    
+    // Check if the association class itself is one of the classes connected by the association
+    // This is an invalid pattern in UML - a class cannot be both an association class and a participant in the same association
+    if (connectedClasses.has(classId)) {
+      const className = elements[classId]?.name || 'Unknown';
+      issues.push(
+        `Class "${className}" is both a participant in an association and serves as the association class for that same association`
+      );
+    }
+    
+    // Step 3: Check if any of these connected classes have other direct connections
+    for (const connectedClassId of connectedClasses) {
+      for (const [relId, rel] of Object.entries(relationships)) {
+        // Skip the current association and any ClassLinkRel
+        if (relId === associationId || rel.type === 'ClassLinkRel') continue;
+        
+        // Check if this relationship connects the class to another class
+        if ((rel.source.element === connectedClassId || rel.target.element === connectedClassId) && 
+            (rel.type === 'ClassBidirectional' || rel.type === 'ClassUnidirectional')) {
+          const className = elements[connectedClassId]?.name || 'Unknown';
+          issues.push(
+            `Class "${className}" is connected to an association class but also has direct connections to other classes`
+          );
+          break; // Only report once per class
+        }
+      }
+    }
+  }
+  
+  return issues.length > 0
+    ? { isValid: false, message: "❌ Association class constraint violations found:\n" + issues.join('\n') }
+    : { isValid: true, message: "✅ All association class constraints satisfied" };
+}
+
 export function validateInheritanceCycles(editor: ApollonEditor): ValidationResult {
   if (!editor?.model) {
     return { isValid: false, message: "❌ Editor not initialized" };
@@ -225,7 +354,8 @@ export function validateDiagram(editor: ApollonEditor): ValidationResult {
     // validateAssociationEnds(editor),
     // validateClassStructure(editor),
     validateInheritanceCycles(editor),
-    validateMultiplicities(editor)
+    validateMultiplicities(editor),
+    validateAssociationClassConstraints(editor) // Add the new validation
   ];
 
   // Collect all validation issues
@@ -233,7 +363,7 @@ export function validateDiagram(editor: ApollonEditor): ValidationResult {
   if (failures.length > 0) {
     return {
       isValid: false,
-      message: "❌ Validation failed:\n\n" + failures.map(f => f.message).join('\n\n')
+      message: "\n\n" + failures.map(f => f.message).join('\n\n')
     };
   }
 
