@@ -99,6 +99,19 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => (
             </td>
           </tr>
           <tr>
+            <th>Association Class</th>
+            <td>
+              An Association Class is a model element that combines an association and a class. To create one, drag and drop the 
+              Class shape onto the canvas. Then, link it to an existing association center point by dragging the dotted line from 
+              the Class to the association. You can define attributes for the Association Class just like 
+              a regular class.
+              Note: The Association Class is currently not supported by our code generators. 
+            </td>
+            <td>
+              <img width="300" src="/images/help/help-association-class.png" alt="Image not found" />
+            </td>
+          </tr>
+          <tr>
             <th>More info</th>
             <td colSpan={2}>
               You can access more info into the <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">BESSER documentation</a> or in the <a href="https://github.com/BESSER-PEARL/BESSER_WME_standalone" target="_blank" rel="noopener noreferrer" className="text-link">WME GitHub repository</a>.
