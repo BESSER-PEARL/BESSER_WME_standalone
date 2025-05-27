@@ -17,7 +17,8 @@ const formatDiagramType = (type: string): string => {
 // Define allowed diagram types
 const ALLOWED_DIAGRAM_TYPES = [
   UMLDiagramType.ClassDiagram,
-  UMLDiagramType.StateMachineDiagram
+  UMLDiagramType.StateMachineDiagram,
+  UMLDiagramType.AgentDiagram,
 ];
 
 export const DiagramTypeSelector: React.FC = () => {
