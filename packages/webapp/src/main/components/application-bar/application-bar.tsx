@@ -166,7 +166,7 @@ export const ApplicationBar: React.FC = () => {
           <Nav className="me-auto">
             <FileMenu />
             <DiagramTypeSelector />
-            {currentType === UMLDiagramType.ClassDiagram && (
+            {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram) && (
               <>
                 <GenerateCodeMenu />
                 {APPLICATION_SERVER_VERSION && (

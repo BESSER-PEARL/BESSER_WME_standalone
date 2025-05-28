@@ -6,6 +6,7 @@ import { useDeployLocally } from '../../../services/generate-code/useDeployLocal
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
 import { BACKEND_URL } from '../../../constant';
+import { UMLDiagramType } from '@besser/wme';
 
 export const GenerateCodeMenu: React.FC = () => {
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
@@ -21,6 +22,7 @@ export const GenerateCodeMenu: React.FC = () => {
   const generateCode = useGenerateCode();
   const deployLocally = useDeployLocally();
   const diagram = useAppSelector((state) => state.diagram.diagram);
+  const currentDiagramType = useAppSelector((state) => state.diagram.editorOptions.type);
   const editor = apollonEditor?.editor;
 
   // Check if we're running locally (not on AWS)
@@ -152,68 +154,78 @@ export const GenerateCodeMenu: React.FC = () => {
     }
   };
 
+  const isAgentDiagram = currentDiagramType === UMLDiagramType.AgentDiagram;
+
   return (
     <>
       <NavDropdown title="Generate Code" className="pt-0 pb-0">
-      {/* Web Dropdown */}
-      <Dropdown drop="end">
-        <Dropdown.Toggle
-          id="dropdown-basic"
-          split
-          className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-        >
-          <span className="flex-grow-1">Web</span>
-        </Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
-          <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+      {isAgentDiagram ? (
+        // Agent Diagram: Only show agent generation option
+        <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
+      ) : (
+        // Class Diagram: Show all other options
+        <>
+          {/* Web Dropdown */}
+          <Dropdown drop="end">
+            <Dropdown.Toggle
+              id="dropdown-basic"
+              split
+              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+            >
+              <span className="flex-grow-1">Web</span>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
 
-      {/* Database Dropdown */}
-      <Dropdown drop="end">
-        <Dropdown.Toggle
-          id="dropdown-basic"
-          split
-          className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-        >
-          <span className="flex-grow-1">Database</span>
-        </Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL DDL</Dropdown.Item>
-          <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy DDL</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+          {/* Database Dropdown */}
+          <Dropdown drop="end">
+            <Dropdown.Toggle
+              id="dropdown-basic"
+              split
+              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+            >
+              <span className="flex-grow-1">Database</span>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL DDL</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy DDL</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
 
-      {/* OOP Dropdown */}
-      <Dropdown drop="end">
-        <Dropdown.Toggle
-          id="dropdown-basic"
-          split
-          className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-        >
-          <span className="flex-grow-1">OOP</span>
-        </Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
-          <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+          {/* OOP Dropdown */}
+          <Dropdown drop="end">
+            <Dropdown.Toggle
+              id="dropdown-basic"
+              split
+              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+            >
+              <span className="flex-grow-1">OOP</span>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
 
-      {/* Schema Dropdown */}
-      <Dropdown drop="end">
-        <Dropdown.Toggle
-          id="dropdown-basic"
-          split
-          className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-        >
-          <span className="flex-grow-1">Schema</span>
-        </Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
-          <Dropdown.Item onClick={() => handleGenerateCode('jsonschema')}>JSON Schema</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
+          {/* Schema Dropdown */}
+          <Dropdown drop="end">
+            <Dropdown.Toggle
+              id="dropdown-basic"
+              split
+              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+            >
+              <span className="flex-grow-1">Schema</span>
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleGenerateCode('jsonschema')}>JSON Schema</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </>
+      )}
     </NavDropdown>
 
       {/* Django Configuration Modal */}
