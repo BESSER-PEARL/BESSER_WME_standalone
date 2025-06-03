@@ -42,7 +42,7 @@
     "crypto-js": "4.2.0"
   },
   "dependencies": {
-    "@besser/wme": "2.0.0"
+    "@besser/wme": "2.0.2"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.15.0",
