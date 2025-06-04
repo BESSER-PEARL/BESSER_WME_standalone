@@ -13,16 +13,16 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
       <Modal.Body>
         <Nav variant="tabs" className="mb-3">
           <Nav.Item>
-            <Nav.Link 
-              active={activePanel === 'class'} 
+            <Nav.Link
+              active={activePanel === 'class'}
               onClick={() => setActivePanel('class')}
             >
               Class Diagram
             </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link 
-              active={activePanel === 'agent'} 
+            <Nav.Link
+              active={activePanel === 'agent'}
               onClick={() => setActivePanel('agent')}
             >
               Agent Diagram
@@ -37,7 +37,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
                 <th>Add Class</th>
                 <td>
                   To add a class, simply drag and drop one of the elements on the left side into the editor area on the
-                  right side. 
+                  right side.
                 </td>
                 <td>
                   <img width="300" src="/images/help/help-create-element.png" alt="Image not found" />
@@ -49,7 +49,7 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
                   To add an association, select the source class with a single click and you will see blue circles.
                   Those are the possible connection points for associations. Click and hold on one of those and drag it to
                   another blue circle to create an association. Define multiplicity using the following format:
-                   1, 0..1, 0..*, 1..*, 2..4, etc. (Default is 1).
+                  1, 0..1, 0..*, 1..*, 2..4, etc. (Default is 1).
                 </td>
                 <td>
                   <img width="300" src="/images/help/help-create-relationship.jpg" alt="Image not found" />
@@ -58,16 +58,16 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
               <tr>
                 <th>Edit Class</th>
                 <td>
-                To edit a class, double-click on it to open a popup where you can modify its components, such as the name, 
-                attributes, and methods. For attributes, specify the type using formats like <code>+ attribute : 
-                  type</code>, <code>+ attribute</code>, or simply <code>attribute</code>, where the type can be a 
-                  primitive data type (int, float, str, bool, time, date, datetime, timedelta, or any) or a class/enum type. The default type is string. 
+                  To edit a class, double-click on it to open a popup where you can modify its components, such as the name,
+                  attributes, and methods. For attributes, specify the type using formats like <code>+ attribute :
+                    type</code>, <code>+ attribute</code>, or simply <code>attribute</code>, where the type can be a
+                  primitive data type (int, float, str, bool, time, date, datetime, timedelta, or any) or a class/enum type. The default type is string.
                   Visibility can be set using <code>+</code> (public), <code>-</code> (private), or <code>#</code> (protected),
                   with public as the default. For methods, specify the return type in a format like <code>+ notify(sms: str = 'message')</code>,
-                  which translates to a public method named <code>notify</code> with a parameter <code>sms</code> 
+                  which translates to a public method named <code>notify</code> with a parameter <code>sms</code>
                   of type <code>str</code> and a default value of <code>'message'</code>. Another example, <code>- findBook(title: str): Book</code>,
-                  represents a private method named <code>findBook</code> that takes a title parameter of type <code>str</code> and 
-                  returns a <code>Book</code>. A method without parameters, such as <code>validate()</code>, would be defined 
+                  represents a private method named <code>findBook</code> that takes a title parameter of type <code>str</code> and
+                  returns a <code>Book</code>. A method without parameters, such as <code>validate()</code>, would be defined
                   as public by default.
                 </td>
                 <td>
@@ -77,9 +77,9 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
               <tr>
                 <th>Edit Association or Generalization</th>
                 <td>
-                To edit an Association or Generalization, double-click on it to open a popup where you can modify its properties. You can change the
-                association type (Unidirectional, Bidirectional, Composition) or switch to Generalization. For associations, you can assign a name, set 
-                source and target end names, and modify the multiplicity at both ends.
+                  To edit an Association or Generalization, double-click on it to open a popup where you can modify its properties. You can change the
+                  association type (Unidirectional, Bidirectional, Composition) or switch to Generalization. For associations, you can assign a name, set
+                  source and target end names, and modify the multiplicity at both ends.
                 </td>
                 <td>
                   <img width="300" src="/images/help/help-update-asso.jpg" alt="Image not found" />
@@ -110,12 +110,12 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
               <tr>
                 <th>OCL Constraint</th>
                 <td>
-                You can add OCL constraints to a class diagram by dragging and dropping the OCL shape onto your canvas. 
-                Then, write the constraint using the format: <code>Context "class name" ... </code>. You can link 
-                the constraint to a class (dotted line). The syntax of each OCL constraint is validated when you click the Quality Check button. 
-                This feature is powered
-                by <a href="https://b-ocl-interpreter.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">B-OCL</a>, 
-                 our OCL interpreter.
+                  You can add OCL constraints to a class diagram by dragging and dropping the OCL shape onto your canvas.
+                  Then, write the constraint using the format: <code>Context "class name" ... </code>. You can link
+                  the constraint to a class (dotted line). The syntax of each OCL constraint is validated when you click the Quality Check button.
+                  This feature is powered
+                  by <a href="https://b-ocl-interpreter.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">B-OCL</a>,
+                  our OCL interpreter.
                 </td>
                 <td>
                   <img width="300" src="/images/help/help-ocl-constraint.png" alt="Image not found" />
@@ -124,11 +124,11 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
               <tr>
                 <th>Association Class</th>
                 <td>
-                  An Association Class is a model element that combines an association and a class. To create one, drag and drop the 
-                  Class shape onto the canvas. Then, link it to an existing association center point by dragging the dotted line from 
-                  the Class to the association. You can define attributes for the Association Class just like 
+                  An Association Class is a model element that combines an association and a class. To create one, drag and drop the
+                  Class shape onto the canvas. Then, link it to an existing association center point by dragging the dotted line from
+                  the Class to the association. You can define attributes for the Association Class just like
                   a regular class.
-                  Note: The Association Class is currently not supported by our code generators. 
+                  Note: The Association Class is currently not supported by our code generators.
                 </td>
                 <td>
                   <img width="300" src="/images/help/help-association-class.png" alt="Image not found" />
@@ -146,63 +146,81 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
           <table className="table">
             <tbody>
               <tr>
-                <th>Add Agent</th>
+                <th>Modeling BAF Agents</th>
                 <td>
-                  To add an agent, drag and drop the Agent element f
-                </td>
-                <td>
-                  <img width="300" src="/images/help/help-create-element.png" alt="Image not found" />
+                  Here, you will see how to model BAF agents using the agent diagram editor. The agent diagram follows a state-machine like structure, where each agent state defines the different states an agent can find itself in. The agent states are linked to bodies, which define the behavior of an agent at a specific state.
                 </td>
               </tr>
               <tr>
-                <th>Add Relationship</th>
+                <th>Add Agent State</th>
                 <td>
-                  To add a r
+                  To add an agent state, drag and drop the agent state element from the left panel onto the canvas.
                 </td>
                 <td>
-                  <img width="300" src="/images/help/help-create-relationship.jpg" alt="Image not found" />
+                  <img width="400" src="/images/help/agent/help-agent-state.png" alt="Image not found" />
                 </td>
               </tr>
               <tr>
-                <th>Edit Agent</th>
+                <th>Edit Agent State Body</th>
                 <td>
-                  Double-click on an age
-                  <ul>
-                    <li>Beliefs: what the agent knows about its environment</li>
+                  To edit the body of an agent state, double-click on the agent state element. This will open a popup where you can define the body of the agent state.
+                  In the agent diagram, you can define three types of actions: 
+                    <ul>
+                  <li>Text reply: simple reply messages which cause the agent to send a predefined text message to the user</li>
+                  <li> LLM reply: will forward the user message to a Large Language Model and let it take care of responding and </li>
+                <li> Python code will allow users to take care of defining the function to be executed when the state is reached using a python syntax</li>
+                </ul>
+                </td>
+              
+                <td>
+                  <img width="400" src="/images/help/agent/help-agent-body.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Add Transition between States</th>
+                <td>
+                 Click on the outer part of the agent state element and drag it to another agent state element to create a transition. For a given state, this will allow you to specify the possible transitions.
 
-                  </ul>
                 </td>
                 <td>
-                  <img width="300" src="/images/help/help-update-element.jpg" alt="Image not found" />
+                  <img width="400" src="/images/help/agent/help-agent-transition.png" alt="Image not found" />
                 </td>
               </tr>
               <tr>
-                <th>Edit Relationship</th>
+                <th>Set Transition Condition</th>
                 <td>
-                  Double-click on a relationship between a
+                  Double-click on a transition to open a popup where you can define the condition for the transition. The condition is a boolean expression that determines when the transition should occur. You can use the following elements in the condition:
                   <ul>
-                    <li>Communication protocol used</li>
+                    <li>When Intent Matched: transition when a specified intent is recognized</li>
+                    <li>When No Intent Matched: transition if no intent fits </li>
+                    <li>Variable Operation Matched: transition when stored user session variable fullfills criteria </li>
+                    <li>File Received: transition when a file is received </li>
+                    <li>Auto Transition: immediately transition </li>
                   </ul>
                 </td>
                 <td>
-                  <img width="300" src="/images/help/help-update-asso.jpg" alt="Image not found" />
+                  <img width="400" src="/images/help/agent/help-agent-transition-body.png" alt="Image not found" />
                 </td>
               </tr>
               <tr>
-                <th>Add </th>
+                <th>Set Initial State </th>
                 <td>
-                  Drag and 
+                  To define your starting agent state, connect the initial state element to the agent state you want to start with. The initial state is the first state the agent will enter when it is activated.
                 </td>
                 <td>
-                  <img width="300" src="/images/help/help-move-element.jpg" alt="Image not found" />
+                  <img width="400" src="/images/help/agent/help-agent-initial-state.png" alt="Image not found" />
                 </td>
               </tr>
               <tr>
-                <th>on</th>
-                <td colSpan={2}>
-                  Y Group ele
+                <th>Defining Intents</th>
+                <td>
+                  To define the intents your agent is supposed to recognize, drag and drop the intent element from the left panel onto the canvas. You can then double-click on the intent element to open a popup where you can define the intent name and its training sentences. The training sentences are the phrases that users might say to trigger this intent.
+                </td>
+                <td>
+                  <img width="400" src="/images/help/agent/help-agent-intent.png" alt="Image not found" />
                 </td>
               </tr>
+
               <tr>
                 <th>More info</th>
                 <td colSpan={2}>
