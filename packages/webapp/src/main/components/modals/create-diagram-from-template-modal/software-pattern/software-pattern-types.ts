@@ -5,6 +5,7 @@ export enum SoftwarePatternCategory {
   CREATIONAL = 'Creational',
   STRUCTURAL = 'Class Diagram',
   BEHAVIORAL = 'Behavioral',
+  AGENT = 'Agent Diagram',
 }
 
 export enum SoftwarePatternType {
@@ -17,6 +18,8 @@ export enum SoftwarePatternType {
   OBSERVER = 'Observer',
   // Creational patterns
   FACTORY = 'Factory',
+  // Agent patterns
+  GREET_AGENT = 'Greeting Agent',
 }
 
 export class SoftwarePatternTemplate extends Template {

@@ -58,7 +58,6 @@ export const CreateFromSoftwarePatternModalTab: React.FC<Props> = ({ selectedTem
       setSelectedPatternCategory(patternCategory);
     }
   };
-
   return (
     <Tabs
       className="flex-row"
@@ -68,6 +67,7 @@ export const CreateFromSoftwarePatternModalTab: React.FC<Props> = ({ selectedTem
       {patternTabComponentForCategory(allPatterns, SoftwarePatternCategory.STRUCTURAL, selectedTemplate, selectPattern)}
       {/* {patternTabComponentForCategory(allPatterns, SoftwarePatternCategory.BEHAVIORAL, selectedTemplate, selectPattern)}
       {patternTabComponentForCategory(allPatterns, SoftwarePatternCategory.CREATIONAL, selectedTemplate, selectPattern)} */}
+      {patternTabComponentForCategory(allPatterns, SoftwarePatternCategory.AGENT, selectedTemplate, selectPattern)}
     </Tabs>
   );
 };

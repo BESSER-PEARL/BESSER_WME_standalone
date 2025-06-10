@@ -39,9 +39,17 @@ export const useBumlImport = () => {
         }
 
       const data = await response.json();
-      const modelType = data.model.type === 'StateMachineDiagram' ? 
-        UMLDiagramType.StateMachineDiagram :// UMLDiagramType.StateMachineDiagram : 
-        UMLDiagramType.ClassDiagram;
+      let modelType: UMLDiagramType;
+      switch (data.model.type) {
+        case 'StateMachineDiagram':
+          modelType = UMLDiagramType.StateMachineDiagram;
+          break;
+        case 'AgentDiagram':
+          modelType = UMLDiagramType.AgentDiagram;
+          break;
+        default:
+          modelType = UMLDiagramType.ClassDiagram;
+}
       
       // Create template model with proper type
       const template: UMLModel = {

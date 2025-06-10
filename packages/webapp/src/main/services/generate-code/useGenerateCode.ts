@@ -121,6 +121,8 @@ function getFilenameForGenerator(generatorType: string): string {
     case 'backend':
     case 'java':
       return `${generatorType}_output.zip`;
+    case 'agent':
+      return 'agent_code.zip';
     default:
       return 'generated_code.txt';
   }

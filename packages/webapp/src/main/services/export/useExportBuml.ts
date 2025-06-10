@@ -61,7 +61,7 @@ export const useExportBUML = () => {
         }
 
         const blob = await response.blob();
-        const filename = 'domain_model.py';
+        const filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
 
         downloadFile({ file: blob, filename });
         toast.success('BUML export completed successfully');

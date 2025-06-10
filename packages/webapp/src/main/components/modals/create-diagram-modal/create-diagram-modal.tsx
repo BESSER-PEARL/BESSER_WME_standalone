@@ -13,6 +13,7 @@ const diagramsInBeta: string[] = ['BPMN'];
 const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   ClassDiagram: 'Class Diagram',
   StateMachineDiagram: 'State Machine Diagram',
+  AgentDiagram: 'Agent Diagram',
   ObjectDiagram: 'Object Diagram',
   ActivityDiagram: 'Activity Diagram',
   UseCaseDiagram: 'Use Case Diagram',
