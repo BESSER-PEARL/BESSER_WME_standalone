@@ -14,6 +14,7 @@ import { showModal } from '../../services/modal/modalSlice';
 import { LayoutTextSidebarReverse, Github, Share } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
+import { ClassDiagramImporter } from './menues/class-diagram-importer';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
 import { checkOclConstraints } from '../../services/validation/checkOCL';
 import { UMLDiagramType } from '@besser/wme';
@@ -166,6 +167,7 @@ export const ApplicationBar: React.FC = () => {
           <Nav className="me-auto">
             <FileMenu />
             <DiagramTypeSelector />
+            <ClassDiagramImporter />
             {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram) && (
               <>
                 <GenerateCodeMenu />

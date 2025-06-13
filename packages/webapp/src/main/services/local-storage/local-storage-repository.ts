@@ -108,6 +108,11 @@ export const LocalStorageRepository = {
       return JSON.parse(stored);
     }
     return null;
+  },
+
+  removeDiagramByType: (type: UMLDiagramType) => {
+    const key = `${localStorageDiagramPrefix}type_${type}`;
+    localStorage.removeItem(key);
   }
 };
 
