@@ -1,16 +1,28 @@
 import { useCallback } from 'react';
-import { ApollonEditor } from '@besser/wme';
+import { ApollonEditor, diagramBridge } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { Diagram } from '../diagram/diagramSlice';
 
 export const useExportJSON = () => {
   const downloadFile = useFileDownload();
-
   const exportJSON = useCallback(
     (editor: ApollonEditor, diagram: Diagram) => {
       const fileName = `${diagram.title}.json`;
       const diagramData: Diagram = { ...diagram, model: editor.model };
-      const jsonContent = JSON.stringify(diagramData);
+      
+      // If it's an ObjectDiagram, include the class diagram data
+      if (editor.model.type === 'ObjectDiagram') {
+        const classDiagramData = diagramBridge.getClassDiagramData();
+        if (classDiagramData) {
+          // Add the class diagram data as a property to the model
+          diagramData.model = {
+            ...editor.model,
+            referenceDiagramData: classDiagramData
+          };
+        }
+      }
+      
+      const jsonContent = JSON.stringify(diagramData, null, 2);
 
       const fileToDownload = new File([jsonContent], fileName, { type: 'application/json' });
 
