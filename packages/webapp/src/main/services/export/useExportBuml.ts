@@ -96,7 +96,7 @@ export const useExportBUML = () => {
         } else {
           // Default filename based on diagram type
           if (editor.model.type === 'ObjectDiagram') {
-            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}_complete_model.py`;
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}_object.py`;
           } else {
             filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
           }
