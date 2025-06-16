@@ -1,9 +1,6 @@
 // webpack environment constants
 export const APPLICATION_SERVER_VERSION = process.env.APPLICATION_SERVER_VERSION;
 export const DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
-// Debug logs
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('BACKEND_URL from env:', process.env.BACKEND_URL);
 export const BACKEND_URL = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:9000/besser_api' 
   : process.env.BACKEND_URL;
