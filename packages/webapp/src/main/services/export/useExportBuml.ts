@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
-import { ApollonEditor } from '@besser/wme';
+import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
+import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 
 
 export const useExportBUML = () => {
@@ -23,17 +24,37 @@ export const useExportBUML = () => {
         console.error('No editor or model available'); // Debug log
         toast.error('No diagram to export');
         return;
-      }
+      }      
+      try {        // Prepare the model data - include referenceDiagramData for ObjectDiagrams
+        let modelData = editor.model;
+        
+        // If it's an ObjectDiagram, include the class diagram data
+        if (editor.model.type === 'ObjectDiagram') {
+          const classDiagramData = diagramBridge.getClassDiagramData();
+          if (classDiagramData) {
+            // Try to get the class diagram title from localStorage
+            const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
+            const classDiagramTitle = classDiagram?.title || 'Class Diagram';
+            
+            // Add the class diagram data and title as referenceDiagramData to the model
+            modelData = {
+              ...editor.model,
+              referenceDiagramData: {
+                ...classDiagramData,
+                title: classDiagramTitle
+              }
+            };
+          }
+        }
 
-      try {
         const response = await fetch(`${BACKEND_URL}/export-buml`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json, text/plain, */*',
+            'Accept': 'application/json, text/plain, application/zip, */*',
           },
           body: JSON.stringify({
-            elements: editor.model,
+            elements: modelData,
             generator: 'buml',
             diagramTitle: diagramTitle
           }),
@@ -58,10 +79,28 @@ export const useExportBUML = () => {
           }
 
           throw new Error(`HTTP error! status: ${response.status}`);
+        }        const blob = await response.blob();
+        
+        // Extract filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename: string;
+        
+        if (contentDisposition) {
+          // Extract filename from Content-Disposition header
+          const filenameMatch = contentDisposition.match(/filename=([^;]+)/);
+          if (filenameMatch) {
+            filename = filenameMatch[1].replace(/"/g, ''); // Remove quotes if present
+          } else {
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
+          }
+        } else {
+          // Default filename based on diagram type
+          if (editor.model.type === 'ObjectDiagram') {
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}_complete_model.py`;
+          } else {
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
+          }
         }
-
-        const blob = await response.blob();
-        const filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
 
         downloadFile({ file: blob, filename });
         toast.success('BUML export completed successfully');

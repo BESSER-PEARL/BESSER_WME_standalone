@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import { ApollonEditor, diagramBridge } from '@besser/wme';
+import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { Diagram } from '../diagram/diagramSlice';
+import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 
 export const useExportJSON = () => {
   const downloadFile = useFileDownload();
@@ -14,10 +15,17 @@ export const useExportJSON = () => {
       if (editor.model.type === 'ObjectDiagram') {
         const classDiagramData = diagramBridge.getClassDiagramData();
         if (classDiagramData) {
-          // Add the class diagram data as a property to the model
+          // Try to get the class diagram title from localStorage
+          const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
+          const classDiagramTitle = classDiagram?.title || 'Class Diagram';
+          
+          // Add the class diagram data and title as a property to the model
           diagramData.model = {
             ...editor.model,
-            referenceDiagramData: classDiagramData
+            referenceDiagramData: {
+              ...classDiagramData,
+              title: classDiagramTitle
+            }
           };
         }
       }
