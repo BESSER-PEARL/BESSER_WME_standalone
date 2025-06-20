@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState, useContext } from 'react';
 import { Nav, Navbar } from 'react-bootstrap';
 import { FileMenu } from './menues/file-menu';
 import { HelpMenu } from './menues/help-menu';
@@ -24,6 +24,7 @@ import { DiagramView } from 'shared';
 import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor-context';
 
 const DiagramTitle = styled.input`
   font-size: x-large;
@@ -53,6 +54,8 @@ export const ApplicationBar: React.FC = () => {
   const tokenInUrl = urlPath.substring(1); // This removes the leading "/"
   const currentType = useAppSelector((state) => state.diagram.editorOptions.type);
   const navigate = useNavigate();
+  const apollonEditor = useContext(ApollonEditorContext);
+  const editor = apollonEditor?.editor;
 
   useEffect(() => {
     if (diagram?.title) {
@@ -73,10 +76,9 @@ export const ApplicationBar: React.FC = () => {
   const handleOpenModal = () => {
     dispatch(showModal({ type: ModalContentType.ShareModal, size: 'lg' }));
   };
-
   const handleOclCheck = async () => {
-    if (diagram) {
-      await checkOclConstraints(diagram);
+    if (editor) {
+      await checkOclConstraints(editor, diagram.title);
     }
   };
 
@@ -168,7 +170,7 @@ export const ApplicationBar: React.FC = () => {
             <FileMenu />
             <DiagramTypeSelector />
             <ClassDiagramImporter />
-            {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram) && (
+            {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram || currentType === UMLDiagramType.ObjectDiagram ) && (
               <>
                 <GenerateCodeMenu />
                 {APPLICATION_SERVER_VERSION && (
