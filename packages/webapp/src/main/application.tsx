@@ -13,6 +13,10 @@ import { PostHogProvider } from 'posthog-js/react';
 import { ApplicationStore } from './components/store/application-store';
 import { ApollonEditorComponentWithConnection } from './components/apollon-editor-component/ApollonEditorComponentWithConnection';
 import { VersionManagementSidebar } from './components/version-management-sidebar/VersionManagementSidebar';
+import { SidebarLayout } from './components/sidebar/SidebarLayout';
+import { HomePage } from './components/home/HomePage';
+import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
+import { TeamPage } from './components/team/TeamPage';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
@@ -35,8 +39,40 @@ export function RoutedApplication() {
             <VersionManagementSidebar />
             {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
             <Routes>
-              <Route path={'/:token'} element={<ApollonEditorComponentWithConnection />} />
-              <Route path={'/'} element={<ApollonEditorComponent />} />
+              {/* Collaboration route with token */}
+              <Route 
+                path="/:token" 
+                element={
+                  // <SidebarLayout>  No collaboration support yet
+                    <ApollonEditorComponentWithConnection />
+                  // </SidebarLayout>
+                } 
+              />
+              
+              {/* Main editor route */}
+              <Route 
+                path="/editor" 
+                element={
+                  <SidebarLayout>
+                    <ApollonEditorComponent />
+                  </SidebarLayout>
+                } 
+              />
+                {/* Project settings route */}
+              <Route 
+                path="/project-settings" 
+                element={
+                  <SidebarLayout>
+                    <ProjectSettingsScreen />
+                  </SidebarLayout>
+                } 
+              />
+              
+              {/* Team page route */}
+              <Route path="/teampage" element={<TeamPage />} />
+              
+              {/* Home route */}
+              <Route path="/" element={<HomePage />} />
             </Routes>
             <ErrorPanel />
             <ToastContainer />

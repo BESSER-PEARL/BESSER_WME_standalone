@@ -12,12 +12,15 @@ export const NO_HTTP_URL = DEPLOYMENT_URL?.split('//')[1] || '';
 export const WS_PROTOCOL = DEPLOYMENT_URL?.startsWith('https') ? 'wss' : 'ws';
 
 // prefixes
-export const localStoragePrefix = 'apollon_';
+export const localStoragePrefix = 'besser_';
 export const localStorageDiagramPrefix = localStoragePrefix + 'diagram_';
+export const localStorageProjectPrefix = localStoragePrefix + 'project_';
 
 // keys
 export const localStorageDiagramsList = localStoragePrefix + 'diagrams';
+export const localStorageProjectsList = localStoragePrefix + 'projects';
 export const localStorageLatest = localStoragePrefix + 'latest';
+export const localStorageLatestProject = localStoragePrefix + 'latest_project';
 export const localStorageCollaborationName = localStoragePrefix + 'collaborationName';
 export const localStorageCollaborationColor = localStoragePrefix + 'collaborationColor';
 export const localStorageUserThemePreference = localStoragePrefix + 'userThemePreference';

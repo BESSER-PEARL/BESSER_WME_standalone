@@ -23,7 +23,7 @@ import { displayError } from '../../services/error-management/errorManagementSli
 import { DiagramView } from 'shared';
 import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor-context';
 
 const DiagramTitle = styled.input`
@@ -56,6 +56,8 @@ export const ApplicationBar: React.FC = () => {
   const navigate = useNavigate();
   const apollonEditor = useContext(ApollonEditorContext);
   const editor = apollonEditor?.editor;
+  const location = useLocation();
+  const isHome = location.pathname === '/' || location.pathname === '/teampage' || location.pathname === '/project-settings';
 
   useEffect(() => {
     if (diagram?.title) {
@@ -155,50 +157,58 @@ export const ApplicationBar: React.FC = () => {
       );
       console.error(error);
     }
-  };
-
-  return (
+  };  return (
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
-        <Navbar.Brand href="https://besser-pearl.org" target="_blank" rel="noopener noreferrer">
+        <Navbar.Brand as={Link} to="/">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
         </Navbar.Brand>
         {/* <ApplicationVersion>{appVersion}</ApplicationVersion> */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <FileMenu />
-            <DiagramTypeSelector />
-            <ClassDiagramImporter />
-            {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram || currentType === UMLDiagramType.ObjectDiagram ) && (
+            {/* Only show these menus if NOT on home */}
+            {!isHome && (
               <>
-                <GenerateCodeMenu />
-                {APPLICATION_SERVER_VERSION && (
-                  <Nav.Item>
-                    <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
-                  </Nav.Item>
+                <FileMenu />
+                {/* <DiagramTypeSelector /> Switched to sidebar */}
+                <ClassDiagramImporter />
+                {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram || currentType === UMLDiagramType.ObjectDiagram ) && (
+                  <>
+                    <GenerateCodeMenu />
+                    {APPLICATION_SERVER_VERSION && (
+                      <Nav.Item>
+                        <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
+                      </Nav.Item>
+                    )}
+                  </>
                 )}
+                {APPLICATION_SERVER_VERSION && (
+                  <>
+                    {/* <Nav.Item>
+                      <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
+                    </Nav.Item> */}
+                    <Nav.Item>
+                      <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
+                        Save & Share
+                      </Nav.Link>
+                    </Nav.Item>
+                  </>
+                )}
+                <HelpMenu />
+                <DiagramTitle
+                  type="text"
+                  value={diagramTitle}
+                  onChange={changeDiagramTitlePreview}
+                  onBlur={changeDiagramTitleApplicationState}
+                />
               </>
             )}
-            {APPLICATION_SERVER_VERSION && (
-              <>
-                {/* <Nav.Item>
-                  <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
-                </Nav.Item> */}
-                <Nav.Item>
-                  <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
-                    Save & Share
-                  </Nav.Link>
-                </Nav.Item>
-              </>
+            {isHome && (
+              <Nav.Item>
+                <Nav.Link as={Link} to="/teampage">Team</Nav.Link>
+              </Nav.Item>
             )}
-            <HelpMenu />
-            <DiagramTitle
-              type="text"
-              value={diagramTitle}
-              onChange={changeDiagramTitlePreview}
-              onBlur={changeDiagramTitleApplicationState}
-            />
           </Nav>
         </Navbar.Collapse>
         <Nav.Item className="me-3">

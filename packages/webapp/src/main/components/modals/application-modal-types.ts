@@ -6,6 +6,8 @@ export const ModalContentType = {
   InformationModal: 'InformationModal',
   LoadDiagramModal: 'LoadDiagramModal',
   CreateDiagramModal: 'CreateDiagramModal',
+  CreateProjectModal: 'CreateProjectModal',
+  ImportProjectModal: 'ImportProjectModal',
   CreateDiagramFromTemplateModal: 'CreateDiagramFromTemplateModal',
   ShareModal: 'ShareModal',
   CollaborationModal: 'CollaborationModal',

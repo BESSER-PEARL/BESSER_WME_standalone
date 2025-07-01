@@ -41,8 +41,9 @@ const behavioralDiagrams = [
 
 const structuralDiagrams = [
   'ClassDiagram',
+  'ObjectDiagram',
   'StateMachineDiagram',
-  // 'ObjectDiagram',
+  'AgentDiagram',
   // 'ComponentDiagram',
   // 'DeploymentDiagram',
   // 'Flowchart',
@@ -64,7 +65,7 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
       title,
       type: selectedDiagramType,
     });
-    navigate('/');
+    navigate('/editor');
 
     close();
   };

@@ -38,7 +38,7 @@ export const useImportDiagram = () => {
       }
 
       dispatch(loadDiagram(diagram));
-      navigate('/', { relative: 'path' });
+      navigate('/editor', { relative: 'path' });
     } catch {
       dispatch(
         displayError('Import failed', 'Could not import selected file. Are you sure it contains a diagram.json?'),

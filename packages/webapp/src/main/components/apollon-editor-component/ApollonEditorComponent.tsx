@@ -11,8 +11,11 @@ import { selectPreviewedDiagramIndex } from '../../services/version-management/v
 const ApollonContainer = styled.div`
   display: flex;
   flex-direction: column;
-  flex-grow: 2;
+  flex-grow: 1;
   overflow: hidden;
+  width: 100%;
+  height: calc(100vh - 60px);
+  background-color: var(--apollon-background, #ffffff);
 `;
 
 export const ApollonEditorComponent: React.FC = () => {

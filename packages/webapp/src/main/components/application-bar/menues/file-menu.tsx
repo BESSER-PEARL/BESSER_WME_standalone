@@ -70,10 +70,13 @@ export const FileMenu: React.FC = () => {
         Start from Template
       </NavDropdown.Item>
       <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.LoadDiagramModal }))}>
-        Load
+        Load Diagram
       </NavDropdown.Item>
       <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.ImportDiagramModal }))}>
-        Import
+        Import Diagram
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.ImportProjectModal }))}>
+        Import Project
       </NavDropdown.Item>
       <Dropdown id="export-dropdown" drop="end">
         <Dropdown.Toggle

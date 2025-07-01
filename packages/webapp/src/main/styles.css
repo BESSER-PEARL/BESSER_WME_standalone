@@ -164,7 +164,8 @@ legend.scheduler-border {
 
 .list-group-item {
   background-color: var(--apollon-list-group-color);
-  color: var(--apollon-background-inverse);
+  border-color: var(--apollon-switch-box-border-color);
+  color: var(--apollon-primary-contrast);
 }
 
 .list-group-item:hover {
@@ -278,4 +279,48 @@ input:checked + .slider:before {
 .navbar {
   background-color: rgb(52, 58, 64);
   padding: 0.5rem 1rem;
+}
+
+/* Enhanced dark mode support for forms and components */
+.form-control {
+  background-color: var(--apollon-background);
+  border-color: var(--apollon-switch-box-border-color);
+  color: var(--apollon-primary-contrast);
+}
+
+.form-control:focus {
+  background-color: var(--apollon-background);
+  border-color: var(--apollon-primary);
+  color: var(--apollon-primary-contrast);
+  box-shadow: 0 0 0 0.2rem rgba(var(--apollon-primary), 0.25);
+}
+
+.form-select {
+  background-color: var(--apollon-background);
+  border-color: var(--apollon-switch-box-border-color);
+  color: var(--apollon-primary-contrast);
+}
+
+.form-select:focus {
+  background-color: var(--apollon-background);
+  border-color: var(--apollon-primary);
+  color: var(--apollon-primary-contrast);
+}
+
+.form-label {
+  color: var(--apollon-primary-contrast);
+}
+
+.text-muted {
+  color: var(--apollon-secondary) !important;
+}
+
+.bg-light {
+  background-color: var(--apollon-background-variant) !important;
+}
+
+
+/* Ensure proper theming for badges */
+.badge {
+  color: white;
 }

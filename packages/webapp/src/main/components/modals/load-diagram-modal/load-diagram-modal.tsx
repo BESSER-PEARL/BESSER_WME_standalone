@@ -27,7 +27,7 @@ export const LoadDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
     if (loadedDiagram && loadedDiagram.model && editorContext?.editor) {
       dispatch(loadDiagram(loadedDiagram));
       dispatch(setPreviewedDiagramIndex(-1));
-      navigate('/', { relative: 'path' });
+      navigate('/editor', { relative: 'path' });
     }
     close();
   };
