@@ -20,6 +20,7 @@ import {
   FileText,
   Tag
 } from 'react-bootstrap-icons';
+import { saveProjectToLocalStorage } from '../../../utils/localStorage';
 
 // Project type definition
 export interface BesserProject {
@@ -37,15 +38,6 @@ export interface BesserProject {
   };
 }
 
-
-// Utility functions for localStorage
-const PROJECT_STORAGE_PREFIX = 'besser_project_';
-const LATEST_PROJECT_KEY = 'besser_latest_project';
-
-const saveProjectToLocalStorage = (project: BesserProject) => {
-  localStorage.setItem(`${PROJECT_STORAGE_PREFIX}${project.id}`, JSON.stringify(project));
-  localStorage.setItem(LATEST_PROJECT_KEY, project.id);
-};
 
 const getBlankModel = (type: UMLDiagramType) => ({
   version: '3.0.0' as const,

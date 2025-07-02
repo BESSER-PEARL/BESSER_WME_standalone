@@ -7,6 +7,7 @@ import { UMLDiagramType } from '@besser/wme';
 import { BesserProject } from '../modals/create-project-modal/CreateProjectModal';
 import { exportProjectById } from '../../services/export/useExportProjectJSON';
 import { exportProjectAsBUMLZip } from '../../services/export/useExportProjectBUML';
+import { saveProjectToLocalStorage } from '../../utils/localStorage';
 
 const PageContainer = styled.div`
   padding: 40px 20px;
@@ -95,11 +96,6 @@ const getLastProjectFromLocalStorage = (): BesserProject | null => {
     }
   }
   return null;
-};
-
-const saveProjectToLocalStorage = (project: BesserProject) => {
-  localStorage.setItem(`besser_project_${project.id}`, JSON.stringify(project));
-  localStorage.setItem('besser_latest_project', project.id);
 };
 
 const exportProjectAsJson = (project: BesserProject) => {
