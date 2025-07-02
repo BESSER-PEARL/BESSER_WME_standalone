@@ -19,7 +19,7 @@ import {
 import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { getLastProjectFromLocalStorage, saveProjectToLocalStorage } from '../../utils/localStorage';
+import { getLastProjectFromLocalStorage, saveProjectToLocalStorage, isInProjectContext } from '../../utils/localStorage';
 import { uuid } from '../../utils/uuid';
 
 const SidebarContainer = styled.div`
@@ -107,9 +107,9 @@ export const DiagramTypeSidebar: React.FC = () => {
   const location = useLocation();
   const pendingDiagramAdd = useRef<boolean>(false);
 
-  // Watch for new diagram creation and add to project
+  // Watch for new diagram creation and add to project (only if in project context)
   useEffect(() => {
-    if (pendingDiagramAdd.current && currentDiagram && currentDiagram.id) {
+    if (pendingDiagramAdd.current && currentDiagram && currentDiagram.id && isInProjectContext()) {
       const currentProject = getLastProjectFromLocalStorage();
       if (currentProject && !currentProject.models.includes(currentDiagram.id)) {
         // Add the new diagram ID to the project's models array
@@ -121,7 +121,19 @@ export const DiagramTypeSidebar: React.FC = () => {
         // Save the updated project
         saveProjectToLocalStorage(updatedProject);
       }
+    }
+    
+    // Reset the flag regardless
+    if (pendingDiagramAdd.current) {
       pendingDiagramAdd.current = false;
+    }
+  }, [currentDiagram]);
+
+  // Save diagram changes when in project context
+  useEffect(() => {
+    if (currentDiagram && currentDiagram.model && isInProjectContext()) {
+      // Auto-save the current diagram when it changes and we're in project context
+      LocalStorageRepository.storeDiagram(currentDiagram);
     }
   }, [currentDiagram]);
 
@@ -140,8 +152,8 @@ export const DiagramTypeSidebar: React.FC = () => {
     const diagramType = item.type as UMLDiagramType;
     
     // If we're not on the editor page, navigate there first
-    if (location.pathname !== '/editor') {
-      navigate('/editor');
+    if (location.pathname !== '/') {
+      navigate('/');
     }
 
     // If it's the same type, don't do anything
@@ -151,7 +163,11 @@ export const DiagramTypeSidebar: React.FC = () => {
 
     // Save current diagram if it exists
     if (currentDiagram && currentDiagram.model) {
-      LocalStorageRepository.storeDiagramByType(currentType, currentDiagram);
+      // Only save by type if we're NOT in project context
+      // In project context, diagrams are saved individually and managed by the project
+      if (!isInProjectContext()) {
+        LocalStorageRepository.storeDiagramByType(currentType, currentDiagram);
+      }
       
       // Object Diagram Bridge Service
       // If we're switching FROM a class diagram, update the bridge service
@@ -164,7 +180,33 @@ export const DiagramTypeSidebar: React.FC = () => {
     if (diagramType === UMLDiagramType.ObjectDiagram) {
       // Try to get the latest class diagram data if bridge doesn't have it
       if (!diagramBridge.hasClassDiagramData()) {
-        const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
+        let classDiagram = null;
+        
+        if (isInProjectContext()) {
+          // In project context, look for class diagram within the project
+          const project = getLastProjectFromLocalStorage();
+          if (project && Array.isArray(project.models)) {
+            const allDiagrams = project.models
+              .map((id: string) => {
+                const diagramData = localStorage.getItem(`besser_diagram_${id}`);
+                if (diagramData) {
+                  try {
+                    return JSON.parse(diagramData);
+                  } catch {
+                    return null;
+                  }
+                }
+                return null;
+              })
+              .filter(Boolean);
+            
+            classDiagram = allDiagrams.find((d: any) => d.model?.type === UMLDiagramType.ClassDiagram);
+          }
+        } else {
+          // In standalone mode, use type-based storage
+          classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
+        }
+        
         if (classDiagram && classDiagram.model) {
           diagramBridge.setClassDiagramData(classDiagram.model);
         }
@@ -172,26 +214,34 @@ export const DiagramTypeSidebar: React.FC = () => {
     }
 
     // Try to load existing diagram of the selected type
-    const project = getLastProjectFromLocalStorage();
     let diagramToLoad = null;
 
-    if (project && Array.isArray(project.models)) {
-      // Find diagrams from the current project
-      const allDiagrams = project.models
-        .map((id: string) => {
-          const diagramData = localStorage.getItem(`besser_diagram_${id}`);
-          if (diagramData) {
-            try {
-              return JSON.parse(diagramData);
-            } catch {
-              return null;
+    // Check if we're in project context
+    if (isInProjectContext()) {
+      // We're in project mode - look for diagrams within the current project
+      const project = getLastProjectFromLocalStorage();
+      
+      if (project && Array.isArray(project.models)) {
+        // Find diagrams from the current project
+        const allDiagrams = project.models
+          .map((id: string) => {
+            const diagramData = localStorage.getItem(`besser_diagram_${id}`);
+            if (diagramData) {
+              try {
+                return JSON.parse(diagramData);
+              } catch {
+                return null;
+              }
             }
-          }
-          return null;
-        })
-        .filter(Boolean);
+            return null;
+          })
+          .filter(Boolean);
 
-      diagramToLoad = allDiagrams.find((d: any) => d.model?.type === diagramType);
+        diagramToLoad = allDiagrams.find((d: any) => d.model?.type === diagramType);
+      }
+    } else {
+      // We're in standalone mode - look for diagrams by type
+      diagramToLoad = LocalStorageRepository.loadDiagramByType(diagramType);
     }
 
     if (diagramToLoad) {

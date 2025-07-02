@@ -123,7 +123,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       
       // Navigate to the project
       close();
-      navigate('/editor');
+      navigate('/');
       
     } catch (error) {
       console.error('Import error:', error);

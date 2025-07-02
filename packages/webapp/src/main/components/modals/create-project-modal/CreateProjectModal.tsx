@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../store/hooks';
 import { uuid } from '../../../utils/uuid';
 import { UMLDiagramType } from '@besser/wme';
-import { createDiagram, Diagram } from '../../../services/diagram/diagramSlice';
+import { createDiagram, loadDiagram, Diagram } from '../../../services/diagram/diagramSlice';
 import { LocalStorageRepository } from '../../../services/local-storage/local-storage-repository';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
@@ -20,7 +20,7 @@ import {
   FileText,
   Tag
 } from 'react-bootstrap-icons';
-import { saveProjectToLocalStorage } from '../../../utils/localStorage';
+import { saveProjectToLocalStorage, setProjectContext } from '../../../utils/localStorage';
 
 // Project type definition
 export interface BesserProject {
@@ -143,16 +143,22 @@ export const CreateProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       };
 
       saveProjectToLocalStorage(project);
+      
+      // Set project context
+      setProjectContext(projectId);
 
-      // Create the first diagram in the editor
-      dispatch(createDiagram({
-        title: `New ${formData.defaultDiagramType}`,
-        diagramType: formData.defaultDiagramType,
-      }));
+      // Load the first diagram in the editor (the one we just created)
+      // Find the diagram we just created and stored
+      const firstDiagramId = diagramIds[0];
+      const diagramData = localStorage.getItem(`besser_diagram_${firstDiagramId}`);
+      if (diagramData) {
+        const diagram = JSON.parse(diagramData);
+        dispatch(loadDiagram(diagram));
+      }
 
       toast.success(`Project "${formData.name}" created successfully!`);
       close();
-      navigate('/editor');
+      navigate('/');
       
     } catch (error) {
       console.error('Error creating project:', error);

@@ -12,7 +12,8 @@ export const setTheme = (theming: string) => {
 
 export const toggleTheme = () => {
   let themePreference = LocalStorageRepository.getUserThemePreference();
-  if (!themePreference) themePreference = LocalStorageRepository.getSystemThemePreference();
+  // if (!themePreference) themePreference = LocalStorageRepository.getSystemThemePreference();
+  if (!themePreference) themePreference = 'light';
 
   switch (themePreference) {
     case 'dark':

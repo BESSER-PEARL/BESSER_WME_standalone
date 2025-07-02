@@ -11,7 +11,7 @@ import { ConnectClientsComponent } from './connected-clients-component';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setCreateNewEditor, setDisplayUnpublishedVersion, updateDiagramThunk } from '../../services/diagram/diagramSlice';
 import { showModal } from '../../services/modal/modalSlice';
-import { LayoutTextSidebarReverse, Github, Share } from 'react-bootstrap-icons';
+import { LayoutTextSidebarReverse, Github, Share, House } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
 import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 import { ClassDiagramImporter } from './menues/class-diagram-importer';
@@ -27,17 +27,28 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor-context';
 
 const DiagramTitle = styled.input`
-  font-size: x-large;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   color: #fff;
-  background-color: transparent;
-  border: none;
-`;
-
-const ApplicationVersion = styled.span`
-  font-size: small;
-  color: #ccc;
-  margin-right: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: all 0.3s ease;
+  max-width: 200px;
+  min-width: 120px;
+  
+  &:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
 `;
 
 const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
@@ -45,7 +56,7 @@ const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
   margin-right: ${(props) => (props.$isSidebarOpen ? '250px' : '0')}; /* Adjust based on sidebar width */
 `;
 
-export const ApplicationBar: React.FC = () => {
+export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHome }) => {
   const dispatch = useAppDispatch();
   const { diagram } = useAppSelector((state) => state.diagram);
   const [diagramTitle, setDiagramTitle] = useState<string>(diagram?.title || '');
@@ -57,7 +68,7 @@ export const ApplicationBar: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
   const editor = apollonEditor?.editor;
   const location = useLocation();
-  const isHome = location.pathname === '/' || location.pathname === '/teampage' || location.pathname === '/project-settings';
+  const isHome = location.pathname === '/teampage' || location.pathname === '/project-settings';
 
   useEffect(() => {
     if (diagram?.title) {
@@ -201,6 +212,7 @@ export const ApplicationBar: React.FC = () => {
                   value={diagramTitle}
                   onChange={changeDiagramTitlePreview}
                   onBlur={changeDiagramTitleApplicationState}
+                  placeholder="Diagram Title"
                 />
               </>
             )}
@@ -213,9 +225,17 @@ export const ApplicationBar: React.FC = () => {
         </Navbar.Collapse>
         <Nav.Item className="me-3">
           <Nav.Link onClick={openGitHubRepo} title="View on GitHub">
-            <Github size={20} color="#FFF" />
+            <Github size={20} />
           </Nav.Link>
         </Nav.Item>
+        {/* Home button - only show when not on home/team/project-settings pages */}
+        {!isHome && onOpenHome && (
+          <Nav.Item className="me-3">
+            <Nav.Link onClick={onOpenHome} title="Home">
+              <House size={20} />
+            </Nav.Link>
+          </Nav.Item>
+        )}
         {tokenInUrl && <ConnectClientsComponent />}
         <ThemeSwitcherMenu />
       </Navbar>

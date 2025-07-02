@@ -113,3 +113,40 @@ export const getLastProjectFromLocalStorage = (): BesserProject | null => {
   const allProjects = getAllProjectsFromLocalStorage();
   return allProjects.length > 0 ? allProjects[0] : null;
 };
+
+// Check if we're currently in a project context
+// This checks if the current diagram belongs to the latest project
+export const isInProjectContext = (): boolean => {
+  const latestDiagram = getDiagramFromLocalStorage();
+  const latestProject = getLastProjectFromLocalStorage();
+  
+  if (!latestDiagram || !latestProject) {
+    return false;
+  }
+  
+  // Check if the current diagram ID is in the project's models array
+  return latestProject.models?.includes(latestDiagram.id) || false;
+};
+
+// Clear project context (when creating standalone diagrams)
+export const clearProjectContext = () => {
+  localStorage.removeItem(localStorageLatestProject);
+};
+
+// Set project context (when working with a project)
+export const setProjectContext = (projectId: string) => {
+  localStorage.setItem(localStorageLatestProject, projectId);
+  
+  // Clear any type-based diagram storage to avoid conflicts
+  clearTypeDiagramStorage();
+};
+
+// Clear type-based diagram storage to avoid conflicts with project diagrams
+export const clearTypeDiagramStorage = () => {
+  const diagramTypes = ['ClassDiagram', 'ObjectDiagram', 'StateMachineDiagram', 'AgentDiagram'];
+  
+  diagramTypes.forEach(type => {
+    const key = `${localStorageDiagramPrefix}type_${type}`;
+    localStorage.removeItem(key);
+  });
+};

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ApplicationBar } from './components/application-bar/application-bar';
 import { ApollonEditorComponent } from './components/apollon-editor-component/ApollonEditorComponent';
 import { ApollonEditor } from '@besser/wme';
@@ -6,7 +6,7 @@ import { POSTHOG_HOST, POSTHOG_KEY } from './constant';
 import { ApollonEditorProvider } from './components/apollon-editor-component/apollon-editor-context';
 import { FirefoxIncompatibilityHint } from './components/incompatability-hints/firefox-incompatibility-hint';
 import { ErrorPanel } from './components/error-handling/error-panel';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { ApplicationModal } from './components/modals/application-modal';
 import { ToastContainer } from 'react-toastify';
 import { PostHogProvider } from 'posthog-js/react';
@@ -15,6 +15,7 @@ import { ApollonEditorComponentWithConnection } from './components/apollon-edito
 import { VersionManagementSidebar } from './components/version-management-sidebar/VersionManagementSidebar';
 import { SidebarLayout } from './components/sidebar/SidebarLayout';
 import { HomePage } from './components/home/HomePage';
+import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 
@@ -24,9 +25,19 @@ const postHogOptions = {
 
 export function RoutedApplication() {
   const [editor, setEditor] = useState<ApollonEditor>();
+  const [showHomeModal, setShowHomeModal] = useState(false);
+  
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
   };
+  
+  // Show home modal automatically when visiting root URL
+  useEffect(() => {
+    if (window.location.pathname === '/') {
+      setShowHomeModal(true);
+    }
+  }, []);
+  
   const isFirefox = useMemo(() => /Firefox/i.test(navigator.userAgent), []);
 
   return (
@@ -34,9 +45,14 @@ export function RoutedApplication() {
       <ApplicationStore>
         <BrowserRouter>
           <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
-            <ApplicationBar />
+            <ApplicationBar onOpenHome={() => setShowHomeModal(true)} />
             <ApplicationModal />
             <VersionManagementSidebar />
+            {/* Home Modal that can be opened from anywhere */}
+            <HomeModal 
+              show={showHomeModal} 
+              onHide={() => setShowHomeModal(false)} 
+            />
             {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
             <Routes>
               {/* Collaboration route with token */}
@@ -51,14 +67,15 @@ export function RoutedApplication() {
               
               {/* Main editor route */}
               <Route 
-                path="/editor" 
+                path="/" 
                 element={
                   <SidebarLayout>
                     <ApollonEditorComponent />
                   </SidebarLayout>
                 } 
               />
-                {/* Project settings route */}
+              
+              {/* Project settings route */}
               <Route 
                 path="/project-settings" 
                 element={
@@ -70,9 +87,6 @@ export function RoutedApplication() {
               
               {/* Team page route */}
               <Route path="/teampage" element={<TeamPage />} />
-              
-              {/* Home route */}
-              <Route path="/" element={<HomePage />} />
             </Routes>
             <ErrorPanel />
             <ToastContainer />

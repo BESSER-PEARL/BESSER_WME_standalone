@@ -65,7 +65,7 @@ export const CreateDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
       title,
       type: selectedDiagramType,
     });
-    navigate('/editor');
+    navigate('/');
 
     close();
   };
