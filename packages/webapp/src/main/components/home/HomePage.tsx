@@ -20,10 +20,17 @@ import {
   ShieldCheck,
   Lightning,
   Download,
-  Trash
+  Trash,
+  ChevronDown,
+  ChevronUp
 } from 'react-bootstrap-icons';
 import styled from 'styled-components';
-import { getLastProjectFromLocalStorage, BesserProject, removeProjectFromLocalStorage } from '../../utils/localStorage';
+import { 
+  getLastProjectFromLocalStorage, 
+  getAllProjectsFromLocalStorage, 
+  BesserProject, 
+  removeProjectFromLocalStorage 
+} from '../../utils/localStorage';
 import { useNavigate } from 'react-router-dom';
 import { exportProjectById } from '../../services/export/useExportProjectJSON';
 import { handleImportProject as importProjectService } from '../../services/import/useImportProjectJSON';
@@ -210,14 +217,45 @@ const FeatureDescription = styled.p`
   line-height: 1.5;
 `;
 
+const AllProjectsToggle = styled.div`
+  text-align: center;
+  margin-top: 2rem;
+`;
+
+const ToggleButton = styled(Button)`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+`;
+
+const AllProjectsList = styled.div`
+  margin-top: 2rem;
+  max-height: 400px;
+  overflow-y: auto;
+`;
+
 export const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [recentProject, setRecentProject] = useState<BesserProject | null>(null);
+  const [allProjects, setAllProjects] = useState<BesserProject[]>([]);
+  const [showAllProjects, setShowAllProjects] = useState(false);
 
   useEffect(() => {
     const project = getLastProjectFromLocalStorage();
+    const projects = getAllProjectsFromLocalStorage();
     setRecentProject(project);
+    setAllProjects(projects);
   }, []);
 
   const handleCreateProject = () => {
@@ -235,6 +273,13 @@ export const HomePage: React.FC = () => {
   const handleOpenProject = () => {
     navigate('/editor');
   };
+
+  const handleOpenSpecificProject = (project: BesserProject) => {
+    // Save as latest project and navigate
+    localStorage.setItem('besser_latest_project', project.id);
+    navigate('/editor');
+  };
+
   const handleProjectSettings = () => {
     navigate('/project-settings');
   };
@@ -269,6 +314,44 @@ export const HomePage: React.FC = () => {
         
         removeProjectFromLocalStorage(recentProject.id);
         setRecentProject(null);
+        // Refresh the projects list
+        const updatedProjects = getAllProjectsFromLocalStorage();
+        setAllProjects(updatedProjects);
+        toast.success('Project deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        toast.error('Failed to delete project');
+      }
+    }
+  };
+
+  const handleDeleteSpecificProject = async (project: BesserProject, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the project "${project.name}"? This action cannot be undone.`
+    );
+    
+    if (confirmDelete) {
+      try {
+        // Remove project and its diagrams from localStorage
+        if (project.models) {
+          project.models.forEach(diagramId => {
+            localStorage.removeItem(`besser_diagram_${diagramId}`);
+          });
+        }
+        
+        removeProjectFromLocalStorage(project.id);
+        
+        // Update the projects list
+        const updatedProjects = getAllProjectsFromLocalStorage();
+        setAllProjects(updatedProjects);
+        
+        // If this was the recent project, clear it
+        if (recentProject?.id === project.id) {
+          setRecentProject(updatedProjects.length > 0 ? updatedProjects[0] : null);
+        }
+        
         toast.success('Project deleted successfully!');
       } catch (error) {
         console.error('Error deleting project:', error);
@@ -397,6 +480,178 @@ export const HomePage: React.FC = () => {
                 </div>
               </ProjectInfo>
             </RecentProjectCard>
+            
+            {/* Toggle for all projects */}
+            <AllProjectsToggle>
+              <ToggleButton 
+                variant="outline-light" 
+                onClick={() => setShowAllProjects(!showAllProjects)}
+                className="d-flex align-items-center justify-content-center"
+              >
+                {showAllProjects ? (
+                  <>
+                    <ChevronUp className="me-2" />
+                    Hide Other Projects
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="me-2" />
+                    Show All Projects ({allProjects.filter(p => p.id !== recentProject?.id).length})
+                  </>
+                )}
+              </ToggleButton>
+            </AllProjectsToggle>
+
+            {/* All projects list */}
+            {showAllProjects && (
+              <AllProjectsList>
+                {allProjects
+                  .filter(project => project.id !== recentProject?.id)
+                  .map(project => (
+                    <RecentProjectCard 
+                      key={project.id} 
+                      onClick={() => handleOpenSpecificProject(project)}
+                      style={{ marginBottom: '1rem' }}
+                    >
+                      <ProjectInfo>
+                        <ProjectDetails>
+                          <ProjectName>{project.name}</ProjectName>
+                          <ProjectMeta>
+                            <span>
+                              <Clock size={14} style={{ marginRight: '0.5rem' }} />
+                              Created: {new Date(project.createdAt).toLocaleDateString()}
+                            </span>
+                            <span>
+                              <Folder size={14} style={{ marginRight: '0.5rem' }} />
+                              {project.models?.length || 0} diagrams
+                            </span>
+                          </ProjectMeta>
+                        </ProjectDetails>
+                        <div>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenSpecificProject(project);
+                            }}
+                          >
+                            Open
+                          </Button>
+                          <Button 
+                            variant="outline-success" 
+                            size="sm" 
+                            className="ms-2"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await exportProjectById(project);
+                                toast.success('Project exported successfully!');
+                              } catch (error) {
+                                console.error('Error exporting project:', error);
+                                toast.error('Failed to export project');
+                              }
+                            }}
+                            title="Export project as file"
+                          >
+                            <BoxArrowInUp size={14} />
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm" 
+                            className="ms-2"
+                            onClick={(e) => handleDeleteSpecificProject(project, e)}
+                            title="Delete project"
+                          >
+                            <Trash size={14} />
+                          </Button>
+                        </div>
+                      </ProjectInfo>
+                    </RecentProjectCard>
+                  ))
+                }
+                {allProjects.filter(p => p.id !== recentProject?.id).length === 0 && (
+                  <div style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', padding: '2rem' }}>
+                    No other projects found.
+                  </div>
+                )}
+              </AllProjectsList>
+            )}
+          </Container>
+        </RecentProjectsSection>
+      )}
+
+      {/* Show all projects section if no recent project */}
+      {!recentProject && allProjects.length > 0 && (
+        <RecentProjectsSection>
+          <Container style={{ maxWidth: '1200px' }}>
+            <h3 style={{ color: 'white', marginBottom: '2rem', textAlign: 'center' }}>
+              Your Projects
+            </h3>
+            <AllProjectsList>
+              {allProjects.map(project => (
+                <RecentProjectCard 
+                  key={project.id} 
+                  onClick={() => handleOpenSpecificProject(project)}
+                  style={{ marginBottom: '1rem' }}
+                >
+                  <ProjectInfo>
+                    <ProjectDetails>
+                      <ProjectName>{project.name}</ProjectName>
+                      <ProjectMeta>
+                        <span>
+                          <Clock size={14} style={{ marginRight: '0.5rem' }} />
+                          Created: {new Date(project.createdAt).toLocaleDateString()}
+                        </span>
+                        <span>
+                          <Folder size={14} style={{ marginRight: '0.5rem' }} />
+                          {project.models?.length || 0} diagrams
+                        </span>
+                      </ProjectMeta>
+                    </ProjectDetails>
+                    <div>
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenSpecificProject(project);
+                        }}
+                      >
+                        Open
+                      </Button>
+                      <Button 
+                        variant="outline-success" 
+                        size="sm" 
+                        className="ms-2"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await exportProjectById(project);
+                            toast.success('Project exported successfully!');
+                          } catch (error) {
+                            console.error('Error exporting project:', error);
+                            toast.error('Failed to export project');
+                          }
+                        }}
+                        title="Export project as file"
+                      >
+                        <BoxArrowInUp size={14} />
+                      </Button>
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        className="ms-2"
+                        onClick={(e) => handleDeleteSpecificProject(project, e)}
+                        title="Delete project"
+                      >
+                        <Trash size={14} />
+                      </Button>
+                    </div>
+                  </ProjectInfo>
+                </RecentProjectCard>
+              ))}
+            </AllProjectsList>
           </Container>
         </RecentProjectsSection>
       )}
