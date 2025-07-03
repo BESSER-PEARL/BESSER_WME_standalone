@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@besser/wme';
 import { uuid } from '../../utils/uuid';
 import { LocalStorageRepository } from '../local-storage/local-storage-repository';
+import { addDiagramToCurrentProject } from '../../utils/localStorage';
 
 import { localStorageDiagramPrefix, localStorageLatest } from '../../constant';
 import { DeepPartial } from '../../utils/types';
@@ -52,9 +53,27 @@ const getInitialEditorOptions = (): EditorOptions => {
 const getInitialDiagram = (): Diagram => {
   const latestId: string | null = window.localStorage.getItem(localStorageLatest);
   let diagram: Diagram;
+  
   if (latestId) {
-    const latestDiagram: Diagram = JSON.parse(window.localStorage.getItem(localStorageDiagramPrefix + latestId)!);
-    diagram = latestDiagram;
+    try {
+      const latestDiagramData = window.localStorage.getItem(localStorageDiagramPrefix + latestId);
+      if (latestDiagramData) {
+        const latestDiagram: Diagram = JSON.parse(latestDiagramData);
+        if (latestDiagram && latestDiagram.id) {
+          diagram = latestDiagram;
+        } else {
+          // Invalid diagram data, create new one
+          diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+        }
+      } else {
+        // No diagram found with that ID, create new one
+        diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+      }
+    } catch (error) {
+      // Parsing error, create new diagram
+      console.warn('Error parsing stored diagram, creating new one:', error);
+      diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+    }
   } else {
     diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
   }
@@ -117,19 +136,33 @@ const diagramSlice = createSlice({
       state,
       action: PayloadAction<{ title: string; diagramType: UMLDiagramType; template?: UMLModel }>,
     ) => {
+      const newDiagramId = uuid();
       state.diagram = {
-        id: uuid(),
+        id: newDiagramId,
         title: action.payload.title,
         model: action.payload.template,
         lastUpdate: new Date().toISOString(),
       };
       state.editorOptions.type = action.payload.diagramType;
       state.createNewEditor = true;
+      
+      // Automatically add the new diagram to the current project if in project context
+      // This ensures all diagram creation flows (drag-drop, modals, imports) work with projects
+      addDiagramToCurrentProject(newDiagramId);
     },
     loadDiagram: (state, action: PayloadAction<Diagram>) => {
       state.diagram = action.payload;
       state.createNewEditor = true;
       state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+    },
+    loadImportedDiagram: (state, action: PayloadAction<Diagram>) => {
+      // Like loadDiagram but also adds to project if in project context
+      state.diagram = action.payload;
+      state.createNewEditor = true;
+      state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+      
+      // Add imported diagram to current project if in project context
+      addDiagramToCurrentProject(action.payload.id);
     },
     setCreateNewEditor: (state, action: PayloadAction<boolean>) => {
       state.createNewEditor = action.payload;
@@ -169,6 +202,7 @@ export const {
   changeDiagramType,
   createDiagram,
   loadDiagram,
+  loadImportedDiagram,
   setDisplayUnpublishedVersion,
 } = diagramSlice.actions;
 

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch } from '../../components/store/hooks';
 import { uuid } from '../../utils/uuid';
-import { Diagram, loadDiagram } from '../diagram/diagramSlice';
+import { Diagram, loadImportedDiagram } from '../diagram/diagramSlice';
 import { displayError } from '../error-management/errorManagementSlice';
 import { useNavigate } from 'react-router-dom';
 import { diagramBridge, UMLDiagramType } from '@besser/wme';
@@ -37,7 +37,7 @@ export const useImportDiagram = () => {
         diagram.model = cleanModel;
       }
 
-      dispatch(loadDiagram(diagram));
+      dispatch(loadImportedDiagram(diagram));
       navigate('/', { relative: 'path' });
     } catch {
       dispatch(

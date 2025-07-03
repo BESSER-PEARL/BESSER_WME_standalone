@@ -8,6 +8,9 @@ import { BesserProject } from '../modals/create-project-modal/CreateProjectModal
 import { exportProjectById } from '../../services/export/useExportProjectJSON';
 import { exportProjectAsBUMLZip } from '../../services/export/useExportProjectBUML';
 import { saveProjectToLocalStorage } from '../../utils/localStorage';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { createDiagram, loadDiagram } from '../../services/diagram/diagramSlice';
+import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
 
 const PageContainer = styled.div`
   padding: 40px 20px;
@@ -124,6 +127,9 @@ export const ProjectSettingsScreen: React.FC = () => {
   const [project, setProject] = useState<BesserProject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [diagrams, setDiagrams] = useState<any[]>([]);
+  
+  const dispatch = useAppDispatch();
+  const currentDiagram = useAppSelector((state) => state.diagram.diagram);
 
   useEffect(() => {
     loadProject();
@@ -208,6 +214,11 @@ export const ProjectSettingsScreen: React.FC = () => {
     if (!project) return;
     
     if (window.confirm('Are you sure you want to delete this diagram? This action cannot be undone.')) {
+      // If we're deleting the currently active diagram, save it first
+      if (currentDiagram && currentDiagram.id === diagramId && currentDiagram.model) {
+        LocalStorageRepository.storeDiagram(currentDiagram);
+      }
+      
       // Remove from localStorage
       localStorage.removeItem(`besser_diagram_${diagramId}`);
       
@@ -220,6 +231,34 @@ export const ProjectSettingsScreen: React.FC = () => {
       setProject(updatedProject);
       saveProjectToLocalStorage(updatedProject);
       loadProjectDiagrams(updatedProject);
+      
+      // If we deleted the currently active diagram, load another one or create a new one
+      if (currentDiagram && currentDiagram.id === diagramId) {
+        const remainingDiagrams = updatedProject.models;
+        if (remainingDiagrams.length > 0) {
+          // Load the first remaining diagram
+          const nextDiagramData = localStorage.getItem(`besser_diagram_${remainingDiagrams[0]}`);
+          if (nextDiagramData) {
+            try {
+              const nextDiagram = JSON.parse(nextDiagramData);
+              dispatch(loadDiagram(nextDiagram));
+            } catch (error) {
+              console.error('Error loading next diagram:', error);
+              // Fallback: create a new diagram
+              dispatch(createDiagram({
+                title: 'New Class Diagram',
+                diagramType: UMLDiagramType.ClassDiagram,
+              }));
+            }
+          }
+        } else {
+          // No diagrams left, create a new one
+          dispatch(createDiagram({
+            title: 'New Class Diagram',
+            diagramType: UMLDiagramType.ClassDiagram,
+          }));
+        }
+      }
       
       toast.success('Diagram deleted successfully');
     }

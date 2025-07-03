@@ -150,3 +150,17 @@ export const clearTypeDiagramStorage = () => {
     localStorage.removeItem(key);
   });
 };
+
+export const addDiagramToCurrentProject = (diagramId: string): void => {
+  if (isInProjectContext() && diagramId) {
+    const currentProject = getLastProjectFromLocalStorage();
+    if (currentProject && !currentProject.models.includes(diagramId)) {
+      const updatedProject = {
+        ...currentProject,
+        models: [...(currentProject.models || []), diagramId]
+      };
+      saveProjectToLocalStorage(updatedProject);
+      console.log('Diagram added to project:', diagramId, 'Project:', currentProject.name);
+    }
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { 
   Diagram3, 
@@ -105,29 +105,6 @@ export const DiagramTypeSidebar: React.FC = () => {
   const currentDiagram = useAppSelector((state) => state.diagram.diagram);
   const navigate = useNavigate();
   const location = useLocation();
-  const pendingDiagramAdd = useRef<boolean>(false);
-
-  // Watch for new diagram creation and add to project (only if in project context)
-  useEffect(() => {
-    if (pendingDiagramAdd.current && currentDiagram && currentDiagram.id && isInProjectContext()) {
-      const currentProject = getLastProjectFromLocalStorage();
-      if (currentProject && !currentProject.models.includes(currentDiagram.id)) {
-        // Add the new diagram ID to the project's models array
-        const updatedProject = {
-          ...currentProject,
-          models: [...(currentProject.models || []), currentDiagram.id]
-        };
-        
-        // Save the updated project
-        saveProjectToLocalStorage(updatedProject);
-      }
-    }
-    
-    // Reset the flag regardless
-    if (pendingDiagramAdd.current) {
-      pendingDiagramAdd.current = false;
-    }
-  }, [currentDiagram]);
 
   // Save diagram changes when in project context
   useEffect(() => {
@@ -247,10 +224,8 @@ export const DiagramTypeSidebar: React.FC = () => {
     if (diagramToLoad) {
       dispatch(loadDiagram(diagramToLoad));
     } else {
-      // Mark that we're about to create a new diagram that should be added to the project
-      pendingDiagramAdd.current = true;
-      
       // Create a new diagram of the selected type
+      // The diagram will be automatically added to the project if in project context
       dispatch(createDiagram({
         title: `New ${diagramType.replace('Diagram', ' Diagram')}`,
         diagramType: diagramType,
