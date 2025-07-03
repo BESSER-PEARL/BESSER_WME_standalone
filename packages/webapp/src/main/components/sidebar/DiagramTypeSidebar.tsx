@@ -91,7 +91,7 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  { type: 'home', label: 'Home', icon: <House size={20} />, path: '/' },
+  // { type: 'home', label: 'Home', icon: <House size={20} />, path: '/' },
   { type: UMLDiagramType.ClassDiagram, label: 'Class Diagram', icon: <Diagram3 size={20} /> },
   { type: UMLDiagramType.ObjectDiagram, label: 'Object Diagram', icon: <Diagram2 size={20} /> },
   { type: UMLDiagramType.StateMachineDiagram, label: 'State Machine', icon: <ArrowRepeat size={20} /> },
