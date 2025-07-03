@@ -12,6 +12,7 @@ import { useExportPNG } from '../../../services/export/useExportPng';
 import { useExportSVG } from '../../../services/export/useExportSvg';
 import { useExportBUML } from '../../../services/export/useExportBuml';
 import { toast } from 'react-toastify';
+import { importProject } from '../../../services/import/useImportProjectJSON';
 
 export const FileMenu: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
@@ -59,42 +60,34 @@ export const FileMenu: React.FC = () => {
     }
   };
 
+  // Placeholder handlers for project actions
+  const handleNewProject = () => dispatch(showModal({ type: ModalContentType.CreateProjectModal }));
+  const handleImportProject = () => dispatch(showModal({ type: ModalContentType.ImportProjectModal }));
+  //const handleLoadProject = () => dispatch(showModal({ type: ModalContentType.LoadProjectModal }));
+  const handleExportProject = () => dispatch(showModal({ type: ModalContentType.ExportProjectModal }));
+
   return (
-    <NavDropdown id="file-menu-item" title="File" className="pt-0, pb-0">
-      <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.CreateDiagramModal }))}>
-        New
+    <NavDropdown id="file-menu-item" title="File" className="pt-0 pb-0">
+      {/* New */}
+      <NavDropdown.Item onClick={handleNewProject}>
+        New Project
       </NavDropdown.Item>
-      <NavDropdown.Item
-        onClick={() => dispatch(showModal({ type: ModalContentType.CreateDiagramFromTemplateModal, size: 'lg' }))}
-      >
-        Start from Template
-      </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.LoadDiagramModal }))}>
-        Load Diagram
-      </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.ImportDiagramModal }))}>
-        Import Diagram
-      </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(showModal({ type: ModalContentType.ImportProjectModal }))}>
+
+      {/* Import */}
+      <NavDropdown.Item onClick={handleImportProject}>
         Import Project
       </NavDropdown.Item>
-      <Dropdown id="export-dropdown" drop="end">
-        <Dropdown.Toggle
-          id="dropdown-basic"
-          split
-          className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-        >
-          <span className="flex-grow-1">Export</span>
-        </Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={() => exportDiagram('BUML')}>As B-UML</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('JSON')}>As JSON</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('SVG')}>As SVG</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('PNG_WHITE')}>As PNG (White Background)</Dropdown.Item>
-          <Dropdown.Item onClick={() => exportDiagram('PNG')}>As PNG (Transparent Background)</Dropdown.Item>
-          {/* <Dropdown.Item onClick={() => exportDiagram('PDF')}>As PDF</Dropdown.Item> */}
-        </Dropdown.Menu>
-      </Dropdown>
+
+      {/* Load */}
+      <NavDropdown.Item >
+        Load Project
+      </NavDropdown.Item>
+
+      {/* Export */}
+      <NavDropdown.Item onClick={handleExportProject}>
+        Export Project
+      </NavDropdown.Item>
+
     </NavDropdown>
   );
 };

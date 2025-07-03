@@ -472,3 +472,27 @@ input:checked + .slider:before {
 .badge {
   color: white;
 }
+
+.export-btn {
+  color: #111 !important;
+  border-color: #b4b4b4c8 !important;
+  background: transparent !important;
+}
+.export-btn:hover, .export-btn:focus {
+  background: #f0f0f0 !important;
+  color: #111 !important;
+  border-color: #b4b4b4c8 !important;
+}
+
+/* Dark mode */
+[data-theme="dark"] .export-btn {
+  color: #fff !important;
+  border-color: #fff !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .export-btn:hover, 
+[data-theme="dark"] .export-btn:focus {
+  background: #222 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}

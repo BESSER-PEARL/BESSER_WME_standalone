@@ -86,7 +86,7 @@ const DiagramItem = styled(ListGroup.Item)`
 `;
 
 // Utility functions
-const getLastProjectFromLocalStorage = (): BesserProject | null => {
+export const getLastProjectFromLocalStorage = (): BesserProject | null => {
   const latestProjectId = localStorage.getItem('besser_latest_project');
   if (latestProjectId) {
     const projectData = localStorage.getItem(`besser_project_${latestProjectId}`);
