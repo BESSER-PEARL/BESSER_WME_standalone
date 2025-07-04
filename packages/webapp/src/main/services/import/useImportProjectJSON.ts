@@ -1,6 +1,6 @@
-import { BesserProject } from '../../components/modals/create-project-modal/CreateProjectModal';
+import { BesserProject } from '../../types/project';
 import { Diagram } from '../diagram/diagramSlice';
-import { saveProjectToLocalStorage } from '../../utils/localStorage';
+import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
 
 // Dynamic import for JSZip
 async function loadJSZip() {
@@ -8,16 +8,36 @@ async function loadJSZip() {
   return JSZip;
 }
 
-// Interface for import validation
-interface ImportData {
+// Interface for V2 JSON export format
+interface V2ExportData {
+  project: BesserProject;
+  exportedAt: string;
+  version: string;
+}
+
+// Interface for legacy import validation (V1 format)
+interface LegacyImportData {
   project: BesserProject;
   diagrams: Diagram[];
   exportedAt?: string;
   version?: string;
 }
 
-// Validate imported project structure
-function validateImportData(data: any): data is ImportData {
+// Validate V2 export format
+function validateV2ExportData(data: any): data is V2ExportData {
+  return (
+    data &&
+    typeof data === 'object' &&
+    data.project &&
+    typeof data.project.id === 'string' &&
+    typeof data.project.name === 'string' &&
+    typeof data.project.diagrams === 'object' &&
+    data.project.diagrams !== null
+  );
+}
+
+// Validate legacy import data structure (V1 format)
+function validateLegacyImportData(data: any): data is LegacyImportData {
   return (
     data &&
     typeof data === 'object' &&
@@ -28,51 +48,28 @@ function validateImportData(data: any): data is ImportData {
   );
 }
 
-// Generate new IDs to avoid conflicts
-function generateNewIds(data: ImportData): ImportData {
-  const idMapping = new Map<string, string>();
-  
+// Convert legacy format (with separate diagrams array) to new project format
+function convertLegacyToProject(data: LegacyImportData): BesserProject {
   // Generate new project ID
   const newProjectId = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  idMapping.set(data.project.id, newProjectId);
   
-  // Generate new diagram IDs
-  const newDiagrams = data.diagrams.map(diagram => {
-    const newDiagramId = `diagram_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    idMapping.set(diagram.id, newDiagramId);
-    
-    return {
-      ...diagram,
-      id: newDiagramId,
-      title: diagram.title || `Imported Diagram ${new Date().toLocaleDateString()}`
-    };
-  });
-  
-  // Update project with new IDs
+  // Create a new project with the legacy data
   const updatedProject: BesserProject = {
     ...data.project,
     id: newProjectId,
     name: `${data.project.name} (Imported)`,
     createdAt: new Date().toISOString(),
-    models: newDiagrams.map(d => d.id)
+    // Note: Legacy import assumes diagrams are stored separately
+    // The new project system stores diagrams within the project structure
   };
   
-  return {
-    ...data,
-    project: updatedProject,
-    diagrams: newDiagrams
-  };
+  return updatedProject;
 }
 
-// Store imported data in localStorage
-function storeImportedData(data: ImportData): void {
-  // Store project using the centralized utility
-  saveProjectToLocalStorage(data.project);
-  
-  // Store diagrams
-  data.diagrams.forEach(diagram => {
-    localStorage.setItem(`besser_diagram_${diagram.id}`, JSON.stringify(diagram));
-  });
+// Store imported project using the project storage system
+function storeImportedProject(project: BesserProject): void {
+  // Use the project storage repository - this stores the complete project including diagrams
+  ProjectStorageRepository.saveProject(project);
 }
 
 // Import from JSON file
@@ -84,15 +81,37 @@ export async function importProjectFromJson(file: File): Promise<BesserProject> 
       try {
         const jsonData = JSON.parse(e.target?.result as string);
         
-        if (!validateImportData(jsonData)) {
-          throw new Error('Invalid project file format');
+        // Check if it's the new V2 format first
+        if (validateV2ExportData(jsonData)) {
+          // V2 format - project already contains diagrams
+          const project = jsonData.project;
+          
+          // Generate new ID for the project to avoid conflicts
+          const newProjectId = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const importedProject: BesserProject = {
+            ...project,
+            id: newProjectId,
+            name: `${project.name} (Imported)`,
+            createdAt: new Date().toISOString()
+          };
+          
+          // Store using project storage
+          storeImportedProject(importedProject);
+          
+          console.log(`Project "${importedProject.name}" imported successfully (V2 format)`);
+          resolve(importedProject);
+          
+        } else if (validateLegacyImportData(jsonData)) {
+          // Legacy V1 format - convert to new format and store
+          const convertedProject = convertLegacyToProject(jsonData);
+          storeImportedProject(convertedProject);
+          
+          console.log(`Project "${convertedProject.name}" imported successfully (Legacy format converted)`);
+          resolve(convertedProject);
+          
+        } else {
+          throw new Error('Invalid project file format - unsupported structure');
         }
-        
-        const dataWithNewIds = generateNewIds(jsonData);
-        storeImportedData(dataWithNewIds);
-        
-        console.log(`Project "${dataWithNewIds.project.name}" imported successfully`);
-        resolve(dataWithNewIds.project);
         
       } catch (error) {
         console.error('JSON import failed:', error);
@@ -144,20 +163,20 @@ export async function importProjectFromZip(file: File): Promise<BesserProject> {
       }
     }
     
-    const importData: ImportData = {
+    const importData: LegacyImportData = {
       project: projectData,
       diagrams: diagrams
     };
     
-    if (!validateImportData(importData)) {
+    if (!validateLegacyImportData(importData)) {
       throw new Error('Invalid project structure in ZIP file');
     }
     
-    const dataWithNewIds = generateNewIds(importData);
-    storeImportedData(dataWithNewIds);
+    const convertedProject = convertLegacyToProject(importData);
+    storeImportedProject(convertedProject);
     
-    console.log(`Project "${dataWithNewIds.project.name}" imported successfully from ZIP`);
-    return dataWithNewIds.project;
+    console.log(`Project "${convertedProject.name}" imported successfully from ZIP`);
+    return convertedProject;
     
   } catch (error) {
     console.error('ZIP import failed:', error);

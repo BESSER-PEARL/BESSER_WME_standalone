@@ -1,12 +1,12 @@
 import { BACKEND_URL } from '../../constant';
 import JSZip from 'jszip';
 import { toast } from 'react-toastify';
-import { BesserProject } from '../../components/modals/create-project-modal/CreateProjectModal';
+import { BesserProject, SupportedDiagramType } from '../../types/project';
 import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
 import { validateDiagram } from '../validation/diagramValidation';
-import { LocalStorageRepository } from '../local-storage/local-storage-repository';
+import { toUMLDiagramType } from '../../types/project';
 
-async function convertDiagramModelToBUML(diagram: any, diagramTitle: string): Promise<string> {
+async function convertDiagramModelToBUML(diagram: any, diagramTitle: string, project?: BesserProject): Promise<string> {
   // Create a mock editor object to use with validateDiagram
   const mockEditor = {
     model: diagram
@@ -32,11 +32,10 @@ async function convertDiagramModelToBUML(diagram: any, diagramTitle: string): Pr
   if (diagram.type === 'ObjectDiagram') {
     const classDiagramData = diagramBridge.getClassDiagramData();
     if (classDiagramData) {
-      // Try to get the class diagram title from localStorage
-      const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
-      const classDiagramTitle = classDiagram?.title || 'Class Diagram';
+      // Get the actual class diagram title from the project
+      const classDiagramTitle = project?.diagrams?.ClassDiagram?.title || 'Class Diagram';
       
-      // Add the class diagram data and title as referenceDiagramData to the model
+      // Add the class diagram data as referenceDiagramData to the model
       modelData = {
         ...diagram,
         referenceDiagramData: {
@@ -49,101 +48,142 @@ async function convertDiagramModelToBUML(diagram: any, diagramTitle: string): Pr
 
   console.log('Sending model data to backend:', modelData); // Debug log
 
-  const response = await fetch(`${BACKEND_URL}/export-buml`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json, text/plain, application/zip, */*',
-    },
-    body: JSON.stringify({
-      elements: modelData,
-      generator: 'buml',
-      diagramTitle,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-  }
-
-  const bumlContent = await response.text();
-  return bumlContent;
-}
-
-// Helper function for exporting project data
-async function useExportProjectBUML(project: BesserProject): Promise<string> {
-
-  const response = await fetch(`${BACKEND_URL}/export-project`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json, text/plain, application/zip, */*',
-    },
-    body: JSON.stringify({
-      elements: {
-        ...project,
-        type: 'Project'
+  try {
+    const response = await fetch(`${BACKEND_URL}/export-buml`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      generator: 'buml',
-      diagramTitle: project.name || 'project'
-    }),
-  });
+      body: JSON.stringify({
+        elements: modelData,
+        diagramTitle: diagramTitle,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Backend error response:', errorData);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.text();
+    console.log('Backend response:', data); // Debug log
+    return data;
+  } catch (error) {
+    console.error('Error converting diagram to BUML:', error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Cannot connect to the conversion service. Please check if the backend is running.');
+    }
+    throw error;
   }
-
-  const bumlContent = await response.text();
-  return bumlContent;
 }
 
-export async function exportProjectAsBUMLZip(project: BesserProject) {
-  const { models, name } = project;
-  const zip = new JSZip();
-  let exportedCount = 0;
-
-  // Export each diagram as .py
-  const exportPromises = models.map(async (diagramId: string) => {
-    const diagramStr = localStorage.getItem(`besser_diagram_${diagramId}`);
-    if (diagramStr) {
-      try {
-        const diagram = JSON.parse(diagramStr);
-        const bumlContent = await convertDiagramModelToBUML(diagram.model, diagram.title || diagram.model?.type || diagramId);
-        const fileName = `${diagram.model?.type || diagramId}.py`;
-        zip.file(fileName, bumlContent);
-        exportedCount++;
-      } catch (e) {
-        console.warn(`Failed to export diagram ${diagramId}:`, e);
-      }
-    }
-  });
-
-  // Export the project itself as project.py
-  const exportProjectPromise = (async () => {
-    try {
-      const projectBuml = await useExportProjectBUML(project);
-      zip.file('project.py', projectBuml);
-    } catch (e) {
-      console.warn('Failed to export project as BUML:', e);
-    }
-  })();
-
-  await Promise.all([...exportPromises, exportProjectPromise]);
-
-  if (exportedCount === 0) {
-    toast.error('No diagrams found to export.');
+export async function exportProjectAsBUMLZip(project: BesserProject): Promise<void> {
+  if (!project || !project.diagrams) {
+    toast.error('No project or diagrams to export');
     return;
   }
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${name || 'project'}-buml.zip`;
-  a.click();
-  window.URL.revokeObjectURL(url);
+  const zip = new JSZip();
+  let successfulExports = 0;
+  let totalExports = 0;
 
-  toast.success('BUML export completed!');
+  try {
+    // Create metadata file
+    const metadata = {
+      projectName: project.name,
+      projectId: project.id,
+      owner: project.owner,
+      description: project.description,
+      createdAt: project.createdAt,
+      exportedAt: new Date().toISOString(),
+      version: '2.0.0',
+      diagramTypes: Object.keys(project.diagrams)
+    };
+    
+    zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+    // Convert each diagram
+    for (const [diagramType, diagram] of Object.entries(project.diagrams)) {
+      if (!diagram.model) {
+        console.warn(`Skipping ${diagramType}: no model available`);
+        continue;
+      }
+
+      // Check if the model has any elements (not empty)
+      if (!diagram.model.elements || Object.keys(diagram.model.elements).length === 0) {
+        console.warn(`Skipping ${diagramType}: model is empty (no elements)`);
+        continue;
+      }
+
+      totalExports++;
+      
+      try {
+        const bumlContent = await convertDiagramModelToBUML(diagram.model, diagram.title, project);
+        const filename = `${diagramType.replace('Diagram', '')}.py`;
+        zip.file(filename, bumlContent);
+        successfulExports++;
+        
+        console.log(`Successfully converted ${diagramType} to BUML`);
+      } catch (error) {
+        console.error(`Failed to convert ${diagramType}:`, error);
+        toast.error(`Failed to convert ${diagramType}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    if (successfulExports === 0) {
+      toast.error('No diagrams could be converted to BUML');
+      return;
+    }
+
+    // Add README
+    const readme = `# ${project.name} - BUML Export
+
+This ZIP file contains BUML (BESSER UML) representations of your project diagrams.
+
+## Project Information
+- **Name:** ${project.name}
+- **Owner:** ${project.owner || 'Unknown'}
+- **Description:** ${project.description || 'No description'}
+- **Created:** ${new Date(project.createdAt).toLocaleDateString()}
+- **Exported:** ${new Date().toLocaleDateString()}
+
+## Export Results
+- **Total Diagrams:** ${totalExports}
+- **Successfully Exported:** ${successfulExports}
+- **Format:** BUML v2.0.0
+
+## Files
+${Object.keys(project.diagrams).map(type => `- ${type.replace('Diagram', '')}.py - ${type}`).join('\n')}
+- metadata.json - Project metadata
+- README.md - This file
+
+## Usage
+These BUML files can be used with BESSER tools for code generation, analysis, and other model-driven engineering tasks.
+
+Generated by BESSER Web Modeling Editor V2
+`;
+
+    zip.file('README.md', readme);
+
+    // Generate and download
+    const content = await zip.generateAsync({ type: 'blob' });
+    const filename = `${project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'project'}_buml_python_export.zip`;
+    
+    // Download the file
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Successfully exported ${successfulExports}/${totalExports} diagrams to BUML format`);
+
+  } catch (error) {
+    console.error('Error creating BUML export:', error);
+    toast.error(`Failed to create BUML export: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
