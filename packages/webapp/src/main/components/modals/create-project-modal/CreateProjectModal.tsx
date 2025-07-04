@@ -3,10 +3,8 @@ import { Button, FormControl, InputGroup, Modal, Form, Row, Col, Card, Badge } f
 import { ModalContentProps } from '../application-modal-types';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../store/hooks';
-import { uuid } from '../../../utils/uuid';
 import { UMLDiagramType } from '@besser/wme';
-import { createDiagram, loadDiagram, Diagram } from '../../../services/diagram/diagramSlice';
-import { LocalStorageRepository } from '../../../services/local-storage/local-storage-repository';
+import { loadDiagram } from '../../../services/diagram/diagramSlice';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
 import { 
@@ -20,9 +18,10 @@ import {
   FileText,
   Tag
 } from 'react-bootstrap-icons';
-import { saveProjectToLocalStorage, setProjectContext } from '../../../utils/localStorage';
+import { useProject } from '../../../hooks/useProject';
+import { toUMLDiagramType } from '../../../types/project';
 
-// Project type definition
+// Legacy project type (kept for compatibility)
 export interface BesserProject {
   id: string;
   type: 'Project';
@@ -38,17 +37,6 @@ export interface BesserProject {
   };
 }
 
-
-const getBlankModel = (type: UMLDiagramType) => ({
-  version: '3.0.0' as const,
-  type,
-  size: { width: 1400, height: 740 },
-  elements: {},
-  relationships: {},
-  interactive: { elements: {}, relationships: {} },
-  assessments: {},
-});
-
 const DIAGRAM_ICONS = {
   [UMLDiagramType.ClassDiagram]: Diagram3,
   [UMLDiagramType.ObjectDiagram]: Diagram2,
@@ -61,20 +49,15 @@ export const CreateProjectModal: React.FC<ModalContentProps> = ({ close }) => {
     name: '',
     description: '',
     owner: '',
-    template: 'blank',
     defaultDiagramType: UMLDiagramType.ClassDiagram,
-    createSampleDiagrams: true,
   });
-  const [selectedTemplate, setSelectedTemplate] = useState('blank');
-  const [selectedDiagrams, setSelectedDiagrams] = useState<UMLDiagramType[]>([UMLDiagramType.ClassDiagram]);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { createProject, loading, error } = useProject();
 
-  const handleInputChange = (field: string, value: string | boolean | UMLDiagramType) => {
+  const handleInputChange = (field: string, value: string | UMLDiagramType) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -87,76 +70,28 @@ export const CreateProjectModal: React.FC<ModalContentProps> = ({ close }) => {
     setIsLoading(true);
     
     try {
-      const projectId = uuid();
-      const diagramIds: string[] = [];
+      // Create project using the new architecture
+      const project = await createProject(
+        formData.name.trim(),
+        formData.description.trim() || 'New project',
+        formData.owner.trim() || 'User'
+      );
 
-      // Create initial diagrams if requested
-      // Commented out sample diagrams creation - always create just one diagram of default type
-      /* if (formData.createSampleDiagrams) {
-        const diagramTypes = [
-          UMLDiagramType.ClassDiagram,
-          UMLDiagramType.ObjectDiagram,
-          UMLDiagramType.StateMachineDiagram,
-          UMLDiagramType.AgentDiagram,
-        ];
-
-        for (const type of diagramTypes) {
-          const diagramId = uuid();
-          const diagram: Diagram = {
-            id: diagramId,
-            title: `${type.replace('Diagram', ' Diagram')}`,
-            model: getBlankModel(type),
-            lastUpdate: new Date().toISOString(),
-          };
-          
-          LocalStorageRepository.storeDiagram(diagram);
-          diagramIds.push(diagramId);
-        }
-      } else { */
-        // Create at least one diagram of the default type
-        const diagramId = uuid();
-        const diagram: Diagram = {
-          id: diagramId,
-          title: `New ${formData.defaultDiagramType}`,
-          model: getBlankModel(formData.defaultDiagramType),
-          lastUpdate: new Date().toISOString(),
+      // Load the default diagram type in the editor
+      const currentDiagram = project.diagrams[project.currentDiagramType];
+      if (currentDiagram?.model) {
+        // Convert to legacy Diagram format for compatibility with current editor
+        const legacyDiagram = {
+          id: currentDiagram.id,
+          title: currentDiagram.title,
+          model: currentDiagram.model,
+          lastUpdate: currentDiagram.lastUpdate,
+          description: currentDiagram.description,
         };
-        
-        LocalStorageRepository.storeDiagram(diagram);
-        diagramIds.push(diagramId);
-      // }
-
-      // Create the project
-      const project: BesserProject = {
-        id: projectId,
-        type: 'Project',
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        owner: formData.owner.trim(),
-        createdAt: new Date().toISOString(),
-        models: diagramIds,
-        settings: {
-          defaultDiagramType: formData.defaultDiagramType,
-          autoSave: true,
-          collaborationEnabled: false,
-        },
-      };
-
-      saveProjectToLocalStorage(project);
-      
-      // Set project context
-      setProjectContext(projectId);
-
-      // Load the first diagram in the editor (the one we just created)
-      // Find the diagram we just created and stored
-      const firstDiagramId = diagramIds[0];
-      const diagramData = localStorage.getItem(`besser_diagram_${firstDiagramId}`);
-      if (diagramData) {
-        const diagram = JSON.parse(diagramData);
-        dispatch(loadDiagram(diagram));
+        dispatch(loadDiagram(legacyDiagram));
       }
 
-      toast.success(`Project "${formData.name}" created successfully!`);
+      toast.success(`Project "${formData.name}" created successfully with all diagram types!`);
       close();
       navigate('/');
       
@@ -212,54 +147,70 @@ export const CreateProjectModal: React.FC<ModalContentProps> = ({ close }) => {
             />
           </Form.Group>
 
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Default Diagram Type</Form.Label>
-                <Form.Select
-                  value={formData.defaultDiagramType}
-                  onChange={(e) => handleInputChange('defaultDiagramType', e.target.value as UMLDiagramType)}
-                >
-                  <option value={UMLDiagramType.ClassDiagram}>Class Diagram</option>
-                  <option value={UMLDiagramType.ObjectDiagram}>Object Diagram</option>
-                  <option value={UMLDiagramType.StateMachineDiagram}>State Machine Diagram</option>
-                  <option value={UMLDiagramType.AgentDiagram}>Agent Diagram</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <div className="mt-4">
-                  {/* Commented out for now - Create sample diagrams option */}
-                  {/* <Form.Check
-                    type="checkbox"
-                    label="Create sample diagrams for all types"
-                    checked={formData.createSampleDiagrams}
-                    onChange={(e) => handleInputChange('createSampleDiagrams', e.target.checked)}
-                  /> */}
-                </div>
-              </Form.Group>
-            </Col>
-          </Row>
+          <Form.Group className="mb-4">
+            <Form.Label>Default Diagram Type</Form.Label>
+            <Form.Select
+              value={formData.defaultDiagramType}
+              onChange={(e) => handleInputChange('defaultDiagramType', e.target.value as UMLDiagramType)}
+            >
+              <option value={UMLDiagramType.ClassDiagram}>Class Diagram</option>
+              <option value={UMLDiagramType.ObjectDiagram}>Object Diagram</option>
+              <option value={UMLDiagramType.StateMachineDiagram}>State Machine Diagram</option>
+              <option value={UMLDiagramType.AgentDiagram}>Agent Diagram</option>
+            </Form.Select>
+            <Form.Text className="text-muted">
+              This will be the active diagram when you first open the project.
+            </Form.Text>
+          </Form.Group>
 
-          <div className="bg-light p-3 rounded">
-            <small className="text-muted">
-              <strong>Note:</strong> This will create a new project with one {formData.defaultDiagramType.replace('Diagram', ' diagram')}. 
-              You can add more diagrams later from the project workspace.
-            </small>
-          </div>
+          <Card className="bg-light border-0">
+            <Card.Body>
+              <div className="d-flex align-items-center mb-2">
+                <Check2Circle className="text-success me-2" size={20} />
+                <strong>What's included in your project:</strong>
+              </div>
+              <Row>
+                <Col md={6}>
+                  <div className="d-flex align-items-center mb-2">
+                    <Diagram3 className="text-primary me-2" size={16} />
+                    <span className="small">Class Diagram</span>
+                  </div>
+                  <div className="d-flex align-items-center mb-2">
+                    <Diagram2 className="text-success me-2" size={16} />
+                    <span className="small">Object Diagram</span>
+                  </div>
+                </Col>
+                <Col md={6}>
+                  <div className="d-flex align-items-center mb-2">
+                    <ArrowRepeat className="text-warning me-2" size={16} />
+                    <span className="small">State Machine Diagram</span>
+                  </div>
+                  <div className="d-flex align-items-center mb-2">
+                    <Robot className="text-info me-2" size={16} />
+                    <span className="small">Agent Diagram</span>
+                  </div>
+                </Col>
+              </Row>
+              <div className="mt-2">
+                <small className="text-muted">
+                  <InfoCircle className="me-1" size={14} />
+                  All diagram types are always available. Switch between them anytime using the diagram type selector.
+                </small>
+              </div>
+            </Card.Body>
+          </Card>
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={close} disabled={isLoading}>
+        <Button variant="secondary" onClick={close} disabled={isLoading || loading}>
           Cancel
         </Button>
         <Button 
           variant="primary" 
           onClick={handleCreateProject} 
-          disabled={!formData.name.trim() || isLoading}
+          disabled={!formData.name.trim() || isLoading || loading}
         >
-          {isLoading ? 'Creating...' : 'Create Project'}
+          {(isLoading || loading) ? 'Creating Project...' : 'Create Project'}
         </Button>
       </Modal.Footer>
     </>

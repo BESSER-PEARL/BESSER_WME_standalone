@@ -63,7 +63,13 @@ export const FileMenu: React.FC = () => {
   // Placeholder handlers for project actions
   const handleNewProject = () => dispatch(showModal({ type: ModalContentType.CreateProjectModal }));
   const handleImportProject = () => dispatch(showModal({ type: ModalContentType.ImportProjectModal }));
-  //const handleLoadProject = () => dispatch(showModal({ type: ModalContentType.LoadProjectModal }));
+  // const handleLoadProject = () => {
+  //   // Open the Home modal to let users select from existing projects
+  //   if (onOpenHome) {
+  //     onOpenHome();
+  //   }
+  // };
+  const handleLoadTemplate = () => dispatch(showModal({ type: ModalContentType.CreateDiagramFromTemplateModal }));
   const handleExportProject = () => dispatch(showModal({ type: ModalContentType.ExportProjectModal }));
 
   return (
@@ -79,9 +85,18 @@ export const FileMenu: React.FC = () => {
       </NavDropdown.Item>
 
       {/* Load */}
-      <NavDropdown.Item >
+      {/* <NavDropdown.Item onClick={handleLoadProject}>
         Load Project
+      </NavDropdown.Item> */}
+
+      {/* <NavDropdown.Divider /> */}
+
+      {/* Load Template */}
+      <NavDropdown.Item onClick={handleLoadTemplate}>
+        Load Template
       </NavDropdown.Item>
+
+      {/* <NavDropdown.Divider /> */}
 
       {/* Export */}
       <NavDropdown.Item onClick={handleExportProject}>

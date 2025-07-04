@@ -16,14 +16,13 @@ import {
 } from 'react-bootstrap-icons';
 import styled from 'styled-components';
 import { 
-  getLastProjectFromLocalStorage, 
-  getAllProjectsFromLocalStorage, 
-  BesserProject, 
-  removeProjectFromLocalStorage,
-  clearProjectContext,
-  setProjectContext 
+  removeProjectFromLocalStorage
 } from '../../utils/localStorage';
+import { BesserProject } from '../../types/project';
+import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
 import { toast } from 'react-toastify';
+import { useProject } from '../../hooks/useProject';
+import { loadDiagram } from '../../services/diagram/diagramSlice';
 
 interface HomeModalProps {
   show: boolean;
@@ -228,10 +227,22 @@ const ToggleButton = styled(Button)`
   font-weight: 600;
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+  }
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
   }
 `;
 
@@ -239,50 +250,65 @@ const AllProjectsList = styled.div`
   margin-top: 1rem;
   max-height: 200px;
   overflow-y: auto;
+  text-align: left;
 `;
 
 export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   const dispatch = useAppDispatch();
-  const [recentProject, setRecentProject] = useState<BesserProject | null>(null);
-  const [allProjects, setAllProjects] = useState<BesserProject[]>([]);
+  const { loadProject, currentProject } = useProject();
+  const [allProjects, setAllProjects] = useState<Array<Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>>>([]);
   const [showAllProjects, setShowAllProjects] = useState(false);
 
   useEffect(() => {
     if (show) {
-      const project = getLastProjectFromLocalStorage();
-      const projects = getAllProjectsFromLocalStorage();
-      setRecentProject(project);
+      const projects = ProjectStorageRepository.getAllProjects();
       setAllProjects(projects);
+      
+      // Si il n'y a pas de projet actuel mais qu'il y a des projets, afficher automatiquement la liste
+      if (!currentProject && projects.length > 0) {
+        setShowAllProjects(true);
+      }
     }
-  }, [show]);
+  }, [show, currentProject]);
 
   const handleCreateProject = () => {
     dispatch(showModal({ type: ModalContentType.CreateProjectModal }));
-    onHide();
   };
 
   const handleImportProject = () => {
     dispatch(showModal({ type: ModalContentType.ImportProjectModal }));
-    onHide();
   };
 
-  const handleCreateDiagram = () => {
-    // Clear project context since this is a standalone diagram
-    clearProjectContext();
-    dispatch(showModal({ type: ModalContentType.CreateDiagramModal }));
-    onHide();
+  const handleOpenSpecificProject = async (projectMeta: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>) => {
+    try {
+      // Load the full project using the project system
+      const loadedProject = await loadProject(projectMeta.id);
+      
+      // Load the current diagram into the editor
+      const currentDiagram = loadedProject.diagrams[loadedProject.currentDiagramType];
+      if (currentDiagram?.model) {
+        // Convert to legacy Diagram format for compatibility with current editor
+        const legacyDiagram = {
+          id: currentDiagram.id,
+          title: currentDiagram.title,
+          model: currentDiagram.model,
+          lastUpdate: currentDiagram.lastUpdate,
+          description: currentDiagram.description,
+        };
+        dispatch(loadDiagram(legacyDiagram));
+      }
+      
+      // Close the modal and show success message
+      onHide();
+      toast.success(`Project "${projectMeta.name}" loaded successfully!`);
+      
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast.error(`Failed to load project "${projectMeta.name}". Please try again.`);
+    }
   };
 
-  const handleOpenSpecificProject = (project: BesserProject) => {
-    // Set project context
-    setProjectContext(project.id);
-    localStorage.setItem('besser_latest_project', project.id);
-    onHide();
-    // Refresh the editor
-    window.location.reload();
-  };
-
-  const handleDeleteSpecificProject = async (project: BesserProject, e: React.MouseEvent) => {
+  const handleDeleteSpecificProject = async (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>, e: React.MouseEvent) => {
     e.stopPropagation();
     
     const confirmDelete = window.confirm(
@@ -291,20 +317,12 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
     
     if (confirmDelete) {
       try {
-        if (project.models) {
-          project.models.forEach(diagramId => {
-            localStorage.removeItem(`besser_diagram_${diagramId}`);
-          });
-        }
+        // Le nouveau système de projet stocke tout dans le projet lui-même
+        // Plus besoin de supprimer les diagrammes individuellement
+        ProjectStorageRepository.deleteProject(project.id);
         
-        removeProjectFromLocalStorage(project.id);
-        
-        const updatedProjects = getAllProjectsFromLocalStorage();
+        const updatedProjects = ProjectStorageRepository.getAllProjects();
         setAllProjects(updatedProjects);
-        
-        if (recentProject?.id === project.id) {
-          setRecentProject(updatedProjects.length > 0 ? updatedProjects[0] : null);
-        }
         
         toast.success('Project deleted successfully!');
       } catch (error) {
@@ -315,16 +333,25 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   };
 
   return (
-    <StyledModal show={show} onHide={onHide} centered backdrop="static">
+    <StyledModal 
+      show={show} 
+      onHide={currentProject ? onHide : () => {}} 
+      centered 
+      backdrop={currentProject ? true : "static"}
+      keyboard={currentProject ? true : false}
+    >
       <Modal.Body>
         <ModalHeader>
           <WelcomeSection>
             <LogoImage src="images/logo.png" alt="BESSER Logo" />
             <ModalTitle>Welcome to BESSER</ModalTitle>
           </WelcomeSection>
-          <CloseButton onClick={onHide}>
-            <X size={18} />
-          </CloseButton>
+          {/* Afficher le bouton fermer seulement s'il y a un projet actuel */}
+          {currentProject && (
+            <CloseButton onClick={onHide}>
+              <X size={18} />
+            </CloseButton>
+          )}
         </ModalHeader>
         
         <ContentContainer>
@@ -361,6 +388,8 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
               </QuickStartButton>
             </ActionCard>
 
+            {/* Quick Diagram option removed as we focus on project-based workflow */}
+            {/* 
             <ActionCard onClick={handleCreateDiagram}>
               <ActionIcon style={{ background: 'linear-gradient(135deg, #fd7e14, #e83e8c)' }}>
                 <Diagram3 />
@@ -373,29 +402,30 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                 Start Modeling
               </QuickStartButton>
             </ActionCard>
+            */}
           </ActionGrid>
 
-          {(recentProject || allProjects.length > 0) && (
+          {(currentProject || allProjects.length > 0) && (
             <ProjectsSection>
               <h4 style={{ color: 'white', marginBottom: '1.25rem', textAlign: 'center' }}>
                 Your Projects
               </h4>
               
-              {recentProject && (
+              {currentProject && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Recent Project:</h6>
-                  <ProjectCard onClick={() => handleOpenSpecificProject(recentProject)}>
+                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Current Project:</h6>
+                  <ProjectCard onClick={() => handleOpenSpecificProject(currentProject)}>
                     <ProjectInfo>
                       <ProjectDetails>
-                        <ProjectName>{recentProject.name}</ProjectName>
+                        <ProjectName>{currentProject.name}</ProjectName>
                         <ProjectMeta>
                           <span>
                             <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                            {new Date(recentProject.createdAt).toLocaleDateString()}
+                            {new Date(currentProject.createdAt).toLocaleDateString()}
                           </span>
                           <span>
                             <Folder size={12} style={{ marginRight: '0.25rem' }} />
-                            {recentProject.models?.length || 0} diagrams
+                            {Object.keys(currentProject.diagrams).length} diagrams
                           </span>
                         </ProjectMeta>
                       </ProjectDetails>
@@ -407,7 +437,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                           variant="outline-danger" 
                           size="sm" 
                           className="ms-2"
-                          onClick={(e) => handleDeleteSpecificProject(recentProject, e)}
+                          onClick={(e) => handleDeleteSpecificProject(currentProject, e)}
                         >
                           <Trash size={12} />
                         </Button>
@@ -417,21 +447,58 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                 </div>
               )}
 
-              {allProjects.filter(p => p.id !== recentProject?.id).length > 0 && (
+              {/* Si pas de projet actuel, montrer le dernier projet créé en haut */}
+              {!currentProject && allProjects.length > 0 && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Recent Project:</h6>
+                  <ProjectCard onClick={() => handleOpenSpecificProject(allProjects[allProjects.length - 1])}>
+                    <ProjectInfo>
+                      <ProjectDetails>
+                        <ProjectName>{allProjects[allProjects.length - 1].name}</ProjectName>
+                        <ProjectMeta>
+                          <span>
+                            <Clock size={12} style={{ marginRight: '0.25rem' }} />
+                            {new Date(allProjects[allProjects.length - 1].createdAt).toLocaleDateString()}
+                          </span>
+                        </ProjectMeta>
+                      </ProjectDetails>
+                      <div>
+                        <Button variant="outline-primary" size="sm">
+                          Open
+                        </Button>
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm" 
+                          className="ms-2"
+                          onClick={(e) => handleDeleteSpecificProject(allProjects[allProjects.length - 1], e)}
+                        >
+                          <Trash size={12} />
+                        </Button>
+                      </div>
+                    </ProjectInfo>
+                  </ProjectCard>
+                </div>
+              )}
+
+              {/* Afficher les autres projets seulement s'il y en a plus d'un */}
+              {((currentProject && allProjects.filter(p => p.id !== currentProject?.id).length > 0) || 
+                (!currentProject && allProjects.length > 1)) && (
                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                   <ToggleButton 
                     onClick={() => setShowAllProjects(!showAllProjects)}
-                    className="d-flex align-items-center justify-content-center"
                   >
                     {showAllProjects ? (
                       <>
-                        <ChevronUp className="me-1" size={14} />
+                        <ChevronUp size={14} />
                         Hide Others
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="me-1" size={14} />
-                        Show All ({allProjects.filter(p => p.id !== recentProject?.id).length})
+                        <ChevronDown size={14} />
+                        Show All ({currentProject ? 
+                          allProjects.filter(p => p.id !== currentProject?.id).length :
+                          allProjects.length - 1
+                        })
                       </>
                     )}
                   </ToggleButton>
@@ -439,7 +506,10 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                   {showAllProjects && (
                     <AllProjectsList>
                       {allProjects
-                        .filter(project => project.id !== recentProject?.id)
+                        .filter(project => currentProject ? 
+                          project.id !== currentProject?.id : 
+                          project.id !== allProjects[allProjects.length - 1].id
+                        )
                         .map(project => (
                           <ProjectCard 
                             key={project.id} 
@@ -452,10 +522,6 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                                   <span>
                                     <Clock size={12} style={{ marginRight: '0.25rem' }} />
                                     {new Date(project.createdAt).toLocaleDateString()}
-                                  </span>
-                                  <span>
-                                    <Folder size={12} style={{ marginRight: '0.25rem' }} />
-                                    {project.models?.length || 0} diagrams
                                   </span>
                                 </ProjectMeta>
                               </ProjectDetails>

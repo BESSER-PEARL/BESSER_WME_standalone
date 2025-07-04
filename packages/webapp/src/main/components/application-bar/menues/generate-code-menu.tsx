@@ -158,7 +158,7 @@ export const GenerateCodeMenu: React.FC = () => {
 
   return (
     <>
-      <NavDropdown title="Generate Code" className="pt-0 pb-0">
+      <NavDropdown title="Generate" className="pt-0 pb-0">
       {isAgentDiagram ? (
         // Agent Diagram: Only show agent generation option
         <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
