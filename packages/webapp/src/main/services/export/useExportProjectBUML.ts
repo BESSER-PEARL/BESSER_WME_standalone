@@ -46,7 +46,6 @@ async function convertDiagramModelToBUML(diagram: any, diagramTitle: string, pro
     }
   }
 
-  console.log('Sending model data to backend:', modelData); // Debug log
 
   try {
     const response = await fetch(`${BACKEND_URL}/export-buml`, {
@@ -67,7 +66,7 @@ async function convertDiagramModelToBUML(diagram: any, diagramTitle: string, pro
     }
 
     const data = await response.text();
-    console.log('Backend response:', data); // Debug log
+    // console.log('Backend response:', data); // Debug log
     return data;
   } catch (error) {
     console.error('Error converting diagram to BUML:', error);
@@ -124,7 +123,7 @@ export async function exportProjectAsBUMLZip(project: BesserProject): Promise<vo
         zip.file(filename, bumlContent);
         successfulExports++;
         
-        console.log(`Successfully converted ${diagramType} to BUML`);
+        // console.log(`Successfully converted ${diagramType} to BUML`);
       } catch (error) {
         console.error(`Failed to convert ${diagramType}:`, error);
         toast.error(`Failed to convert ${diagramType}: ${error instanceof Error ? error.message : 'Unknown error'}`);
