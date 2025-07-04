@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { diagramReducer } from '../services/diagram/diagramSlice';
+import { projectReducer } from '../services/project/projectSlice';
 
 export const store = configureStore({
   reducer: {
     diagram: diagramReducer,
+    project: projectReducer,
     // Add other reducers here
   },
 });

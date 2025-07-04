@@ -13,7 +13,6 @@ import { setCreateNewEditor, setDisplayUnpublishedVersion, updateDiagramThunk } 
 import { showModal } from '../../services/modal/modalSlice';
 import { LayoutTextSidebarReverse, Github, Share, House } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
-import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
 import { ClassDiagramImporter } from './menues/class-diagram-importer';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
 import { checkOclConstraints } from '../../services/validation/checkOCL';
@@ -25,6 +24,7 @@ import { LocalStorageRepository } from '../../services/local-storage/local-stora
 import { toast } from 'react-toastify';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor-context';
+import { useProject } from '../../hooks/useProject';
 
 const DiagramTitle = styled.input`
   font-size: 1rem;
@@ -51,6 +51,30 @@ const DiagramTitle = styled.input`
   }
 `;
 
+const ProjectName = styled.div`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  display: flex;
+  align-items: center;
+  
+  &::before {
+    content: "📁";
+    margin-right: 6px;
+    font-size: 0.8rem;
+  }
+`;
+
 const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
   transition: margin-right 0.3s ease;
   margin-right: ${(props) => (props.$isSidebarOpen ? '250px' : '0')}; /* Adjust based on sidebar width */
@@ -69,6 +93,7 @@ export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHo
   const editor = apollonEditor?.editor;
   const location = useLocation();
   const isHome = location.pathname === '/teampage' || location.pathname === '/project-settings';
+  const { currentProject } = useProject();
 
   useEffect(() => {
     if (diagram?.title) {
@@ -174,6 +199,20 @@ export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHo
         <Navbar.Brand as={Link} to="/">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
         </Navbar.Brand>
+        {/* Home button - placed right after logo */}
+        {!isHome && onOpenHome && (
+          <Nav.Item className="me-3">
+            <Nav.Link onClick={onOpenHome} title="Home">
+              <House size={20} />
+            </Nav.Link>
+          </Nav.Item>
+        )}
+        {/* Project name display
+        {currentProject && (
+          <ProjectName title={currentProject.name}>
+            {currentProject.name}
+          </ProjectName>
+        )} */}
         {/* <ApplicationVersion>{appVersion}</ApplicationVersion> */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -228,14 +267,6 @@ export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHo
             <Github size={20} />
           </Nav.Link>
         </Nav.Item>
-        {/* Home button - only show when not on home/team/project-settings pages */}
-        {!isHome && onOpenHome && (
-          <Nav.Item className="me-3">
-            <Nav.Link onClick={onOpenHome} title="Home">
-              <House size={20} />
-            </Nav.Link>
-          </Nav.Item>
-        )}
         {tokenInUrl && <ConnectClientsComponent />}
         <ThemeSwitcherMenu />
       </Navbar>

@@ -1,10 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@besser/wme';
 import { uuid } from '../../utils/uuid';
-import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 import { addDiagramToCurrentProject } from '../../utils/localStorage';
-
-import { localStorageDiagramPrefix, localStorageLatest } from '../../constant';
+import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
+import { toUMLDiagramType } from '../../types/project';
 import { DeepPartial } from '../../utils/types';
 
 export type Diagram = {
@@ -39,46 +38,51 @@ export const defaultEditorOptions: EditorOptions = {
 };
 
 const getInitialEditorOptions = (): EditorOptions => {
-  const latestId = window.localStorage.getItem(localStorageLatest);
   const editorOptions = defaultEditorOptions;
 
-  if (latestId) {
-    const latestDiagram: Diagram = JSON.parse(window.localStorage.getItem(localStorageDiagramPrefix + latestId)!);
-    editorOptions.type = latestDiagram?.model?.type ? latestDiagram.model.type : editorOptions.type;
+  // Always try to get from current project first
+  try {
+    const currentProject = ProjectStorageRepository.getCurrentProject();
+    if (currentProject) {
+      const diagramType = toUMLDiagramType(currentProject.currentDiagramType);
+      editorOptions.type = diagramType;
+      return editorOptions;
+    }
+  } catch (error) {
+    console.warn('Error loading project for initial editor options:', error);
   }
 
+  // If no project, return default options
   return editorOptions;
 };
 
 const getInitialDiagram = (): Diagram => {
-  const latestId: string | null = window.localStorage.getItem(localStorageLatest);
-  let diagram: Diagram;
-  
-  if (latestId) {
-    try {
-      const latestDiagramData = window.localStorage.getItem(localStorageDiagramPrefix + latestId);
-      if (latestDiagramData) {
-        const latestDiagram: Diagram = JSON.parse(latestDiagramData);
-        if (latestDiagram && latestDiagram.id) {
-          diagram = latestDiagram;
-        } else {
-          // Invalid diagram data, create new one
-          diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
-        }
-      } else {
-        // No diagram found with that ID, create new one
-        diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
-      }
-    } catch (error) {
-      // Parsing error, create new diagram
-      console.warn('Error parsing stored diagram, creating new one:', error);
-      diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+  // Always get from current project - no localStorage fallback
+  try {
+    const currentProject = ProjectStorageRepository.getCurrentProject();
+    if (currentProject) {
+      const currentDiagram = currentProject.diagrams[currentProject.currentDiagramType];
+
+      return {
+        id: currentDiagram.id,
+        title: currentDiagram.title,
+        model: currentDiagram.model,
+        lastUpdate: currentDiagram.lastUpdate,
+      };
     }
-  } else {
-    diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+  } catch (error) {
+    console.warn('Error loading project for initial diagram:', error);
   }
 
-  return diagram;
+  // If no project found, create a default diagram
+  // This should only happen during development or if there's an issue with project creation
+  console.warn('No project found - creating default diagram. This might indicate a project setup issue.');
+  return { 
+    id: uuid(), 
+    title: 'UMLClassDiagram', 
+    model: undefined, 
+    lastUpdate: new Date().toISOString() 
+  };
 };
 
 const initialState = {
@@ -91,8 +95,8 @@ const initialState = {
 };
 
 export const updateDiagramThunk = createAsyncThunk(
-  'diagram/updateWithLocalStorage',
-  async (diagram: Partial<Diagram>, { getState }) => {
+  'diagram/updateWithProject',
+  async (diagram: Partial<Diagram>, { getState, dispatch }) => {
     const state = getState() as any;
     const currentDiagram = state.diagram.diagram;
     
@@ -105,9 +109,20 @@ export const updateDiagramThunk = createAsyncThunk(
       model: diagram.model || currentDiagram.model
     };
 
-    // Store in localStorage
-    LocalStorageRepository.storeDiagram(updatedDiagram);
-    window.localStorage.setItem(localStorageLatest, updatedDiagram.id);
+    // Always use project system - no localStorage fallback
+    if (updatedDiagram.model) {
+      try {
+        // Import the project thunk dynamically to avoid circular imports
+        const { updateCurrentDiagramThunk } = await import('../project/projectSlice');
+        
+        // Update the project diagram
+        await dispatch(updateCurrentDiagramThunk({ model: updatedDiagram.model }));
+        // console.log('Successfully synced to project system');
+      } catch (error) {
+        console.error('Project sync failed:', error);
+        throw error; // Propagate the error since we no longer fall back to localStorage
+      }
+    }
 
     return updatedDiagram;
   }
