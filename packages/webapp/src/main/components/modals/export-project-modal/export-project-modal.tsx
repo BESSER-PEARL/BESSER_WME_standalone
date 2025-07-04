@@ -7,7 +7,7 @@ import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
 import { exportProjectAsBUMLZip } from '../../../services/export/useExportProjectBUML';
-import { getLastProjectFromLocalStorage } from '../../project/ProjectSettingsScreen';
+import { useProject } from '../../../hooks/useProject';
 import { exportProjectById } from '../../../services/export/useExportProjectJSON';
 
 const exportFormats = [
@@ -22,6 +22,9 @@ export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const apollonEditor = useContext(ApollonEditorContext);
   const editor = apollonEditor?.editor;
   const diagram = useAppSelector((state) => state.diagram.diagram);
+  
+  // Use the new project system
+  const { currentProject } = useProject();
 
   const exportAsSVG = useExportSVG();
   const exportAsPNG = useExportPNG();
@@ -31,11 +34,12 @@ export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       toast.error('No diagram available to export');
       return;
     }
-    const currentProject = getLastProjectFromLocalStorage();
+    
     if (!currentProject) {
-      toast.error('No project available to export as BUML');
+      toast.error('No project available to export');
       return;
     }
+    
     try {
       switch (format) {
         case 'SVG':

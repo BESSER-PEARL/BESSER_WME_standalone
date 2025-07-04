@@ -1,16 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Button, Modal, Form, Alert, ProgressBar } from 'react-bootstrap';
 import { ModalContentProps } from '../application-modal-types';
-import { BesserProject } from '../create-project-modal/CreateProjectModal';
-import { Diagram } from '../../../services/diagram/diagramSlice';
-import { LocalStorageRepository } from '../../../services/local-storage/local-storage-repository';
-import { saveProjectToLocalStorage } from '../../../utils/localStorage';
-import { uuid } from '../../../utils/uuid';
+import { BesserProject } from '../../../types/project';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileZip, FileText } from 'react-bootstrap-icons';
 import styled from 'styled-components';
 import { importProject } from '../../../services/import/useImportProjectJSON';
+import { useProject } from '../../../hooks/useProject';
 
 const DropZone = styled.div<{ $isDragOver: boolean }>`
   border: 2px dashed ${props => props.$isDragOver ? '#667eea' : '#dee2e6'};
@@ -39,13 +36,6 @@ const ImportButton = styled(Button)`
   font-weight: 500;
 `;
 
-interface ImportData {
-  project: BesserProject;
-  diagrams: Diagram[];
-  version: string;
-  exportedAt: string;
-}
-
 export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -54,6 +44,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { loadProject } = useProject();
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -117,11 +108,16 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       // Use the new import service
       const importedProject = await importProject(selectedFile);
       
+      setImportProgress(75);
+      
+      // Load the imported project into the project system
+      await loadProject(importedProject.id);
+      
       setImportProgress(100);
       
       toast.success(`Project "${importedProject.name}" imported successfully!`);
       
-      // Navigate to the project
+      // Close modal and navigate to the editor
       close();
       navigate('/');
       
