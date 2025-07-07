@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Row, Col, Badge, ListGroup } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { Download, Trash, Plus } from 'react-bootstrap-icons';
 import styled from 'styled-components';
+import { settingsService } from '@besser/wme';
 import { useProject } from '../../hooks/useProject';
 import { SupportedDiagramType } from '../../types/project';
 
@@ -91,6 +92,7 @@ const getDiagramTypeColor = (type: SupportedDiagramType): string => {
 
 export const ProjectSettingsScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showInstancedObjects, setShowInstancedObjects] = useState(false);
   
   // Use the new project hook
   const {
@@ -100,6 +102,18 @@ export const ProjectSettingsScreen: React.FC = () => {
     loading,
     error
   } = useProject();
+
+  // Initialize settings on component mount
+  useEffect(() => {
+    const currentSetting = settingsService.shouldShowInstancedObjects();
+    setShowInstancedObjects(currentSetting);
+  }, []);
+
+  const handleShowInstancedObjectsToggle = (checked: boolean) => {
+    setShowInstancedObjects(checked);
+    settingsService.updateSetting('showInstancedObjects', checked);
+    toast.success(`Instanced objects ${checked ? 'enabled' : 'disabled'}`);
+  };
 
   const handleProjectUpdate = (field: string, value: string) => {
     if (!currentProject) return;
@@ -267,6 +281,20 @@ export const ProjectSettingsScreen: React.FC = () => {
                 </div>
               </Col>
             </Row>
+
+            <SectionTitle>Display Settings</SectionTitle>
+            <Form.Group className="mb-4">
+              <Form.Check
+                type="switch"
+                id="show-instanced-objects"
+                label="Show Instanced Objects"
+                checked={showInstancedObjects}
+                onChange={(e) => handleShowInstancedObjectsToggle(e.target.checked)}
+              />
+              <Form.Text className="text-muted">
+                Toggle the visibility of instanced objects in diagrams
+              </Form.Text>
+            </Form.Group>
 
             <div className="d-flex justify-content-end gap-3 mt-4">
               <ActionButton
