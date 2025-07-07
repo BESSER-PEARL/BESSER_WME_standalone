@@ -4,7 +4,7 @@ import { ModalContentProps } from '../application-modal-types';
 import { BesserProject } from '../../../types/project';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileZip, FileText } from 'react-bootstrap-icons';
+import { Upload, FileText } from 'react-bootstrap-icons';
 import styled from 'styled-components';
 import { importProject } from '../../../services/import/useImportProjectJSON';
 import { useProject } from '../../../hooks/useProject';
@@ -82,7 +82,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   };
 
   const isValidFile = (file: File): boolean => {
-    const validExtensions = ['.zip', '.json'];
+    const validExtensions = ['.json'];
     const fileName = file.name.toLowerCase();
     return validExtensions.some(ext => fileName.endsWith(ext));
   };
@@ -94,7 +94,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
     }
 
     if (!isValidFile(selectedFile)) {
-      setError('Please select a valid ZIP or JSON file');
+      setError('Please select a valid JSON file');
       return;
     }
 
@@ -133,12 +133,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
 
   const getFileIcon = () => {
     if (!selectedFile) return <Upload />;
-    
-    if (selectedFile.name.toLowerCase().endsWith('.zip')) {
-      return <FileZip />;
-    } else {
-      return <FileText />;
-    }
+    return <FileText />;
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -157,7 +152,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       <Modal.Body>
         <div className="mb-4">
           <p className="text-muted">
-            Import a project from a ZIP file (exported from BESSER) or a JSON file (individual diagram or project).
+            Import a project from a JSON file.
           </p>
         </div>
 
@@ -184,7 +179,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
             <div>
               <h5 className="mb-2">Drop files here or click to browse</h5>
               <p className="text-muted mb-0">
-                Supports ZIP files (project exports) and JSON files (diagrams)
+                Supports JSON files
               </p>
             </div>
           )}
@@ -193,7 +188,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".zip,.json"
+          accept=".json"
           style={{ display: 'none' }}
           onChange={handleFileInputChange}
         />
@@ -217,8 +212,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <div className="mt-4">
           <h6>Supported Formats:</h6>
           <ul className="small text-muted">
-            <li><strong>ZIP files:</strong> Complete project exports with all diagrams</li>
-            <li><strong>JSON files:</strong> Individual diagrams or project data</li>
+            <li><strong>JSON files:</strong>Project data</li>
           </ul>
         </div>
       </Modal.Body>
