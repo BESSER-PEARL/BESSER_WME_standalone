@@ -6,7 +6,7 @@ import { useExportSVG } from '../../../services/export/useExportSvg';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { exportProjectAsBUMLZip } from '../../../services/export/useExportProjectBUML';
+import { exportProjectAsSingleBUMLFile } from '../../../services/export/useExportProjectBUML';
 import { useProject } from '../../../hooks/useProject';
 import { exportProjectById } from '../../../services/export/useExportProjectJSON';
 
@@ -55,7 +55,7 @@ export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
           await exportProjectById(currentProject);
           break;
         case 'BUML':
-          await exportProjectAsBUMLZip(currentProject);
+          await exportProjectAsSingleBUMLFile(currentProject);
           break;
         default:
           toast.error('Unknown export format.');
