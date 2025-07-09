@@ -193,13 +193,26 @@ export async function exportProjectAsSingleBUMLFile(project: BesserProject): Pro
     return;
   }
 
+  // Prepare a deep copy of the project to avoid mutating the original
+  const projectToExport = JSON.parse(JSON.stringify(project));
+
+  // Add referenceDiagramData to ObjectDiagram if needed
+  const objectDiagram = projectToExport.diagrams?.ObjectDiagram;
+  const classDiagram = projectToExport.diagrams?.ClassDiagram;
+  if (objectDiagram && classDiagram && classDiagram.model) {
+    objectDiagram.model.referenceDiagramData = {
+      ...classDiagram.model,
+      title: classDiagram.title || 'Class Diagram'
+    };
+  }
+
   try {
     const response = await fetch(`${BACKEND_URL}/export-project_as_buml`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(project),
+      body: JSON.stringify(projectToExport),
     });
 
     if (!response.ok) {
