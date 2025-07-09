@@ -23,6 +23,7 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         
       // If it's an ObjectDiagram, include the class diagram data
       if (editor.model.type === 'ObjectDiagram') {
+        console.log('Processing ObjectDiagram'); // Debug log
         const classDiagramData = diagramBridge.getClassDiagramData();
         if (classDiagramData) {
           // Try to get the class diagram title from localStorage
@@ -37,6 +38,7 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
               title: classDiagramTitle
             }
           };
+          console.log('Class diagram data added to model:', modelData); // Debug log
         }
       }
 
@@ -46,7 +48,8 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        elements: modelData
+        title: diagramTitle,
+        model: modelData
       }),
     });
 

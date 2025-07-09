@@ -55,8 +55,8 @@ export const useGenerateCode = () => {
             'Accept': 'application/json, text/plain, */*',
           },
           body: JSON.stringify({
-            diagramTitle: diagramTitle,
-            elements: editor.model,
+            title: diagramTitle,
+            model: editor.model,
             generator: generatorType,
             config: config // Add configuration object
           }),
