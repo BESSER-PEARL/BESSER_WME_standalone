@@ -80,9 +80,28 @@ export const useGenerateCode = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-
         const blob = await response.blob();
-        const filename = getFilenameForGenerator(generatorType);
+        
+        // Get the filename from the response headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'generated_code.txt'; // Default filename
+        
+        if (contentDisposition) {
+          // Try multiple patterns to extract filename
+          const patterns = [
+            /filename="([^"]+)"/,
+            /filename=([^;\s]+)/, 
+            /filename="?([^";\s]+)"?/ 
+          ];
+          
+          for (const pattern of patterns) {
+            const match = contentDisposition.match(pattern);
+            if (match) {
+              filename = match[1];
+              break;
+            }
+          }
+        }
 
         console.log('Download starting...');
         downloadFile({ file: blob, filename });
@@ -103,27 +122,3 @@ export const useGenerateCode = () => {
 
   return generateCode;
 };
-
-function getFilenameForGenerator(generatorType: string): string {
-  switch (generatorType) {
-    case 'python':
-      return 'classes.py';
-    case 'django':
-      return 'django_project.zip'; 
-    case 'pydantic':
-      return 'pydantic_classes.py';
-    case 'sqlalchemy':
-      return 'sql_alchemy.py';
-    case 'sql':
-      return 'tables.sql';
-      case 'jsonschema':
-        return 'json_schema.json';
-    case 'backend':
-    case 'java':
-      return `${generatorType}_output.zip`;
-    case 'agent':
-      return 'agent_code.zip';
-    default:
-      return 'generated_code.txt';
-  }
-}

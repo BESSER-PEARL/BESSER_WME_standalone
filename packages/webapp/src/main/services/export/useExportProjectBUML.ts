@@ -221,10 +221,29 @@ export async function exportProjectAsSingleBUMLFile(project: BesserProject): Pro
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
-    const bumlContent = await response.text();
-    const filename = `${project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'project'}_besser.py`;
+    const blob = await response.blob();
+    
+    // Get the filename from the response headers
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const normalizedProjectName = project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    let filename = `${normalizedProjectName}_besser.py`; // Default filename
+    
+    if (contentDisposition) {
+      // Try multiple patterns to extract filename
+      const patterns = [
+        /filename="([^"]+)"/,
+        /filename=([^;\s]+)/, 
+        /filename="?([^";\s]+)"?/ 
+      ];
+      for (const pattern of patterns) {
+        const match = contentDisposition.match(pattern);
+        if (match) {
+          filename = `${normalizedProjectName}_${match[1]}`;
+          break;
+        }
+      }
+    }
 
-    const blob = new Blob([bumlContent], { type: 'text/x-python' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
