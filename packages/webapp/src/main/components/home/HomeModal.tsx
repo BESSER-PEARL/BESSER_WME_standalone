@@ -258,6 +258,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   const { loadProject, currentProject } = useProject();
   const [allProjects, setAllProjects] = useState<Array<Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>>>([]);
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [deletedCurrentProjectId, setDeletedCurrentProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     if (show) {
@@ -317,12 +318,15 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
     
     if (confirmDelete) {
       try {
-        // Le nouveau système de projet stocke tout dans le projet lui-même
-        // Plus besoin de supprimer les diagrammes individuellement
         ProjectStorageRepository.deleteProject(project.id);
         
         const updatedProjects = ProjectStorageRepository.getAllProjects();
         setAllProjects(updatedProjects);
+        
+        // If the deleted project is the current one, mark it as deleted
+        if (currentProject && currentProject.id === project.id) {
+          setDeletedCurrentProjectId(project.id);
+        }
         
         toast.success('Project deleted successfully!');
       } catch (error) {
@@ -405,13 +409,13 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
             */}
           </ActionGrid>
 
-          {(currentProject || allProjects.length > 0) && (
+          {((currentProject && currentProject.id !== deletedCurrentProjectId) || allProjects.length > 0) && (
             <ProjectsSection>
               <h4 style={{ color: 'white', marginBottom: '1.25rem', textAlign: 'center' }}>
                 Your Projects
               </h4>
               
-              {currentProject && (
+              {currentProject && currentProject.id !== deletedCurrentProjectId && (
                 <div style={{ marginBottom: '1rem' }}>
                   <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Current Project:</h6>
                   <ProjectCard onClick={() => handleOpenSpecificProject(currentProject)}>
