@@ -670,7 +670,7 @@ export function validateDiagram(editor: ApollonEditor): ValidationResult {
     
     case 'ObjectDiagram':
       validations = [
-        validateObjectDiagram(editor)
+        // validateObjectDiagram(editor)
       ];
       break;
     

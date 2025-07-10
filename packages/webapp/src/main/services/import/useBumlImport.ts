@@ -62,21 +62,6 @@ export const useBumlImport = () => {
         ...data.model,
         type: modelType
       };      // If importing an ObjectDiagram with embedded class diagram data
-      if (modelType === UMLDiagramType.ObjectDiagram && data.model?.referenceDiagramData) {
-        const referenceDiagramData = data.model.referenceDiagramData;
-        
-        // Set the class diagram data in the bridge service
-        diagramBridge.setClassDiagramData(referenceDiagramData);
-
-        // Create a class diagram entry in localStorage so users can navigate to it
-        const classDiagramForStorage: Diagram = {
-          id: uuid(),
-          title: referenceDiagramData.title || data.title + ' - Class Diagram',
-          model: referenceDiagramData,
-          lastUpdate: new Date().toISOString()
-        };
-        LocalStorageRepository.storeDiagramByType(UMLDiagramType.ClassDiagram, classDiagramForStorage);
-      }
 
       dispatch(createDiagram({
         title: data.title,

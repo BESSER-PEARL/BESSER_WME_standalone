@@ -24,28 +24,9 @@ export const useExportBUML = () => {
         console.error('No editor or model available'); // Debug log
         toast.error('No diagram to export');
         return;
-      }      
-      try {        // Prepare the model data - include referenceDiagramData for ObjectDiagrams
+      }
+      try {        // Prepare the model data 
         let modelData = editor.model;
-        
-        // If it's an ObjectDiagram, include the class diagram data
-        if (editor.model.type === 'ObjectDiagram') {
-          const classDiagramData = diagramBridge.getClassDiagramData();
-          if (classDiagramData) {
-            // Try to get the class diagram title from localStorage
-            const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
-            const classDiagramTitle = classDiagram?.title || 'Class Diagram';
-            
-            // Add the class diagram data and title as referenceDiagramData to the model
-            modelData = {
-              ...editor.model,
-              referenceDiagramData: {
-                ...classDiagramData,
-                title: classDiagramTitle
-              }
-            };
-          }
-        }
 
         const response = await fetch(`${BACKEND_URL}/export-buml`, {
           method: 'POST',

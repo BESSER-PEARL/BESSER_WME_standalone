@@ -13,29 +13,7 @@ export const useImportDiagram = () => {
   const importDiagram = useCallback((stringifiedJson: string) => {
     try {
       const diagram: Diagram = JSON.parse(stringifiedJson);
-      diagram.id = uuid();      // If importing an ObjectDiagram with embedded class diagram data
-      if (diagram.model?.type === UMLDiagramType.ObjectDiagram && diagram.model?.referenceDiagramData) {
-        const referenceDiagramData = diagram.model.referenceDiagramData;
-        
-        // Set the class diagram data in the bridge service
-        diagramBridge.setClassDiagramData(referenceDiagramData);
-
-        // If the reference diagram has a title, create a class diagram entry in localStorage
-        if (referenceDiagramData.title) {
-          const classDiagramForStorage: Diagram = {
-            id: uuid(),
-            title: referenceDiagramData.title,
-            model: referenceDiagramData,
-            lastUpdate: new Date().toISOString()
-          };
-          LocalStorageRepository.storeDiagramByType(UMLDiagramType.ClassDiagram, classDiagramForStorage);
-        }
-
-        // Remove from model before loading (keep the model clean)
-        const cleanModel = { ...diagram.model };
-        delete cleanModel.referenceDiagramData;
-        diagram.model = cleanModel;
-      }
+      diagram.id = uuid();
 
       dispatch(loadImportedDiagram(diagram));
       navigate('/', { relative: 'path' });

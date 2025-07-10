@@ -44,27 +44,6 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
 
       // Step 4: For OCL-supported diagrams, proceed with OCL checks
       let modelData = editor.model;
-        
-      // If it's an ObjectDiagram, include the class diagram data
-      if (editor.model.type === 'ObjectDiagram') {
-        console.log('Processing ObjectDiagram'); // Debug log
-        const classDiagramData = diagramBridge.getClassDiagramData();
-        if (classDiagramData) {
-          // Try to get the class diagram title from localStorage
-          const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
-          const classDiagramTitle = classDiagram?.title || 'Class Diagram';
-          
-          // Add the class diagram data and title as referenceDiagramData to the model
-          modelData = {
-            ...editor.model,
-            referenceDiagramData: {
-              ...classDiagramData,
-              title: classDiagramTitle
-            }
-          };
-          console.log('Class diagram data added to model:', modelData); // Debug log
-        }
-      }
 
     const response = await fetch(`${BACKEND_URL}/check-ocl`, {
       method: 'POST',

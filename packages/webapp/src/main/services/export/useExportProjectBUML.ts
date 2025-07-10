@@ -25,27 +25,7 @@ async function convertDiagramModelToBUML(diagram: any, diagramTitle: string, pro
     throw new Error('No diagram to export');
   }
 
-  // Prepare the model data - include referenceDiagramData for ObjectDiagrams
   let modelData = diagram;
-  
-  // If it's an ObjectDiagram, include the class diagram data
-  if (diagram.type === 'ObjectDiagram') {
-    const classDiagramData = diagramBridge.getClassDiagramData();
-    if (classDiagramData) {
-      // Get the actual class diagram title from the project
-      const classDiagramTitle = project?.diagrams?.ClassDiagram?.title || 'Class Diagram';
-      
-      // Add the class diagram data as referenceDiagramData to the model
-      modelData = {
-        ...diagram,
-        referenceDiagramData: {
-          ...classDiagramData,
-          title: classDiagramTitle
-        }
-      };
-    }
-  }
-
 
   try {
     const response = await fetch(`${BACKEND_URL}/export-buml`, {
@@ -196,16 +176,6 @@ export async function exportProjectAsSingleBUMLFile(project: BesserProject): Pro
 
   // Prepare a deep copy of the project to avoid mutating the original
   const projectToExport = JSON.parse(JSON.stringify(project));
-
-  // Add referenceDiagramData to ObjectDiagram if needed
-  const objectDiagram = projectToExport.diagrams?.ObjectDiagram;
-  const classDiagram = projectToExport.diagrams?.ClassDiagram;
-  if (objectDiagram && classDiagram && classDiagram.model) {
-    objectDiagram.model.referenceDiagramData = {
-      ...classDiagram.model,
-      title: classDiagram.title || 'Class Diagram'
-    };
-  }
 
   try {
     const response = await fetch(`${BACKEND_URL}/export-project_as_buml`, {
