@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Upload, FileText } from 'react-bootstrap-icons';
 import styled from 'styled-components';
 import { importProject } from '../../../services/import/useImportProjectJSON';
+import { importProjectBUML } from '../../../services/import/useImportProjectBUML';
 import { useProject } from '../../../hooks/useProject';
 
 const DropZone = styled.div<{ $isDragOver: boolean }>`
@@ -82,7 +83,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   };
 
   const isValidFile = (file: File): boolean => {
-    const validExtensions = ['.json'];
+    const validExtensions = ['.json', '.py'];
     const fileName = file.name.toLowerCase();
     return validExtensions.some(ext => fileName.endsWith(ext));
   };
@@ -94,7 +95,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
     }
 
     if (!isValidFile(selectedFile)) {
-      setError('Please select a valid JSON file');
+      setError('Please select a valid JSON or Python (.py) file');
       return;
     }
 
@@ -104,23 +105,25 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
 
     try {
       setImportProgress(25);
-      
-      // Use the new import service
-      const importedProject = await importProject(selectedFile);
-      
+
+      let importedProject: BesserProject;
+
+      if (selectedFile.name.toLowerCase().endsWith('.json')) {
+        importedProject = await importProject(selectedFile);
+      } else if (selectedFile.name.toLowerCase().endsWith('.py')) {
+        importedProject = await importProjectBUML(selectedFile);
+      } else {
+        throw new Error('Unsupported file type');
+      }
+
       setImportProgress(75);
-      
-      // Load the imported project into the project system
       await loadProject(importedProject.id);
-      
       setImportProgress(100);
-      
+
       toast.success(`Project "${importedProject.name}" imported successfully!`);
-      
-      // Close modal and navigate to the editor
+
       close();
       navigate('/');
-      
     } catch (error) {
       console.error('Import error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -150,11 +153,6 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <Modal.Title>Import Project</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div className="mb-4">
-          <p className="text-muted">
-            Import a project from a JSON file.
-          </p>
-        </div>
 
         <DropZone
           $isDragOver={isDragOver}
@@ -178,9 +176,6 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
           ) : (
             <div>
               <h5 className="mb-2">Drop files here or click to browse</h5>
-              <p className="text-muted mb-0">
-                Supports JSON files
-              </p>
             </div>
           )}
         </DropZone>
@@ -188,7 +183,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".json"
+          accept=".json,.py"
           style={{ display: 'none' }}
           onChange={handleFileInputChange}
         />
@@ -212,7 +207,8 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <div className="mt-4">
           <h6>Supported Formats:</h6>
           <ul className="small text-muted">
-            <li><strong>JSON files:</strong>Project data</li>
+            <li><strong>JSON format</strong> (.json file)</li>
+            <li><strong>B-UML format</strong> (.py file)</li>
           </ul>
         </div>
       </Modal.Body>
