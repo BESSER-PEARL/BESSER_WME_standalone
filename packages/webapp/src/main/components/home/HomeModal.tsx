@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
 import { useAppDispatch } from '../store/hooks';
 import { showModal } from '../../services/modal/modalSlice';
@@ -27,6 +27,19 @@ import { loadDiagram } from '../../services/diagram/diagramSlice';
 interface HomeModalProps {
   show: boolean;
   onHide: () => void;
+}
+
+interface ProjectCardProps {
+  project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>;
+  onOpen: (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>) => void;
+  onDelete: (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>, e: React.MouseEvent) => void;
+  showDiagramCount?: boolean;
+  diagrams?: Record<string, any>;
+}
+
+interface ModalState {
+  showAllProjects: boolean;
+  deletedCurrentProjectId: string | null;
 }
 
 // Styled Components
@@ -253,21 +266,86 @@ const AllProjectsList = styled.div`
   text-align: left;
 `;
 
+// Reusable Project Card Component
+const ProjectCardComponent: React.FC<ProjectCardProps> = ({ 
+  project, 
+  onOpen, 
+  onDelete, 
+  showDiagramCount = false, 
+  diagrams 
+}) => (
+  <ProjectCard onClick={() => onOpen(project)}>
+    <ProjectInfo>
+      <ProjectDetails>
+        <ProjectName>{project.name}</ProjectName>
+        <ProjectMeta>
+          <span>
+            <Clock size={12} style={{ marginRight: '0.25rem' }} />
+            {new Date(project.createdAt).toLocaleDateString()}
+          </span>
+          {showDiagramCount && diagrams && (
+            <span>
+              <Folder size={12} style={{ marginRight: '0.25rem' }} />
+              {Object.keys(diagrams).length} diagrams
+            </span>
+          )}
+        </ProjectMeta>
+      </ProjectDetails>
+      <div>
+        <Button variant="outline-primary" size="sm">
+          Open
+        </Button>
+        <Button 
+          variant="outline-danger" 
+          size="sm" 
+          className="ms-2"
+          onClick={(e) => onDelete(project, e)}
+        >
+          <Trash size={12} />
+        </Button>
+      </div>
+    </ProjectInfo>
+  </ProjectCard>
+);
+
 export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   const dispatch = useAppDispatch();
   const { loadProject, currentProject } = useProject();
   const [allProjects, setAllProjects] = useState<Array<Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>>>([]);
-  const [showAllProjects, setShowAllProjects] = useState(false);
-  const [deletedCurrentProjectId, setDeletedCurrentProjectId] = useState<string | null>(null);
+  const [modalState, setModalState] = useState<ModalState>({
+    showAllProjects: false,
+    deletedCurrentProjectId: null
+  });
+
+  // Computed values using useMemo for better performance
+  const otherProjects = useMemo(() => {
+    if (currentProject) {
+      return allProjects.filter(p => p.id !== currentProject.id);
+    }
+    return allProjects.slice(0, -1); // All except the most recent
+  }, [allProjects, currentProject]);
+
+  const hasOtherProjects = useMemo(() => otherProjects.length > 0, [otherProjects]);
+
+  const recentProject = useMemo(() => {
+    if (!currentProject && allProjects.length > 0) {
+      return allProjects[allProjects.length - 1];
+    }
+    return null;
+  }, [currentProject, allProjects]);
+
+  const updateModalState = (updates: Partial<ModalState>) => {
+    setModalState(prev => ({ ...prev, ...updates }));
+  };
 
   useEffect(() => {
     if (show) {
       const projects = ProjectStorageRepository.getAllProjects();
       setAllProjects(projects);
       
-      // Si il n'y a pas de projet actuel mais qu'il y a des projets, afficher automatiquement la liste
+      // If there's no current project but there are projects, automatically show the list
       if (!currentProject && projects.length > 0) {
-        setShowAllProjects(true);
+        updateModalState({ showAllProjects: true });
       }
     }
   }, [show, currentProject]);
@@ -325,7 +403,7 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
         
         // If the deleted project is the current one, mark it as deleted
         if (currentProject && currentProject.id === project.id) {
-          setDeletedCurrentProjectId(project.id);
+          updateModalState({ deletedCurrentProjectId: project.id });
         }
         
         toast.success('Project deleted successfully!');
@@ -343,16 +421,18 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
       centered 
       backdrop={currentProject ? true : "static"}
       keyboard={currentProject ? true : false}
+      aria-labelledby="home-modal-title"
+      aria-describedby="home-modal-description"
     >
       <Modal.Body>
         <ModalHeader>
           <WelcomeSection>
             <LogoImage src="images/logo.png" alt="BESSER Logo" />
-            <ModalTitle>Welcome to BESSER</ModalTitle>
+            <ModalTitle id="home-modal-title">Welcome to BESSER</ModalTitle>
           </WelcomeSection>
-          {/* Afficher le bouton fermer seulement s'il y a un projet actuel */}
+          {/* Show close button only if there's a current project */}
           {currentProject && (
-            <CloseButton onClick={onHide}>
+            <CloseButton onClick={onHide} aria-label="Close modal">
               <X size={18} />
             </CloseButton>
           )}
@@ -360,7 +440,10 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
         
         <ContentContainer>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '1rem', opacity: 0.9, maxWidth: '500px', margin: '0 auto' }}>
+            <p 
+              id="home-modal-description" 
+              style={{ fontSize: '1rem', opacity: 0.9, maxWidth: '500px', margin: '0 auto' }}
+            >
               Transform your ideas into reality with our comprehensive low-code platform for UML modeling.
             </p>
           </div>
@@ -409,89 +492,47 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
             */}
           </ActionGrid>
 
-          {((currentProject && currentProject.id !== deletedCurrentProjectId) || allProjects.length > 0) && (
+          {((currentProject && currentProject.id !== modalState.deletedCurrentProjectId) || allProjects.length > 0) && (
             <ProjectsSection>
               <h4 style={{ color: 'white', marginBottom: '1.25rem', textAlign: 'center' }}>
                 Your Projects
               </h4>
               
-              {currentProject && currentProject.id !== deletedCurrentProjectId && (
+              {/* Current Project Section */}
+              {currentProject && currentProject.id !== modalState.deletedCurrentProjectId && (
                 <div style={{ marginBottom: '1rem' }}>
                   <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Current Project:</h6>
-                  <ProjectCard onClick={() => handleOpenSpecificProject(currentProject)}>
-                    <ProjectInfo>
-                      <ProjectDetails>
-                        <ProjectName>{currentProject.name}</ProjectName>
-                        <ProjectMeta>
-                          <span>
-                            <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                            {new Date(currentProject.createdAt).toLocaleDateString()}
-                          </span>
-                          <span>
-                            <Folder size={12} style={{ marginRight: '0.25rem' }} />
-                            {Object.keys(currentProject.diagrams).length} diagrams
-                          </span>
-                        </ProjectMeta>
-                      </ProjectDetails>
-                      <div>
-                        <Button variant="outline-primary" size="sm">
-                          Open
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          className="ms-2"
-                          onClick={(e) => handleDeleteSpecificProject(currentProject, e)}
-                        >
-                          <Trash size={12} />
-                        </Button>
-                      </div>
-                    </ProjectInfo>
-                  </ProjectCard>
+                  <ProjectCardComponent
+                    project={currentProject}
+                    onOpen={handleOpenSpecificProject}
+                    onDelete={handleDeleteSpecificProject}
+                    showDiagramCount={true}
+                    diagrams={currentProject.diagrams}
+                  />
                 </div>
               )}
 
-              {/* Si pas de projet actuel, montrer le dernier projet créé en haut */}
-              {!currentProject && allProjects.length > 0 && (
+              {/* Recent Project Section (when no current project) */}
+              {recentProject && (
                 <div style={{ marginBottom: '1rem' }}>
                   <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Recent Project:</h6>
-                  <ProjectCard onClick={() => handleOpenSpecificProject(allProjects[allProjects.length - 1])}>
-                    <ProjectInfo>
-                      <ProjectDetails>
-                        <ProjectName>{allProjects[allProjects.length - 1].name}</ProjectName>
-                        <ProjectMeta>
-                          <span>
-                            <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                            {new Date(allProjects[allProjects.length - 1].createdAt).toLocaleDateString()}
-                          </span>
-                        </ProjectMeta>
-                      </ProjectDetails>
-                      <div>
-                        <Button variant="outline-primary" size="sm">
-                          Open
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          className="ms-2"
-                          onClick={(e) => handleDeleteSpecificProject(allProjects[allProjects.length - 1], e)}
-                        >
-                          <Trash size={12} />
-                        </Button>
-                      </div>
-                    </ProjectInfo>
-                  </ProjectCard>
+                  <ProjectCardComponent
+                    project={recentProject}
+                    onOpen={handleOpenSpecificProject}
+                    onDelete={handleDeleteSpecificProject}
+                  />
                 </div>
               )}
 
-              {/* Afficher les autres projets seulement s'il y en a plus d'un */}
-              {((currentProject && allProjects.filter(p => p.id !== currentProject?.id).length > 0) || 
-                (!currentProject && allProjects.length > 1)) && (
+              {/* Other Projects Section */}
+              {hasOtherProjects && (
                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                   <ToggleButton 
-                    onClick={() => setShowAllProjects(!showAllProjects)}
+                    onClick={() => updateModalState({ showAllProjects: !modalState.showAllProjects })}
+                    aria-expanded={modalState.showAllProjects}
+                    aria-label={`${modalState.showAllProjects ? 'Hide' : 'Show'} other projects`}
                   >
-                    {showAllProjects ? (
+                    {modalState.showAllProjects ? (
                       <>
                         <ChevronUp size={14} />
                         Hide Others
@@ -499,53 +540,21 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                     ) : (
                       <>
                         <ChevronDown size={14} />
-                        Show All ({currentProject ? 
-                          allProjects.filter(p => p.id !== currentProject?.id).length :
-                          allProjects.length - 1
-                        })
+                        Show All ({otherProjects.length})
                       </>
                     )}
                   </ToggleButton>
 
-                  {showAllProjects && (
+                  {modalState.showAllProjects && (
                     <AllProjectsList>
-                      {allProjects
-                        .filter(project => currentProject ? 
-                          project.id !== currentProject?.id : 
-                          project.id !== allProjects[allProjects.length - 1].id
-                        )
-                        .map(project => (
-                          <ProjectCard 
-                            key={project.id} 
-                            onClick={() => handleOpenSpecificProject(project)}
-                          >
-                            <ProjectInfo>
-                              <ProjectDetails>
-                                <ProjectName>{project.name}</ProjectName>
-                                <ProjectMeta>
-                                  <span>
-                                    <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                                    {new Date(project.createdAt).toLocaleDateString()}
-                                  </span>
-                                </ProjectMeta>
-                              </ProjectDetails>
-                              <div>
-                                <Button variant="outline-primary" size="sm">
-                                  Open
-                                </Button>
-                                <Button 
-                                  variant="outline-danger" 
-                                  size="sm" 
-                                  className="ms-2"
-                                  onClick={(e) => handleDeleteSpecificProject(project, e)}
-                                >
-                                  <Trash size={12} />
-                                </Button>
-                              </div>
-                            </ProjectInfo>
-                          </ProjectCard>
-                        ))
-                      }
+                      {otherProjects.map(project => (
+                        <ProjectCardComponent
+                          key={project.id}
+                          project={project}
+                          onOpen={handleOpenSpecificProject}
+                          onDelete={handleDeleteSpecificProject}
+                        />
+                      ))}
                     </AllProjectsList>
                   )}
                 </div>
