@@ -80,7 +80,7 @@ export async function importProjectFromBUML(file: File): Promise<BesserProject> 
     const project = {
       ...jsonData.project,
       id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: `${jsonData.project.name} (Imported)`,
+      name: `${jsonData.project.name}`,
       createdAt: new Date().toISOString(),
     };
     storeImportedProject(project);
