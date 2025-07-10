@@ -92,7 +92,6 @@ export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHo
   const apollonEditor = useContext(ApollonEditorContext);
   const editor = apollonEditor?.editor;
   const location = useLocation();
-  const isHome = location.pathname === '/teampage' || location.pathname === '/project-settings';
   const { currentProject } = useProject();
 
   useEffect(() => {
@@ -199,67 +198,35 @@ export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHo
         <Navbar.Brand as={Link} to="/">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
         </Navbar.Brand>
-        {/* Home button - placed right after logo */}
-        {!isHome && onOpenHome && (
-          <Nav.Item className="me-3">
-            <Nav.Link onClick={onOpenHome} title="Home">
-              <House size={20} />
-            </Nav.Link>
-          </Nav.Item>
-        )}
-        {/* Project name display
-        {currentProject && (
-          <ProjectName title={currentProject.name}>
-            {currentProject.name}
-          </ProjectName>
-        )} */}
-        {/* <ApplicationVersion>{appVersion}</ApplicationVersion> */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            {/* Only show these menus if NOT on home */}
-            {!isHome && (
-              <>
-                <FileMenu />
-                {/* <DiagramTypeSelector /> Switched to sidebar */}
-                <ClassDiagramImporter />
-                {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram || currentType === UMLDiagramType.ObjectDiagram ) && (
-                  <>
-                    <GenerateCodeMenu />
-                    {APPLICATION_SERVER_VERSION && (
-                      <Nav.Item>
-                        <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
-                      </Nav.Item>
-                    )}
-                  </>
-                )}
-                {APPLICATION_SERVER_VERSION && (
-                  <>
-                    {/* <Nav.Item>
-                      <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
-                    </Nav.Item> */}
-                    <Nav.Item>
-                      <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
-                        Save & Share
-                      </Nav.Link>
-                    </Nav.Item>
-                  </>
-                )}
-                <HelpMenu />
-                <DiagramTitle
-                  type="text"
-                  value={diagramTitle}
-                  onChange={changeDiagramTitlePreview}
-                  onBlur={changeDiagramTitleApplicationState}
-                  placeholder="Diagram Title"
-                />
-              </>
-            )}
-            {isHome && (
+            <FileMenu />
+            {/* <ClassDiagramImporter /> */}
+            {/* Ensure all diagram types have access to GenerateCodeMenu and Quality Check */}
+            <>
+              <GenerateCodeMenu />
+              {APPLICATION_SERVER_VERSION && (
+                <Nav.Item>
+                  <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
+                </Nav.Item>
+              )}
+            </>
+            {APPLICATION_SERVER_VERSION && (
               <Nav.Item>
-                <Nav.Link as={Link} to="/teampage">Team</Nav.Link>
+                <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
+                  Save & Share
+                </Nav.Link>
               </Nav.Item>
             )}
+            <HelpMenu />
+            <DiagramTitle
+              type="text"
+              value={diagramTitle}
+              onChange={changeDiagramTitlePreview}
+              onBlur={changeDiagramTitleApplicationState}
+              placeholder="Diagram Title"
+            />
           </Nav>
         </Navbar.Collapse>
         <Nav.Item className="me-3">

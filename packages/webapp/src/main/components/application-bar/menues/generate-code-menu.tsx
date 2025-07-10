@@ -162,7 +162,7 @@ export const GenerateCodeMenu: React.FC = () => {
       {isAgentDiagram ? (
         // Agent Diagram: Only show agent generation option
         <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
-      ) : (
+      ) : currentDiagramType === UMLDiagramType.ClassDiagram ? (
         // Class Diagram: Show all other options
         <>
           {/* Web Dropdown */}
@@ -225,6 +225,9 @@ export const GenerateCodeMenu: React.FC = () => {
             </Dropdown.Menu>
           </Dropdown>
         </>
+      ) : (
+        // Not yet available
+        <Dropdown.Item disabled>Not yet available</Dropdown.Item>
       )}
     </NavDropdown>
 

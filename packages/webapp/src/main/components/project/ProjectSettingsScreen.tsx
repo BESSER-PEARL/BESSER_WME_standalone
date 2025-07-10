@@ -120,7 +120,7 @@ export const ProjectSettingsScreen: React.FC = () => {
     
     try {
       updateProject({ [field]: value } as any);
-      toast.success('Project updated successfully!');
+      // toast.success('Project updated successfully!');
     } catch (error) {
       console.error('Error updating project:', error);
       toast.error('Failed to update project');
