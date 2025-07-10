@@ -5,12 +5,9 @@ import { SoftwarePatternType } from './software-pattern/software-pattern-types';
 import { CreateFromSoftwarePatternModalTab } from './software-pattern/create-from-software-pattern-modal-tab';
 import { TemplateFactory } from './template-factory';
 import { ModalContentProps } from '../application-modal-types';
-import { useProject } from '../../../hooks/useProject';
-import { useNavigate } from 'react-router-dom';
-import { toSupportedDiagramType } from '../../../types/project';
 import { useAppDispatch } from '../../store/hooks';
-import { setCreateNewEditor, loadDiagram, changeDiagramType } from '../../../services/diagram/diagramSlice';
-import { uuid } from '../../../utils/uuid';
+import { createDiagram } from '../../../services/diagram/diagramSlice';
+import { updateCurrentDiagramThunk, switchDiagramTypeThunk } from '../../../services/project/projectSlice';
 
 export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(
@@ -20,9 +17,7 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
     TemplateCategory.SOFTWARE_PATTERN,
   );
 
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentProject, switchDiagramType, updateCurrentDiagram } = useProject();
 
   const selectTemplateCategory = (templateCategory: TemplateCategory) => {
     setSelectedTemplateCategory(templateCategory);
@@ -32,82 +27,46 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
     setSelectedTemplate(template);
   };
 
-  const loadTemplate = async () => {
+  const createNewDiagram = async () => {
+    // First, create the diagram in the local state
+    dispatch(
+      createDiagram({
+        title: selectedTemplate.type,
+        diagramType: selectedTemplate.diagramType,
+        template: selectedTemplate.diagram,
+      }),
+    );
+    
+    // Then ensure we're on the correct diagram type in the project
     try {
-      if (!currentProject) {
-        console.error('No current project - cannot load template');
-        return;
-      }
-
-      const templateDiagramType = selectedTemplate.diagramType;
-      const templateModel = selectedTemplate.diagram;
-
-      if (!templateModel) {
-        console.error('Template has no diagram model');
-        return;
-      }
-
-      console.log('Loading template into current project:', {
-        templateType: selectedTemplate.type,
-        templateDiagramType,
-        currentProjectName: currentProject.name,
-        currentDiagramType: currentProject.currentDiagramType
-      });
-
-      // Check if we need to switch diagram type
-      const targetSupportedType = toSupportedDiagramType(templateDiagramType);
-      const needsTypeSwitch = currentProject.currentDiagramType !== targetSupportedType;
-
-      if (needsTypeSwitch) {
-        console.log('Switching diagram type from', currentProject.currentDiagramType, 'to', targetSupportedType);
-        await switchDiagramType(templateDiagramType);
-        console.log('Diagram type switch completed');
-      }
-
-      // Update the diagram with the template
-      console.log('Updating diagram with template model');
-      await updateCurrentDiagram(templateModel);
-      console.log('Template loaded successfully');
-
-      // Prepare diagram for editor reload
-      const newDiagramId = uuid();
-      const compatibleDiagram = {
-        id: newDiagramId,
-        title: currentProject.diagrams[targetSupportedType].title,
-        model: templateModel,
-        lastUpdate: new Date().toISOString(),
-      };
-      
-      // Close modal and navigate
-      close();
-      navigate('/');
-      
-      // Force editor reload with quick diagram type switch
-      setTimeout(() => {
-        // Switch to different type temporarily to force reload
-        const tempType = templateDiagramType === 'ClassDiagram' ? 'ObjectDiagram' : 'ClassDiagram';
-        dispatch(changeDiagramType(tempType));
-        dispatch(setCreateNewEditor(true));
-        
-        // Switch back to correct type with template
-        setTimeout(() => {
-          dispatch(changeDiagramType(templateDiagramType));
-          dispatch(loadDiagram(compatibleDiagram));
-          dispatch(setCreateNewEditor(true));
-        }, 100);
-      }, 100);
-      
+      await dispatch(switchDiagramTypeThunk({ diagramType: selectedTemplate.diagramType }));
+      console.log('Switched to diagram type:', selectedTemplate.diagramType);
     } catch (error) {
-      console.error('Error loading template:', error);
+      console.error('Failed to switch diagram type:', error);
     }
+    
+    // Finally, save the template to the project system
+    if (selectedTemplate.diagram) {
+      try {
+        await dispatch(updateCurrentDiagramThunk({ model: selectedTemplate.diagram }));
+        console.log('Template saved to project successfully');
+      } catch (error) {
+        console.error('Failed to save template to project:', error);
+      }
+    }
+    
+    close();
+    
+    // Force a page reload to ensure the template is properly rendered in the canvas
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   return (
     <>
       <Modal.Header closeButton>
-        <Modal.Title>
-          Load Diagram Template
-        </Modal.Title>
+        <Modal.Title>Load Diagram Template</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Tab.Container id="left-tabs-example" defaultActiveKey={selectedTemplateCategory}>
@@ -148,7 +107,7 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
         <Button variant="secondary" onClick={close}>
           Close
         </Button>
-        <Button variant="primary" onClick={loadTemplate} disabled={!selectedTemplate}>
+        <Button variant="primary" onClick={createNewDiagram} disabled={!selectedTemplate}>
           Load Template
         </Button>
       </Modal.Footer>
