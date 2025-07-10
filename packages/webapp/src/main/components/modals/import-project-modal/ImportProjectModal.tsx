@@ -6,8 +6,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText } from 'react-bootstrap-icons';
 import styled from 'styled-components';
-import { importProject } from '../../../services/import/useImportProjectJSON';
-import { importProjectBUML } from '../../../services/import/useImportProjectBUML';
+import { importProject } from '../../../services/import/useImportProject';
 import { useProject } from '../../../hooks/useProject';
 
 const DropZone = styled.div<{ $isDragOver: boolean }>`
@@ -111,7 +110,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
       if (selectedFile.name.toLowerCase().endsWith('.json')) {
         importedProject = await importProject(selectedFile);
       } else if (selectedFile.name.toLowerCase().endsWith('.py')) {
-        importedProject = await importProjectBUML(selectedFile);
+        importedProject = await importProject(selectedFile);
       } else {
         throw new Error('Unsupported file type');
       }

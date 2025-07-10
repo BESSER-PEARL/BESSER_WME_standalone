@@ -12,7 +12,7 @@ import { useExportPNG } from '../../../services/export/useExportPng';
 import { useExportSVG } from '../../../services/export/useExportSvg';
 import { useExportBUML } from '../../../services/export/useExportBuml';
 import { toast } from 'react-toastify';
-import { importProject } from '../../../services/import/useImportProjectJSON';
+import { importProject } from '../../../services/import/useImportProject';
 
 export const FileMenu: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
