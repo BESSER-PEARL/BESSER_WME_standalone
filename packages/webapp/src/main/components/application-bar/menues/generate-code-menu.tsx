@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig } from '../../../services/generate-code/useGenerateCode';
+import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig, JSONSchemaConfig } from '../../../services/generate-code/useGenerateCode';
 import { useDeployLocally } from '../../../services/generate-code/useDeployLocally';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
@@ -12,11 +12,13 @@ export const GenerateCodeMenu: React.FC = () => {
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
   const [showSqlConfig, setShowSqlConfig] = useState(false);
   const [showSqlAlchemyConfig, setShowSqlAlchemyConfig] = useState(false);
+  const [showJsonSchemaConfig, setShowJsonSchemaConfig] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [appName, setAppName] = useState('');
   const [useDocker, setUseDocker] = useState(false);
   const [sqlDialect, setSqlDialect] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
   const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
+  const [jsonSchemaMode, setJsonSchemaMode] = useState<'regular' | 'smart_data'>('regular');
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -48,6 +50,11 @@ export const GenerateCodeMenu: React.FC = () => {
 
     if (generatorType === 'sqlalchemy') {
       setShowSqlAlchemyConfig(true);
+      return;
+    }
+
+    if (generatorType === 'jsonschema') {
+      setShowJsonSchemaConfig(true);
       return;
     }
 
@@ -151,6 +158,19 @@ export const GenerateCodeMenu: React.FC = () => {
     } catch (error) {
       console.error('Error in SQLAlchemy code generation:', error);
       toast.error('SQLAlchemy code generation failed');
+    }
+  };
+
+  const handleJsonSchemaGenerate = async () => {
+    try {
+      const jsonSchemaConfig: JSONSchemaConfig = {
+        mode: jsonSchemaMode
+      };
+      await generateCode(editor!, 'jsonschema', diagram.title, jsonSchemaConfig);
+      setShowJsonSchemaConfig(false);
+    } catch (error) {
+      console.error('Error in JSON Schema code generation:', error);
+      toast.error('JSON Schema code generation failed');
     }
   };
 
@@ -364,6 +384,39 @@ export const GenerateCodeMenu: React.FC = () => {
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSqlAlchemyGenerate}>
+            Generate
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* JSON Schema Configuration Modal */}
+      <Modal show={showJsonSchemaConfig} onHide={() => setShowJsonSchemaConfig(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>JSON Schema Mode Selection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Schema Generation Mode</Form.Label>
+              <Form.Select
+                value={jsonSchemaMode}
+                onChange={(e) => setJsonSchemaMode(e.target.value as 'regular' | 'smart_data')}
+              >
+                <option value="regular">Regular JSON Schema</option>
+                <option value="smart_data">Smart Data Models</option>
+              </Form.Select>
+              <Form.Text className="text-muted">
+                Regular mode generates a standard JSON schema. 
+                Smart Data mode generates NGSI-LD compatible schemas for each class.
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowJsonSchemaConfig(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleJsonSchemaGenerate}>
             Generate
           </Button>
         </Modal.Footer>

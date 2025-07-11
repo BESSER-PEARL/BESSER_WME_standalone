@@ -7,9 +7,9 @@ import { BACKEND_URL } from '../../constant';
 
 // Add type definitions
 export interface DjangoConfig {
-  project_name: string;  // Changed from projectName
-  app_name: string;      // Changed from appName
-  containerization: boolean;  // Changed from useDocker
+  project_name: string;
+  app_name: string;
+  containerization: boolean;
 }
 
 export interface SQLConfig {
@@ -20,10 +20,15 @@ export interface SQLAlchemyConfig {
   dbms: 'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb';
 }
 
+export interface JSONSchemaConfig {
+  mode: 'regular' | 'smart_data';
+}
+
 export type GeneratorConfig = {
   django: DjangoConfig;
   sql: SQLConfig;
   sqlalchemy: SQLAlchemyConfig;
+  jsonschema: JSONSchemaConfig;
   [key: string]: any;
 };
 
@@ -103,9 +108,7 @@ export const useGenerateCode = () => {
           }
         }
 
-        console.log('Download starting...');
         downloadFile({ file: blob, filename });
-        console.log('Download completed');
         toast.success('Code generation completed successfully');
       } catch (error) {
 
