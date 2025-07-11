@@ -109,7 +109,7 @@ export const createProjectThunk = createAsyncThunk(
 
 export const updateCurrentDiagramThunk = createAsyncThunk(
   'project/updateCurrentDiagram',
-  async ({ model }: { model: UMLModel }, { getState }) => {
+  async (updates: Partial<Pick<ProjectDiagram, 'model' | 'title' | 'description'>>, { getState }) => {
     const state = getState() as { project: ProjectState };
     const { currentProject, currentDiagramType } = state.project;
     
@@ -119,7 +119,7 @@ export const updateCurrentDiagramThunk = createAsyncThunk(
     
     const updatedDiagram: ProjectDiagram = {
       ...currentProject.diagrams[currentDiagramType],
-      model,
+      ...updates,
       lastUpdate: new Date().toISOString(),
     };
     

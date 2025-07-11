@@ -110,18 +110,30 @@ export const updateDiagramThunk = createAsyncThunk(
     };
 
     // Always use project system - no localStorage fallback
-    if (updatedDiagram.model) {
-      try {
-        // Import the project thunk dynamically to avoid circular imports
-        const { updateCurrentDiagramThunk } = await import('../project/projectSlice');
-        
-        // Update the project diagram
-        await dispatch(updateCurrentDiagramThunk({ model: updatedDiagram.model }));
-        // console.log('Successfully synced to project system');
-      } catch (error) {
-        console.error('Project sync failed:', error);
-        throw error; // Propagate the error since we no longer fall back to localStorage
+    try {
+      // Import the project thunk dynamically to avoid circular imports
+      const { updateCurrentDiagramThunk } = await import('../project/projectSlice');
+      
+      // Prepare updates for the project system
+      const projectUpdates: any = {};
+      if (updatedDiagram.model) {
+        projectUpdates.model = updatedDiagram.model;
       }
+      if (diagram.title !== undefined) {
+        projectUpdates.title = diagram.title;
+      }
+      if (diagram.description !== undefined) {
+        projectUpdates.description = diagram.description;
+      }
+      
+      // Only update project if we have something to update
+      if (Object.keys(projectUpdates).length > 0) {
+        await dispatch(updateCurrentDiagramThunk(projectUpdates));
+        // console.log('Successfully synced to project system');
+      }
+    } catch (error) {
+      console.error('Project sync failed:', error);
+      throw error; // Propagate the error since we no longer fall back to localStorage
     }
 
     return updatedDiagram;
