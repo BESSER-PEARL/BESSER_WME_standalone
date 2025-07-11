@@ -55,7 +55,7 @@ function convertLegacyToProject(data: LegacyImportData): BesserProject {
   return {
     ...data.project,
     id: newProjectId,
-    name: `${data.project.name} (Imported)`,
+    name: `${data.project.name}`,
     createdAt: new Date().toISOString(),
   };
 }
@@ -121,7 +121,7 @@ export async function importProjectFromJson(file: File): Promise<BesserProject> 
           const importedProject: BesserProject = {
             ...project,
             id: newProjectId,
-            name: `${project.name} (Imported)`,
+            name: `${project.name}`,
             createdAt: new Date().toISOString()
           };
           

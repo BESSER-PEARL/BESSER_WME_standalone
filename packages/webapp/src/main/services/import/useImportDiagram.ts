@@ -56,7 +56,7 @@ export const useImportDiagramToProject = () => {
       const importedDiagram: Diagram = {
         ...diagram,
         id: newId,
-        title: `${diagram.title} (Imported)`,
+        title: `${diagram.title}`,
         lastUpdate: new Date().toISOString()
       };
 
