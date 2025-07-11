@@ -13,9 +13,9 @@ import { exportProjectById } from '../../../services/export/useExportProjectJSON
 const exportFormats = [
   { label: 'JSON', value: 'JSON' },
   { label: 'B-UML', value: 'BUML' },
-  { label: 'SVG', value: 'SVG' },
-  { label: 'PNG (White Background)', value: 'PNG_WHITE' },
-  { label: 'PNG (Transparent Background)', value: 'PNG' },
+  { label: 'SVG*', value: 'SVG' },
+  { label: 'PNG (White Background)*', value: 'PNG_WHITE' },
+  { label: 'PNG (Transparent Background)*', value: 'PNG' },
 ];
 
 export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
@@ -83,6 +83,9 @@ export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
             {fmt.label}
           </Button>
         ))}
+        <div className="mt-3 text-muted small">
+          *Note: Exporting as SVG or PNG applies only to the current diagram, not the entire project.
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={close}>

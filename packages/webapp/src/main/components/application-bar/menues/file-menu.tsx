@@ -13,17 +13,21 @@ import { useExportSVG } from '../../../services/export/useExportSvg';
 import { useExportBUML } from '../../../services/export/useExportBuml';
 import { toast } from 'react-toastify';
 import { importProject } from '../../../services/import/useImportProject';
+import { useImportDiagramToProjectWorkflow } from '../../../services/import/useImportDiagram';
+import { useProject } from '../../../hooks/useProject';
 
 export const FileMenu: React.FC = () => {
   const apollonEditor = useContext(ApollonEditorContext);
   const dispatch = useAppDispatch();
   const editor = apollonEditor?.editor;
   const diagram = useAppSelector((state) => state.diagram.diagram);
+  const { currentProject } = useProject();
   const exportAsSVG = useExportSVG();
   const exportAsPNG = useExportPNG();
   const exportAsPDF = useExportPDF();
   const exportAsJSON = useExportJSON();
   const exportAsBUML = useExportBUML();
+  const handleImportDiagramToProject = useImportDiagramToProjectWorkflow();
 
   const exportDiagram = async (exportType: 'PNG' | 'PNG_WHITE' | 'SVG' | 'JSON' | 'PDF' | 'BUML'): Promise<void> => {
     if (!editor || !diagram?.title) {
@@ -72,6 +76,23 @@ export const FileMenu: React.FC = () => {
   const handleLoadTemplate = () => dispatch(showModal({ type: ModalContentType.CreateDiagramFromTemplateModal }));
   const handleExportProject = () => dispatch(showModal({ type: ModalContentType.ExportProjectModal }));
 
+  // Handler for importing single diagram to project
+  const handleImportDiagramToCurrentProject = async () => {
+    if (!currentProject) {
+      toast.error('No project is open. Please create or open a project first.');
+      return;
+    }
+
+    try {
+      const result = await handleImportDiagramToProject();
+      toast.success(result.message);
+      toast.info(`Imported diagram type: ${result.diagramType}`);
+    } catch (error) {
+      // Error handling is already done in the workflow function
+      console.error('Import failed:', error);
+    }
+  };
+
   return (
     <NavDropdown id="file-menu-item" title="File" className="pt-0 pb-0">
       {/* New */}
@@ -83,6 +104,19 @@ export const FileMenu: React.FC = () => {
       <NavDropdown.Item onClick={handleImportProject}>
         Import Project
       </NavDropdown.Item>
+
+      {/* Import Single Diagram to Project - only show when a project is active */}
+      {currentProject && (
+        <>
+          {/* <NavDropdown.Divider /> */}
+          <NavDropdown.Item 
+            onClick={handleImportDiagramToCurrentProject}
+            title="Import a single diagram JSON file and add it to the current project (useful for converting old diagrams)"
+          >
+            Import Single Diagram to Project
+          </NavDropdown.Item>
+        </>
+      )}
 
       {/* Load */}
       {/* <NavDropdown.Item onClick={handleLoadProject}>
