@@ -260,9 +260,8 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
                 <th>Edit State</th>
                 <td>
                   To edit a state, double-click on it to open a popup where you can modify its name and internal activities.
-                  You can define entry actions (executed when entering the state), exit actions (executed when leaving),
-                  and do activities (executed while in the state) using the format <code>entry / action</code>, 
-                  <code>exit / action</code>, or <code>do / activity</code>.
+                  You can define the <code>Body</code> (the main behavior of the state) and an optional <code>Fallback</code> (an
+                  action that executes if the state is entered without a specific trigger).
                 </td>
                 <td>
                   <img width="300" src="/images/help/statemachine/help-update-state.png" alt="Image not found" />
