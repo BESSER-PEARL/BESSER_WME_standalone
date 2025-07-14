@@ -8,23 +8,57 @@ import { diagramBridge, UMLDiagramType } from '@besser/wme';
 import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
 import { toSupportedDiagramType } from '../../types/project';
+import { useBumlToDiagram, isBumlFile, isJsonFile } from './useBumlToDiagram';
 
 export const useImportDiagram = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const importDiagram = useCallback((stringifiedJson: string) => {
+  const convertBumlToDiagram = useBumlToDiagram();
+  
+  const importDiagram = useCallback(async (file: File) => {
     try {
-      const diagram: Diagram = JSON.parse(stringifiedJson);
-      diagram.id = uuid();
+      let diagram: Diagram;
+
+      if (isBumlFile(file)) {
+        // Handle Python/BUML file - convert to diagram
+        diagram = await convertBumlToDiagram(file);
+
+      } else if (isJsonFile(file)) {
+        // Handle JSON file - parse directly
+        const fileContent = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsText(file);
+        });
+        
+        diagram = JSON.parse(fileContent);
+        diagram.id = uuid();
+      } else {
+        throw new Error('Unsupported file type. Please select a .json or .py file.');
+      }
+
+      // Ensure the diagram has a valid model with type
+      if (!diagram.model || !diagram.model.type) {
+        throw new Error('Invalid diagram: missing model or type information');
+      }
 
       dispatch(loadImportedDiagram(diagram));
       navigate('/', { relative: 'path' });
-    } catch {
+      
+    } catch (error) {
+      console.error('Error importing diagram:', error);
+      
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       dispatch(
-        displayError('Import failed', 'Could not import selected file. Are you sure it contains a diagram.json?'),
+        displayError('Import failed', `Could not import selected file: ${errorMessage}`)
       );
     }
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, convertBumlToDiagram]);
 
   return importDiagram;
 };
@@ -32,10 +66,28 @@ export const useImportDiagram = () => {
 // Helper function to import a single diagram JSON and add it to the current project
 export const useImportDiagramToProject = () => {
   const dispatch = useAppDispatch();
+  const convertBumlToDiagram = useBumlToDiagram();
   
-  const importDiagramToProject = useCallback((stringifiedJson: string) => {
+  const importDiagramToProject = useCallback(async (file: File) => {
     try {
-      const diagram: Diagram = JSON.parse(stringifiedJson);
+      let diagram: Diagram;
+
+      if (isBumlFile(file)) {
+        // Handle Python/BUML file - convert to diagram
+        diagram = await convertBumlToDiagram(file);
+      } else if (isJsonFile(file)) {
+        // Handle JSON file - parse directly
+        const fileContent = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsText(file);
+        });
+        
+        diagram = JSON.parse(fileContent);
+      } else {
+        throw new Error('Unsupported file type. Please select a .json or .py file.');
+      }
       
       // Validate that it's a valid diagram
       if (!diagram.model || !diagram.model.type) {
@@ -83,11 +135,12 @@ export const useImportDiagramToProject = () => {
         dispatch(loadImportedDiagram(importedDiagram));
       }
 
+      const fileType = isBumlFile(file) ? 'Python/BUML' : 'JSON';
       return {
         success: true,
         diagramType,
         diagramTitle: importedDiagram.title,
-        message: `${diagramType} diagram imported successfully and added to project "${currentProject.name}". This diagram has been converted from the old format to the new project format.`
+        message: `${diagramType} diagram imported successfully and added to project "${currentProject.name}". This diagram has been converted from ${fileType} format to the new project format.`
       };
 
     } catch (error) {
@@ -97,7 +150,7 @@ export const useImportDiagramToProject = () => {
       );
       throw error;
     }
-  }, [dispatch]);
+  }, [dispatch, convertBumlToDiagram]);
 
   return importDiagramToProject;
 };
@@ -107,7 +160,7 @@ export function selectDiagramFileForProject(): Promise<File> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.py'; // Accept both JSON and Python files
     input.multiple = false;
     
     input.onchange = (e) => {
@@ -136,16 +189,8 @@ export const useImportDiagramToProjectWorkflow = () => {
       // Select the file
       const file = await selectDiagramFileForProject();
       
-      // Read the file content
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsText(file);
-      });
-      
-      // Import the diagram to the project
-      const result = await importDiagramToProject(fileContent);
+      // Import the diagram to the project (now handles both JSON and Python files)
+      const result = await importDiagramToProject(file);
       
       return result;
     } catch (error) {

@@ -2,14 +2,12 @@ import React, { ChangeEvent, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { ModalContentProps } from '../application-modal-types';
 import { useImportDiagram } from '../../../services/import/useImportDiagram';
-import { useBumlImport } from '../../../services/import/useBumlImport';
 
 export const ImportDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const importDiagram = useImportDiagram();
-  const importBuml = useBumlImport();
 
-  const importHandler = () => {
+  const importHandler = async () => {
     if (!selectedFile) return;
 
     const isJsonFile = selectedFile.name.toLowerCase().endsWith('.json');
@@ -20,21 +18,13 @@ export const ImportDiagramModal: React.FC<ModalContentProps> = ({ close }) => {
       return;
     }
 
-    if (isJsonFile) {
-      new Promise((resolve: (value: string) => void, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const target: any = event.target;
-          resolve(target.result);
-        };
-        reader.readAsText(selectedFile);
-      }).then((content: string) => {
-        importDiagram(content);
-      });
-    } else {
-      importBuml(selectedFile);
+    try {
+      await importDiagram(selectedFile);
+      close();
+    } catch (error) {
+      console.error('Import failed:', error);
+      // Error handling is managed by the importDiagram hook
     }
-    close();
   };
 
   const fileUpload = (event: ChangeEvent<HTMLInputElement>) => {

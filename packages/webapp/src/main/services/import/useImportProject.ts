@@ -70,7 +70,7 @@ export async function importProjectFromBUML(file: File): Promise<BesserProject> 
   const formData = new FormData();
   formData.append("buml_file", file);
 
-  const response = await fetch(`${BACKEND_URL}/get-json-model`, {
+  const response = await fetch(`${BACKEND_URL}/get-project-json-model`, {
     method: 'POST',
     body: formData,
   });
