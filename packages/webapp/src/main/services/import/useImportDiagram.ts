@@ -130,6 +130,17 @@ export const useImportDiagramToProject = () => {
       // Save the updated project
       ProjectStorageRepository.saveProject(updatedProject);
 
+      // If importing a Class Diagram, update the diagram bridge for Object Diagram compatibility
+      if (diagramType === 'ClassDiagram' && importedDiagram.model) {
+        try {
+          const { diagramBridge } = await import('@besser/wme');
+          diagramBridge.setClassDiagramData(importedDiagram.model);
+          console.log('Updated diagram bridge with imported class diagram data');
+        } catch (error) {
+          console.warn('Could not update diagram bridge with class diagram data:', error);
+        }
+      }
+
       // If the imported diagram is the same type as the current diagram, load it immediately
       if (diagramType === currentProject.currentDiagramType) {
         dispatch(loadImportedDiagram(importedDiagram));
