@@ -6,6 +6,7 @@ export enum SoftwarePatternCategory {
   STRUCTURAL = 'Class Diagram',
   BEHAVIORAL = 'Behavioral',
   AGENT = 'Agent Diagram',
+  STATE_MACHINE = 'State Machine Diagram',
 }
 
 export enum SoftwarePatternType {
@@ -20,6 +21,8 @@ export enum SoftwarePatternType {
   FACTORY = 'Factory',
   // Agent patterns
   GREET_AGENT = 'Greeting Agent',
+  // State Machine patterns
+  TRAFIC_LIGHT = 'Traffic Light',
 }
 
 export class SoftwarePatternTemplate extends Template {
