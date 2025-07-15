@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState, useContext } from 'react';
 import { Nav, Navbar } from 'react-bootstrap';
 import { FileMenu } from './menues/file-menu';
 import { HelpMenu } from './menues/help-menu';
@@ -11,9 +11,9 @@ import { ConnectClientsComponent } from './connected-clients-component';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setCreateNewEditor, setDisplayUnpublishedVersion, updateDiagramThunk } from '../../services/diagram/diagramSlice';
 import { showModal } from '../../services/modal/modalSlice';
-import { LayoutTextSidebarReverse, Github, Share } from 'react-bootstrap-icons';
+import { LayoutTextSidebarReverse, Github, Share, House } from 'react-bootstrap-icons';
 import { selectDisplaySidebar, toggleSidebar } from '../../services/version-management/versionManagementSlice';
-import { DiagramTypeSelector } from './menues/DiagramTypeSelector';
+import { ClassDiagramImporter } from './menues/class-diagram-importer';
 import { GenerateCodeMenu } from './menues/generate-code-menu';
 import { checkOclConstraints } from '../../services/validation/checkOCL';
 import { UMLDiagramType } from '@besser/wme';
@@ -22,20 +22,57 @@ import { displayError } from '../../services/error-management/errorManagementSli
 import { DiagramView } from 'shared';
 import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor-context';
+import { useProject } from '../../hooks/useProject';
 
 const DiagramTitle = styled.input`
-  font-size: x-large;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   color: #fff;
-  background-color: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: all 0.3s ease;
+  max-width: 200px;
+  min-width: 120px;
+  
+  &:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
 `;
 
-const ApplicationVersion = styled.span`
-  font-size: small;
-  color: #ccc;
-  margin-right: 10px;
+const ProjectName = styled.div`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  display: flex;
+  align-items: center;
+  
+  &::before {
+    content: "📁";
+    margin-right: 6px;
+    font-size: 0.8rem;
+  }
 `;
 
 const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
@@ -43,7 +80,7 @@ const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
   margin-right: ${(props) => (props.$isSidebarOpen ? '250px' : '0')}; /* Adjust based on sidebar width */
 `;
 
-export const ApplicationBar: React.FC = () => {
+export const ApplicationBar: React.FC<{ onOpenHome?: () => void }> = ({ onOpenHome }) => {
   const dispatch = useAppDispatch();
   const { diagram } = useAppSelector((state) => state.diagram);
   const [diagramTitle, setDiagramTitle] = useState<string>(diagram?.title || '');
@@ -52,6 +89,10 @@ export const ApplicationBar: React.FC = () => {
   const tokenInUrl = urlPath.substring(1); // This removes the leading "/"
   const currentType = useAppSelector((state) => state.diagram.editorOptions.type);
   const navigate = useNavigate();
+  const apollonEditor = useContext(ApollonEditorContext);
+  const editor = apollonEditor?.editor;
+  const location = useLocation();
+  const { currentProject } = useProject();
 
   useEffect(() => {
     if (diagram?.title) {
@@ -72,10 +113,9 @@ export const ApplicationBar: React.FC = () => {
   const handleOpenModal = () => {
     dispatch(showModal({ type: ModalContentType.ShareModal, size: 'lg' }));
   };
-
   const handleOclCheck = async () => {
-    if (diagram) {
-      await checkOclConstraints(diagram);
+    if (editor) {
+      await checkOclConstraints(editor, diagram.title);
     }
   };
 
@@ -152,41 +192,37 @@ export const ApplicationBar: React.FC = () => {
       );
       console.error(error);
     }
-  };
-
-  return (
+  };  return (
     <MainContent $isSidebarOpen={isSidebarOpen}>
       <Navbar className="navbar" variant="dark" expand="lg">
-        <Navbar.Brand href="https://besser-pearl.org" target="_blank" rel="noopener noreferrer">
+        <Navbar.Brand as={Link} to="/">
           <img alt="" src="images/logo.png" width="124" height="33" className="d-inline-block align-top" />{' '}
         </Navbar.Brand>
-        {/* <ApplicationVersion>{appVersion}</ApplicationVersion> */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
+            <Nav.Item className="me-3">
+              <Nav.Link onClick={onOpenHome} title="Home">
+              <House size={20} />
+            </Nav.Link>
+            </Nav.Item>
             <FileMenu />
-            <DiagramTypeSelector />
-            {(currentType === UMLDiagramType.ClassDiagram || currentType === UMLDiagramType.AgentDiagram) && (
-              <>
-                <GenerateCodeMenu />
-                {APPLICATION_SERVER_VERSION && (
-                  <Nav.Item>
-                    <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
-                  </Nav.Item>
-                )}
-              </>
-            )}
-            {APPLICATION_SERVER_VERSION && (
-              <>
-                {/* <Nav.Item>
-                  <Nav.Link onClick={handleOpenModal}>Share</Nav.Link>
-                </Nav.Item> */}
+            {/* <ClassDiagramImporter /> */}
+            {/* Ensure all diagram types have access to GenerateCodeMenu and Quality Check */}
+            <>
+              <GenerateCodeMenu />
+              {APPLICATION_SERVER_VERSION && (
                 <Nav.Item>
-                  <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
-                    Save & Share
-                  </Nav.Link>
+                  <Nav.Link onClick={handleOclCheck}>Quality Check</Nav.Link>
                 </Nav.Item>
-              </>
+              )}
+            </>
+            {APPLICATION_SERVER_VERSION && (
+              <Nav.Item>
+                <Nav.Link onClick={handleQuickShare} title="Store and share your diagram into the database">
+                  Save & Share
+                </Nav.Link>
+              </Nav.Item>
             )}
             <HelpMenu />
             <DiagramTitle
@@ -194,12 +230,13 @@ export const ApplicationBar: React.FC = () => {
               value={diagramTitle}
               onChange={changeDiagramTitlePreview}
               onBlur={changeDiagramTitleApplicationState}
+              placeholder="Diagram Title"
             />
           </Nav>
         </Navbar.Collapse>
         <Nav.Item className="me-3">
           <Nav.Link onClick={openGitHubRepo} title="View on GitHub">
-            <Github size={20} color="#FFF" />
+            <Github size={20} />
           </Nav.Link>
         </Nav.Item>
         {tokenInUrl && <ConnectClientsComponent />}

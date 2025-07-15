@@ -1,16 +1,49 @@
 import { toast } from 'react-toastify';
 import { validateDiagram } from './diagramValidation';
 import { BACKEND_URL } from '../../constant';
+import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
+import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 
-export async function checkOclConstraints(diagramData: any) {
+export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: string) {
   try {
-    // Validate the diagram first
-    const validationResult = validateDiagram(diagramData);
-    if (!validationResult.isValid) {
-      toast.error(`${validationResult.message}`);
-      return;
-    } 
+      // Step 1: Always run diagram validation first
+      const validationResult = validateDiagram(editor);
+      if (!validationResult.isValid) {
+        toast.error(validationResult.message);
+        return;
+      }
 
+      if (!editor || !editor.model) {
+        console.error('No editor or model available'); // Debug log
+        toast.error('No diagram to export');
+        return;
+      }
+
+      // Step 2: Show validation success message
+      if (validationResult.message && validationResult.message.trim()) {
+        toast.success(validationResult.message, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark"
+        });
+      }
+
+      // Step 3: Check if this diagram type supports OCL checks
+      const supportsOCL = editor.model.type === 'ClassDiagram' || editor.model.type === 'ObjectDiagram';
+      
+      if (!supportsOCL) {
+        // For non-OCL diagrams, just show validation success and return
+        console.log(`Diagram type ${editor.model.type} does not support OCL checks`);
+        return { isValid: true, message: "Diagram validation completed successfully" };
+      }
+
+      // Step 4: For OCL-supported diagrams, proceed with OCL checks
+      let modelData = editor.model;
 
     const response = await fetch(`${BACKEND_URL}/check-ocl`, {
       method: 'POST',
@@ -18,7 +51,8 @@ export async function checkOclConstraints(diagramData: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        elements: diagramData.model
+        title: diagramTitle,
+        model: modelData
       }),
     });
 
@@ -38,13 +72,12 @@ export async function checkOclConstraints(diagramData: any) {
       }
 
       throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
+    }    const result = await response.json();
     
-    // Show the result in a toast notification
-    if (result.success) {
-      toast.success(result.message, {
+    // Handle the separated valid and invalid constraints from backend
+    if (result.valid_constraints && result.valid_constraints.length > 0) {
+      const validMessage = "Valid constraints:\n" + result.valid_constraints.join("\n");
+      toast.success(validMessage, {
         position: "top-right",
         autoClose: false,
         hideProgressBar: false,
@@ -54,13 +87,16 @@ export async function checkOclConstraints(diagramData: any) {
         progress: undefined,
         theme: "dark",
         style: {
-          fontSize: "18px",
+          fontSize: "16px",
           padding: "20px",
           width: "350px"
         }
       });
-
-      toast.success(validationResult.message, {
+    }
+    
+    if (result.invalid_constraints && result.invalid_constraints.length > 0) {
+      const invalidMessage = "Invalid constraints:\n" + result.invalid_constraints.join("\n");
+      toast.error(invalidMessage, {
         position: "top-right",
         autoClose: false,
         hideProgressBar: false,
@@ -68,13 +104,38 @@ export async function checkOclConstraints(diagramData: any) {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "dark"
+        theme: "dark",
+        style: {
+          fontSize: "16px",
+          padding: "20px",
+          width: "350px"
+        }
       });
-      
-    } else {
-      toast.error(result.message);
+    }
+    
+    // If no constraints were found, show the general message
+    if ((!result.valid_constraints || result.valid_constraints.length === 0) && 
+        (!result.invalid_constraints || result.invalid_constraints.length === 0)) {
+      toast.info(result.message, {
+        position: "top-right",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        style: {
+          fontSize: "16px",
+          padding: "20px",
+          width: "350px"
+        }
+      });
     }
 
+    // Show validation result separately (only if there are validation messages to show)
+    // Note: We already showed validation success earlier, so this is just for consistency
+    
     return result;
   } catch (error: unknown) {
     console.error('Error during OCL check:', error);
