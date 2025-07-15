@@ -268,6 +268,18 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
                 </td>
               </tr>
               <tr>
+                <th>Link Code Block</th>
+                <td>
+                  To link a code block to a state, you can link a code block by specifying its function name directly. 
+                  This allows for precise mapping of behaviors to states.
+                  You can define the <code>Body</code> (the main behavior of the state) and an optional <code>Fallback</code> (an
+                  action that executes if the state is entered without a specific trigger).
+                </td>
+                <td>
+                  <img width="300" src="/images/help/statemachine/help-code-block.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
                 <th>Best Practices</th>
                 <td colSpan={2}>
                   Keep state names concise and descriptive. Use guard conditions to make transitions conditional.
