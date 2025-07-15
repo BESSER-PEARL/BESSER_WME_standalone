@@ -7,12 +7,16 @@ import { setCreateNewEditor, updateDiagramThunk, selectCreatenewEditor } from '.
 import { ApollonEditorContext } from './apollon-editor-context';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { selectPreviewedDiagramIndex } from '../../services/version-management/versionManagementSlice';
+import { addDiagramToCurrentProject } from '../../utils/localStorage';
 
 const ApollonContainer = styled.div`
   display: flex;
   flex-direction: column;
-  flex-grow: 2;
+  flex-grow: 1;
   overflow: hidden;
+  width: 100%;
+  height: calc(100vh - 60px);
+  background-color: var(--apollon-background, #ffffff);
 `;
 
 export const ApollonEditorComponent: React.FC = () => {
@@ -24,6 +28,9 @@ export const ApollonEditorComponent: React.FC = () => {
   const createNewEditor = useAppSelector(selectCreatenewEditor);
   const previewedDiagramIndex = useAppSelector(selectPreviewedDiagramIndex);
   const { setEditor } = useContext(ApollonEditorContext);
+  
+  // Track if this diagram was added to the project to avoid duplicate additions
+  const diagramAddedToProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -31,6 +38,9 @@ export const ApollonEditorComponent: React.FC = () => {
       if (!containerRef.current) return;
 
       if (createNewEditor || previewedDiagramIndex === -1) {
+        // Reset tracking when creating a new editor
+        diagramAddedToProjectRef.current = null;
+        
         // Initialize or reset editor
         if (editorRef.current) {
           await editorRef.current.nextRender;
@@ -40,7 +50,7 @@ export const ApollonEditorComponent: React.FC = () => {
         await editorRef.current.nextRender;
 
         // Only load the model if we're not changing diagram type
-        if (reduxDiagram.model && reduxDiagram.model.type === options.type) {
+        if (reduxDiagram && reduxDiagram.model && reduxDiagram.model.type === options.type) {
           editorRef.current.model = reduxDiagram.model;
         }
 
@@ -52,6 +62,17 @@ export const ApollonEditorComponent: React.FC = () => {
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
             if (JSON.stringify(model) !== JSON.stringify(reduxDiagram?.model)) {
+              // Check if this is a drag and drop operation (empty diagram becomes non-empty)
+              const wasEmpty = !reduxDiagram?.model || !reduxDiagram.model.elements || Object.keys(reduxDiagram.model.elements).length === 0;
+              const isNowNonEmpty = model && model.elements && Object.keys(model.elements).length > 0;
+              
+              // If diagram went from empty to non-empty, and hasn't been added to project yet, add it
+              if (wasEmpty && isNowNonEmpty && reduxDiagram?.id && diagramAddedToProjectRef.current !== reduxDiagram.id) {
+                addDiagramToCurrentProject(reduxDiagram.id);
+                diagramAddedToProjectRef.current = reduxDiagram.id;
+                console.log('Diagram added to project via drag and drop:', reduxDiagram.id);
+              }
+              
               dispatch(updateDiagramThunk({
                 model,
                 lastUpdate: new Date().toISOString()

@@ -41,8 +41,9 @@ const behavioralDiagrams = [
 
 const structuralDiagrams = [
   'ClassDiagram',
+  'ObjectDiagram',
   'StateMachineDiagram',
-  // 'ObjectDiagram',
+  'AgentDiagram',
   // 'ComponentDiagram',
   // 'DeploymentDiagram',
   // 'Flowchart',

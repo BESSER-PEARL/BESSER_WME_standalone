@@ -7,6 +7,7 @@ import { TemplateFactory } from './template-factory';
 import { ModalContentProps } from '../application-modal-types';
 import { useAppDispatch } from '../../store/hooks';
 import { createDiagram } from '../../../services/diagram/diagramSlice';
+import { updateCurrentDiagramThunk, switchDiagramTypeThunk } from '../../../services/project/projectSlice';
 
 export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(
@@ -26,7 +27,8 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
     setSelectedTemplate(template);
   };
 
-  const createNewDiagram = () => {
+  const createNewDiagram = async () => {
+    // First, create the diagram in the local state
     dispatch(
       createDiagram({
         title: selectedTemplate.type,
@@ -34,13 +36,37 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
         template: selectedTemplate.diagram,
       }),
     );
+    
+    // Then ensure we're on the correct diagram type in the project
+    try {
+      await dispatch(switchDiagramTypeThunk({ diagramType: selectedTemplate.diagramType }));
+      console.log('Switched to diagram type:', selectedTemplate.diagramType);
+    } catch (error) {
+      console.error('Failed to switch diagram type:', error);
+    }
+    
+    // Finally, save the template to the project system
+    if (selectedTemplate.diagram) {
+      try {
+        await dispatch(updateCurrentDiagramThunk({ model: selectedTemplate.diagram }));
+        console.log('Template saved to project successfully');
+      } catch (error) {
+        console.error('Failed to save template to project:', error);
+      }
+    }
+    
     close();
+    
+    // Force a page reload to ensure the template is properly rendered in the canvas
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   return (
     <>
       <Modal.Header closeButton>
-        <Modal.Title>Start Diagram from Template</Modal.Title>
+        <Modal.Title>Load Diagram Template</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Tab.Container id="left-tabs-example" defaultActiveKey={selectedTemplateCategory}>
@@ -82,7 +108,7 @@ export const CreateFromTemplateModal: React.FC<ModalContentProps> = ({ close }) 
           Close
         </Button>
         <Button variant="primary" onClick={createNewDiagram} disabled={!selectedTemplate}>
-          Create Diagram
+          Load Template
         </Button>
       </Modal.Footer>
     </>

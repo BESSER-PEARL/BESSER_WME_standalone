@@ -24,28 +24,9 @@ export const useExportBUML = () => {
         console.error('No editor or model available'); // Debug log
         toast.error('No diagram to export');
         return;
-      }      
-      try {        // Prepare the model data - include referenceDiagramData for ObjectDiagrams
+      }
+      try {        // Prepare the model data 
         let modelData = editor.model;
-        
-        // If it's an ObjectDiagram, include the class diagram data
-        if (editor.model.type === 'ObjectDiagram') {
-          const classDiagramData = diagramBridge.getClassDiagramData();
-          if (classDiagramData) {
-            // Try to get the class diagram title from localStorage
-            const classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
-            const classDiagramTitle = classDiagram?.title || 'Class Diagram';
-            
-            // Add the class diagram data and title as referenceDiagramData to the model
-            modelData = {
-              ...editor.model,
-              referenceDiagramData: {
-                ...classDiagramData,
-                title: classDiagramTitle
-              }
-            };
-          }
-        }
 
         const response = await fetch(`${BACKEND_URL}/export-buml`, {
           method: 'POST',
@@ -81,17 +62,24 @@ export const useExportBUML = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }        const blob = await response.blob();
         
-        // Extract filename from Content-Disposition header or use default
-        const contentDisposition = response.headers.get('content-disposition');
-        let filename: string;
+        // Get the filename from the response headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'exported_buml.py'; // Default filename
         
         if (contentDisposition) {
-          // Extract filename from Content-Disposition header
-          const filenameMatch = contentDisposition.match(/filename=([^;]+)/);
-          if (filenameMatch) {
-            filename = filenameMatch[1].replace(/"/g, ''); // Remove quotes if present
-          } else {
-            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
+          // Try multiple patterns to extract filename
+          const patterns = [
+            /filename="([^"]+)"/,
+            /filename=([^;\s]+)/, 
+            /filename="?([^";\s]+)"?/ 
+          ];
+          
+          for (const pattern of patterns) {
+            const match = contentDisposition.match(pattern);
+            if (match) {
+              filename = match[1];
+              break;
+            }
           }
         } else {
           // Default filename based on diagram type

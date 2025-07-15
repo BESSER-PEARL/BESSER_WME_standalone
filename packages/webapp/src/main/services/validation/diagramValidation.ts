@@ -339,6 +339,306 @@ export function validateMultiplicities(editor: ApollonEditor): ValidationResult 
     : { isValid: true, message: "✅ All multiplicities are valid" };
 }
 
+// State Machine Diagram Validation
+export function validateStateMachine(editor: ApollonEditor): ValidationResult {
+  if (!editor?.model) {
+    return { isValid: false, message: "❌ Editor not initialized" };
+  }
+
+  const elements = editor.model.elements;
+  const relationships = editor.model.relationships;
+  const issues: string[] = [];
+
+  let hasInitialState = false;
+  let hasFinalState = false;
+  const stateNames = new Set<string>();
+
+  // Validate states
+  for (const [id, element] of Object.entries(elements)) {
+    if (element.type === 'State') {
+      // Check for duplicate state names
+      if (stateNames.has(element.name.toLowerCase())) {
+        issues.push(`Duplicate state name: "${element.name}"`);
+      }
+      stateNames.add(element.name.toLowerCase());
+
+      // Check for empty state names
+      if (!element.name?.trim()) {
+        issues.push(`State with ID ${id} has no name`);
+      }
+    } else if (element.type === 'StateInitialNode') {
+      hasInitialState = true;
+    } else if (element.type === 'StateFinalNode') {
+      hasFinalState = true;
+    }
+  }
+
+  // Check for initial state
+  if (!hasInitialState) {
+    issues.push("State machine must have an initial state");
+  }
+
+  // Validate transitions
+  for (const [id, rel] of Object.entries(relationships)) {
+    if (rel.type === 'StateTransition') {
+      const sourceElement = elements[rel.source.element];
+      const targetElement = elements[rel.target.element];
+
+      if (!sourceElement || !targetElement) {
+        issues.push(`Transition ${id} has invalid source or target`);
+        continue;
+      }
+
+      // Check if initial state has outgoing transitions
+      if (sourceElement.type === 'StateInitialNode') {
+        // Initial state should have exactly one outgoing transition
+        const outgoingTransitions = Object.values(relationships).filter(
+          r => r.type === 'StateTransition' && r.source.element === rel.source.element
+        );
+        if (outgoingTransitions.length !== 1) {
+          issues.push("Initial state must have exactly one outgoing transition");
+        }
+      }
+
+      // Check if final state has incoming transitions
+      if (targetElement.type === 'StateFinalNode') {
+        // This is valid - final states can have incoming transitions
+      }
+
+      // Check if final state has outgoing transitions (invalid)
+      if (sourceElement.type === 'StateFinalNode') {
+        issues.push("Final state cannot have outgoing transitions");
+      }
+    }
+  }
+
+  return issues.length > 0
+    ? { isValid: false, message: "❌ State machine validation issues found:\n" + issues.join('\n') }
+    : { isValid: true, message: "✅ State machine is valid" };
+}
+
+// Object Diagram Validation
+export function validateObjectDiagram(editor: ApollonEditor): ValidationResult {
+  if (!editor?.model) {
+    return { isValid: false, message: "❌ Editor not initialized" };
+  }
+
+  const elements = editor.model.elements;
+  const relationships = editor.model.relationships;
+  const issues: string[] = [];
+
+  const objectNames = new Set<string>();
+
+  // Validate objects
+  for (const [id, element] of Object.entries(elements)) {
+    if (element.type === 'ObjectName') {
+      // Check for duplicate object names
+      if (objectNames.has(element.name.toLowerCase())) {
+        issues.push(`Duplicate object name: "${element.name}"`);
+      }
+      objectNames.add(element.name.toLowerCase());
+
+      // Check for empty object names
+      if (!element.name?.trim()) {
+        issues.push(`Object with ID ${id} has no name`);
+      }
+
+      // Check if object has a class reference
+      const classId = (element as any).classId;
+      if (!classId) {
+        issues.push(`Object "${element.name}" is not linked to a class`);
+      } else {
+        // Validate that the class name follows the pattern "objectName : ClassName"
+        if (!element.name.includes(':')) {
+          issues.push(`Object "${element.name}" should follow the format "objectName : ClassName"`);
+        }
+      }
+
+      // Validate object attributes (instance values)
+      const attributes = (element as any).attributes;
+      if (attributes && Array.isArray(attributes)) {
+        for (const attr of attributes) {
+          if (!attr.name?.trim()) {
+            issues.push(`Object "${element.name}" has an attribute with no name`);
+          }
+          
+          // Check if attribute has a value (object diagrams should show instance values)
+          if (attr.value === undefined || attr.value === null || attr.value === '') {
+            issues.push(`Attribute "${attr.name}" in object "${element.name}" has no value assigned`);
+          }
+        }
+      }
+    }
+  }
+
+  // Check if diagram has at least one object
+  if (objectNames.size === 0) {
+    issues.push("Object diagram must have at least one object");
+  }
+
+  // Validate links between objects
+  for (const [id, rel] of Object.entries(relationships)) {
+    if (rel.type === 'ObjectLink') {
+      const sourceElement = elements[rel.source.element];
+      const targetElement = elements[rel.target.element];
+
+      if (!sourceElement || !targetElement) {
+        issues.push(`Link ${id} has invalid source or target`);
+        continue;
+      }
+
+      // Both ends should be objects
+      if (sourceElement.type !== 'ObjectName' || targetElement.type !== 'ObjectName') {
+        issues.push(`Link ${id} must connect two objects`);
+      }
+
+      // Check if link has a role name
+      if (!(rel as any).name?.trim()) {
+        issues.push(`Link ${id} between "${sourceElement.name}" and "${targetElement.name}" has no role name`);
+      }
+    }
+  }
+
+  return issues.length > 0
+    ? { isValid: false, message: "❌ Object diagram validation issues found:\n" + issues.join('\n') }
+    : { isValid: true, message: "✅ Object diagram is valid" };
+}
+
+// Agent Diagram Validation
+export function validateAgentDiagram(editor: ApollonEditor): ValidationResult {
+  if (!editor?.model) {
+    return { isValid: false, message: "❌ Editor not initialized" };
+  }
+
+  const elements = editor.model.elements;
+  const relationships = editor.model.relationships;
+  const issues: string[] = [];
+
+  const agentStateNames = new Set<string>();
+  const intentNames = new Set<string>();
+  let hasInitialState = false;
+  let initialStateCount = 0;
+
+  // Validate agent states
+  for (const [id, element] of Object.entries(elements)) {
+    if (element.type === 'AgentState') {
+      // Check for duplicate agent state names
+      if (agentStateNames.has(element.name.toLowerCase())) {
+        issues.push(`Duplicate agent state name: "${element.name}"`);
+      }
+      agentStateNames.add(element.name.toLowerCase());
+
+      // Check for empty agent state names
+      if (!element.name?.trim()) {
+        issues.push(`Agent state with ID ${id} has no name`);
+      }
+
+      // Check if this is an initial state (connected from StateInitialNode)
+      const isInitialState = Object.values(relationships).some(rel => 
+        (rel.type === 'AgentStateTransition' || rel.type === 'AgentStateTransitionInit') &&
+        rel.target.element === id &&
+        elements[rel.source.element]?.type === 'StateInitialNode'
+      );
+      
+      if (isInitialState) {
+        initialStateCount++;
+      }
+
+    } else if (element.type === 'AgentIntent') {
+      // Check for duplicate intent names
+      if (intentNames.has(element.name.toLowerCase())) {
+        issues.push(`Duplicate intent name: "${element.name}"`);
+      }
+      intentNames.add(element.name.toLowerCase());
+
+      // Check for empty intent names
+      if (!element.name?.trim()) {
+        issues.push(`Intent with ID ${id} has no name`);
+      }
+
+      // Check if intent has training sentences (bodies)
+      if (!(element as any).bodies || (element as any).bodies.length === 0) {
+        issues.push(`Intent "${element.name}" has no training sentences`);
+      }
+
+    } else if (element.type === 'StateInitialNode') {
+      hasInitialState = true;
+    }
+  }
+
+  // Check for initial state
+  if (!hasInitialState) {
+    issues.push("Agent diagram must have an initial state");
+  }
+
+  // Check for exactly one initial state
+  if (initialStateCount > 1) {
+    issues.push("Agent diagram must have exactly one initial state");
+  }
+
+  // Check if diagram has at least one agent state
+  if (agentStateNames.size === 0) {
+    issues.push("Agent diagram must have at least one agent state");
+  }
+
+  // Validate agent state transitions
+  for (const [id, rel] of Object.entries(relationships)) {
+    if (rel.type === 'AgentStateTransition' || rel.type === 'AgentStateTransitionInit') {
+      const sourceElement = elements[rel.source.element];
+      const targetElement = elements[rel.target.element];
+
+      if (!sourceElement || !targetElement) {
+        issues.push(`Transition ${id} has invalid source or target`);
+        continue;
+      }
+
+      // Check if transition is between valid elements
+      const validSourceTypes = ['AgentState', 'StateInitialNode'];
+      const validTargetTypes = ['AgentState'];
+      
+      if (!validSourceTypes.includes(sourceElement.type)) {
+        issues.push(`Transition ${id} has invalid source type: ${sourceElement.type}`);
+      }
+      
+      if (!validTargetTypes.includes(targetElement.type)) {
+        issues.push(`Transition ${id} has invalid target type: ${targetElement.type}`);
+      }
+
+      // Check if initial state has exactly one outgoing transition
+      if (sourceElement.type === 'StateInitialNode') {
+        const outgoingTransitions = Object.values(relationships).filter(
+          r => (r.type === 'AgentStateTransition' || r.type === 'AgentStateTransitionInit') && 
+               r.source.element === rel.source.element
+        );
+        if (outgoingTransitions.length !== 1) {
+          issues.push("Initial state must have exactly one outgoing transition");
+        }
+      }
+
+      // Validate transition conditions
+      const condition = (rel as any).condition;
+      if (condition === 'when_intent_matched') {
+        const conditionValue = (rel as any).conditionValue;
+        if (!conditionValue || !conditionValue.trim()) {
+          issues.push(`Transition ${id} has "when_intent_matched" condition but no intent specified`);
+        } else {
+          // Check if the specified intent exists
+          const intentExists = Array.from(intentNames).some(intentName => 
+            intentName === conditionValue.toLowerCase()
+          );
+          if (!intentExists) {
+            issues.push(`Transition ${id} references non-existent intent: "${conditionValue}"`);
+          }
+        }
+      }
+    }
+  }
+
+  return issues.length > 0
+    ? { isValid: false, message: "❌ Agent diagram validation issues found:\n" + issues.join('\n') }
+    : { isValid: true, message: "✅ Agent diagram is valid" };
+}
+
 export function validateDiagram(editor: ApollonEditor): ValidationResult {
   if (!editor?.model) {
     return { isValid: false, message: "⚠️ Editor is not properly initialized" };
@@ -348,15 +648,48 @@ export function validateDiagram(editor: ApollonEditor): ValidationResult {
     return { isValid: false, message: "⚠️ The model is empty. Please add some elements before proceeding." };
   }
 
-  // Run all validations
-  const validations = [
-    validateClassNames(editor),
-    // validateAssociationEnds(editor),
-    // validateClassStructure(editor),
-    validateInheritanceCycles(editor),
-    validateMultiplicities(editor),
-    validateAssociationClassConstraints(editor) // Add the new validation
-  ];
+  // Determine diagram type and run appropriate validations
+  const diagramType = editor.model.type;
+  let validations: ValidationResult[] = [];
+
+  switch (diagramType) {
+    case 'ClassDiagram':
+      validations = [
+        validateClassNames(editor),
+        validateInheritanceCycles(editor),
+        validateMultiplicities(editor),
+        validateAssociationClassConstraints(editor)
+      ];
+      break;
+    
+    case 'StateMachineDiagram':
+      validations = [
+        validateStateMachine(editor)
+      ];
+      break;
+    
+    case 'ObjectDiagram':
+      validations = [
+        // validateObjectDiagram(editor)
+      ];
+      break;
+    
+    case 'AgentDiagram':
+      validations = [
+        validateAgentDiagram(editor)
+      ];
+      break;
+    
+    default:
+      // For unknown diagram types, run basic validations
+      validations = [
+        validateClassNames(editor),
+        validateInheritanceCycles(editor),
+        validateMultiplicities(editor),
+        validateAssociationClassConstraints(editor)
+      ];
+      break;
+  }
 
   // Collect all validation issues
   const failures = validations.filter(v => !v.isValid);

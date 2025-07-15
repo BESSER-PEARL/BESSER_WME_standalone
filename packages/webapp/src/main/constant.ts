@@ -12,7 +12,7 @@ export const NO_HTTP_URL = DEPLOYMENT_URL?.split('//')[1] || '';
 export const WS_PROTOCOL = DEPLOYMENT_URL?.startsWith('https') ? 'wss' : 'ws';
 
 // prefixes
-export const localStoragePrefix = 'apollon_';
+export const localStoragePrefix = 'besser_';
 export const localStorageDiagramPrefix = localStoragePrefix + 'diagram_';
 
 // keys
@@ -22,6 +22,12 @@ export const localStorageCollaborationName = localStoragePrefix + 'collaboration
 export const localStorageCollaborationColor = localStoragePrefix + 'collaborationColor';
 export const localStorageUserThemePreference = localStoragePrefix + 'userThemePreference';
 export const localStorageSystemThemePreference = localStoragePrefix + 'systemThemePreference';
+
+// Project constants
+export const localStorageProjectPrefix = localStoragePrefix + 'project_';
+export const localStorageLatestProject = localStoragePrefix + 'latest_project';
+export const localStorageProjectsList = localStoragePrefix + 'projects';
+
 // date formats
 export const longDate = 'MMMM Do YYYY, h:mm:ss a';
 
