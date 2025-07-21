@@ -1,16 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Button, Modal, Form, Alert, ProgressBar } from 'react-bootstrap';
 import { ModalContentProps } from '../application-modal-types';
-import { BesserProject } from '../create-project-modal/CreateProjectModal';
-import { Diagram } from '../../../services/diagram/diagramSlice';
-import { LocalStorageRepository } from '../../../services/local-storage/local-storage-repository';
-import { saveProjectToLocalStorage } from '../../../utils/localStorage';
-import { uuid } from '../../../utils/uuid';
+import { BesserProject } from '../../../types/project';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileZip, FileText } from 'react-bootstrap-icons';
+import { Upload, FileText } from 'react-bootstrap-icons';
 import styled from 'styled-components';
-import { importProject } from '../../../services/import/useImportProjectJSON';
+import { importProject } from '../../../services/import/useImportProject';
+import { useProject } from '../../../hooks/useProject';
 
 const DropZone = styled.div<{ $isDragOver: boolean }>`
   border: 2px dashed ${props => props.$isDragOver ? '#667eea' : '#dee2e6'};
@@ -39,13 +36,6 @@ const ImportButton = styled(Button)`
   font-weight: 500;
 `;
 
-interface ImportData {
-  project: BesserProject;
-  diagrams: Diagram[];
-  version: string;
-  exportedAt: string;
-}
-
 export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -54,6 +44,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { loadProject } = useProject();
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -91,7 +82,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   };
 
   const isValidFile = (file: File): boolean => {
-    const validExtensions = ['.zip', '.json'];
+    const validExtensions = ['.json', '.py'];
     const fileName = file.name.toLowerCase();
     return validExtensions.some(ext => fileName.endsWith(ext));
   };
@@ -103,7 +94,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
     }
 
     if (!isValidFile(selectedFile)) {
-      setError('Please select a valid ZIP or JSON file');
+      setError('Please select a valid JSON or Python (.py) file');
       return;
     }
 
@@ -113,18 +104,25 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
 
     try {
       setImportProgress(25);
-      
-      // Use the new import service
-      const importedProject = await importProject(selectedFile);
-      
+
+      let importedProject: BesserProject;
+
+      if (selectedFile.name.toLowerCase().endsWith('.json')) {
+        importedProject = await importProject(selectedFile);
+      } else if (selectedFile.name.toLowerCase().endsWith('.py')) {
+        importedProject = await importProject(selectedFile);
+      } else {
+        throw new Error('Unsupported file type');
+      }
+
+      setImportProgress(75);
+      await loadProject(importedProject.id);
       setImportProgress(100);
-      
+
       toast.success(`Project "${importedProject.name}" imported successfully!`);
-      
-      // Navigate to the project
+
       close();
       navigate('/');
-      
     } catch (error) {
       console.error('Import error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -137,12 +135,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
 
   const getFileIcon = () => {
     if (!selectedFile) return <Upload />;
-    
-    if (selectedFile.name.toLowerCase().endsWith('.zip')) {
-      return <FileZip />;
-    } else {
-      return <FileText />;
-    }
+    return <FileText />;
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -159,11 +152,6 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <Modal.Title>Import Project</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div className="mb-4">
-          <p className="text-muted">
-            Import a project from a ZIP file (exported from BESSER) or a JSON file (individual diagram or project).
-          </p>
-        </div>
 
         <DropZone
           $isDragOver={isDragOver}
@@ -187,9 +175,6 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
           ) : (
             <div>
               <h5 className="mb-2">Drop files here or click to browse</h5>
-              <p className="text-muted mb-0">
-                Supports ZIP files (project exports) and JSON files (diagrams)
-              </p>
             </div>
           )}
         </DropZone>
@@ -197,7 +182,7 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".zip,.json"
+          accept=".json,.py"
           style={{ display: 'none' }}
           onChange={handleFileInputChange}
         />
@@ -221,8 +206,8 @@ export const ImportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
         <div className="mt-4">
           <h6>Supported Formats:</h6>
           <ul className="small text-muted">
-            <li><strong>ZIP files:</strong> Complete project exports with all diagrams</li>
-            <li><strong>JSON files:</strong> Individual diagrams or project data</li>
+            <li><strong>JSON format</strong> (.json file)</li>
+            <li><strong>B-UML format</strong> (.py file)</li>
           </ul>
         </div>
       </Modal.Body>

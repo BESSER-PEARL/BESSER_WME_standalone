@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
 import { useAppDispatch } from '../store/hooks';
 import { showModal } from '../../services/modal/modalSlice';
@@ -16,18 +16,30 @@ import {
 } from 'react-bootstrap-icons';
 import styled from 'styled-components';
 import { 
-  getLastProjectFromLocalStorage, 
-  getAllProjectsFromLocalStorage, 
-  BesserProject, 
-  removeProjectFromLocalStorage,
-  clearProjectContext,
-  setProjectContext 
+  removeProjectFromLocalStorage
 } from '../../utils/localStorage';
+import { BesserProject } from '../../types/project';
+import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
 import { toast } from 'react-toastify';
+import { useProject } from '../../hooks/useProject';
+import { loadDiagram } from '../../services/diagram/diagramSlice';
 
 interface HomeModalProps {
   show: boolean;
   onHide: () => void;
+}
+
+interface ProjectCardProps {
+  project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>;
+  onOpen: (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>) => void;
+  onDelete: (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>, e: React.MouseEvent) => void;
+  showDiagramCount?: boolean;
+  diagrams?: Record<string, any>;
+}
+
+interface ModalState {
+  showAllProjects: boolean;
+  deletedCurrentProjectId: string | null;
 }
 
 // Styled Components
@@ -228,10 +240,22 @@ const ToggleButton = styled(Button)`
   font-weight: 600;
   transition: all 0.3s ease;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+  }
+  
+  &:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
   }
 `;
 
@@ -239,50 +263,131 @@ const AllProjectsList = styled.div`
   margin-top: 1rem;
   max-height: 200px;
   overflow-y: auto;
+  text-align: left;
 `;
+
+// Reusable Project Card Component
+const ProjectCardComponent: React.FC<ProjectCardProps> = ({ 
+  project, 
+  onOpen, 
+  onDelete, 
+  showDiagramCount = false, 
+  diagrams 
+}) => (
+  <ProjectCard onClick={() => onOpen(project)}>
+    <ProjectInfo>
+      <ProjectDetails>
+        <ProjectName>{project.name}</ProjectName>
+        <ProjectMeta>
+          <span>
+            <Clock size={12} style={{ marginRight: '0.25rem' }} />
+            {new Date(project.createdAt).toLocaleDateString()}
+          </span>
+          {showDiagramCount && diagrams && (
+            <span>
+              <Folder size={12} style={{ marginRight: '0.25rem' }} />
+              {Object.keys(diagrams).length} diagrams
+            </span>
+          )}
+        </ProjectMeta>
+      </ProjectDetails>
+      <div>
+        <Button variant="outline-primary" size="sm">
+          Open
+        </Button>
+        <Button 
+          variant="outline-danger" 
+          size="sm" 
+          className="ms-2"
+          onClick={(e) => onDelete(project, e)}
+        >
+          <Trash size={12} />
+        </Button>
+      </div>
+    </ProjectInfo>
+  </ProjectCard>
+);
 
 export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   const dispatch = useAppDispatch();
-  const [recentProject, setRecentProject] = useState<BesserProject | null>(null);
-  const [allProjects, setAllProjects] = useState<BesserProject[]>([]);
-  const [showAllProjects, setShowAllProjects] = useState(false);
+  const { loadProject, currentProject } = useProject();
+  const [allProjects, setAllProjects] = useState<Array<Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>>>([]);
+  const [modalState, setModalState] = useState<ModalState>({
+    showAllProjects: false,
+    deletedCurrentProjectId: null
+  });
+
+  // Computed values using useMemo for better performance
+  const otherProjects = useMemo(() => {
+    if (currentProject) {
+      return allProjects.filter(p => p.id !== currentProject.id);
+    }
+    return allProjects.slice(0, -1); // All except the most recent
+  }, [allProjects, currentProject]);
+
+  const hasOtherProjects = useMemo(() => otherProjects.length > 0, [otherProjects]);
+
+  const recentProject = useMemo(() => {
+    if (!currentProject && allProjects.length > 0) {
+      return allProjects[allProjects.length - 1];
+    }
+    return null;
+  }, [currentProject, allProjects]);
+
+  const updateModalState = (updates: Partial<ModalState>) => {
+    setModalState(prev => ({ ...prev, ...updates }));
+  };
 
   useEffect(() => {
     if (show) {
-      const project = getLastProjectFromLocalStorage();
-      const projects = getAllProjectsFromLocalStorage();
-      setRecentProject(project);
+      const projects = ProjectStorageRepository.getAllProjects();
       setAllProjects(projects);
+      
+      // If there's no current project but there are projects, automatically show the list
+      if (!currentProject && projects.length > 0) {
+        updateModalState({ showAllProjects: true });
+      }
     }
-  }, [show]);
+  }, [show, currentProject]);
 
   const handleCreateProject = () => {
     dispatch(showModal({ type: ModalContentType.CreateProjectModal }));
-    onHide();
   };
 
   const handleImportProject = () => {
     dispatch(showModal({ type: ModalContentType.ImportProjectModal }));
-    onHide();
   };
 
-  const handleCreateDiagram = () => {
-    // Clear project context since this is a standalone diagram
-    clearProjectContext();
-    dispatch(showModal({ type: ModalContentType.CreateDiagramModal }));
-    onHide();
+  const handleOpenSpecificProject = async (projectMeta: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>) => {
+    try {
+      // Load the full project using the project system
+      const loadedProject = await loadProject(projectMeta.id);
+      
+      // Load the current diagram into the editor
+      const currentDiagram = loadedProject.diagrams[loadedProject.currentDiagramType];
+      if (currentDiagram?.model) {
+        // Convert to legacy Diagram format for compatibility with current editor
+        const legacyDiagram = {
+          id: currentDiagram.id,
+          title: currentDiagram.title,
+          model: currentDiagram.model,
+          lastUpdate: currentDiagram.lastUpdate,
+          description: currentDiagram.description,
+        };
+        dispatch(loadDiagram(legacyDiagram));
+      }
+      
+      // Close the modal and show success message
+      onHide();
+      toast.success(`Project "${projectMeta.name}" loaded successfully!`);
+      
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast.error(`Failed to load project "${projectMeta.name}". Please try again.`);
+    }
   };
 
-  const handleOpenSpecificProject = (project: BesserProject) => {
-    // Set project context
-    setProjectContext(project.id);
-    localStorage.setItem('besser_latest_project', project.id);
-    onHide();
-    // Refresh the editor
-    window.location.reload();
-  };
-
-  const handleDeleteSpecificProject = async (project: BesserProject, e: React.MouseEvent) => {
+  const handleDeleteSpecificProject = async (project: Pick<BesserProject, 'id' | 'name' | 'description' | 'owner' | 'createdAt'>, e: React.MouseEvent) => {
     e.stopPropagation();
     
     const confirmDelete = window.confirm(
@@ -291,19 +396,14 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
     
     if (confirmDelete) {
       try {
-        if (project.models) {
-          project.models.forEach(diagramId => {
-            localStorage.removeItem(`besser_diagram_${diagramId}`);
-          });
-        }
+        ProjectStorageRepository.deleteProject(project.id);
         
-        removeProjectFromLocalStorage(project.id);
-        
-        const updatedProjects = getAllProjectsFromLocalStorage();
+        const updatedProjects = ProjectStorageRepository.getAllProjects();
         setAllProjects(updatedProjects);
         
-        if (recentProject?.id === project.id) {
-          setRecentProject(updatedProjects.length > 0 ? updatedProjects[0] : null);
+        // If the deleted project is the current one, mark it as deleted
+        if (currentProject && currentProject.id === project.id) {
+          updateModalState({ deletedCurrentProjectId: project.id });
         }
         
         toast.success('Project deleted successfully!');
@@ -315,21 +415,35 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
   };
 
   return (
-    <StyledModal show={show} onHide={onHide} centered backdrop="static">
+    <StyledModal 
+      show={show} 
+      onHide={currentProject ? onHide : () => {}} 
+      centered 
+      backdrop={currentProject ? true : "static"}
+      keyboard={currentProject ? true : false}
+      aria-labelledby="home-modal-title"
+      aria-describedby="home-modal-description"
+    >
       <Modal.Body>
         <ModalHeader>
           <WelcomeSection>
             <LogoImage src="images/logo.png" alt="BESSER Logo" />
-            <ModalTitle>Welcome to BESSER</ModalTitle>
+            <ModalTitle id="home-modal-title">Welcome to BESSER</ModalTitle>
           </WelcomeSection>
-          <CloseButton onClick={onHide}>
-            <X size={18} />
-          </CloseButton>
+          {/* Show close button only if there's a current project */}
+          {currentProject && (
+            <CloseButton onClick={onHide} aria-label="Close modal">
+              <X size={18} />
+            </CloseButton>
+          )}
         </ModalHeader>
         
         <ContentContainer>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '1rem', opacity: 0.9, maxWidth: '500px', margin: '0 auto' }}>
+            <p 
+              id="home-modal-description" 
+              style={{ fontSize: '1rem', opacity: 0.9, maxWidth: '500px', margin: '0 auto' }}
+            >
               Transform your ideas into reality with our comprehensive low-code platform for UML modeling.
             </p>
           </div>
@@ -361,6 +475,8 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
               </QuickStartButton>
             </ActionCard>
 
+            {/* Quick Diagram option removed as we focus on project-based workflow */}
+            {/* 
             <ActionCard onClick={handleCreateDiagram}>
               <ActionIcon style={{ background: 'linear-gradient(135deg, #fd7e14, #e83e8c)' }}>
                 <Diagram3 />
@@ -373,109 +489,72 @@ export const HomeModal: React.FC<HomeModalProps> = ({ show, onHide }) => {
                 Start Modeling
               </QuickStartButton>
             </ActionCard>
+            */}
           </ActionGrid>
 
-          {(recentProject || allProjects.length > 0) && (
+          {((currentProject && currentProject.id !== modalState.deletedCurrentProjectId) || allProjects.length > 0) && (
             <ProjectsSection>
               <h4 style={{ color: 'white', marginBottom: '1.25rem', textAlign: 'center' }}>
                 Your Projects
               </h4>
               
-              {recentProject && (
+              {/* Current Project Section */}
+              {currentProject && currentProject.id !== modalState.deletedCurrentProjectId && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Recent Project:</h6>
-                  <ProjectCard onClick={() => handleOpenSpecificProject(recentProject)}>
-                    <ProjectInfo>
-                      <ProjectDetails>
-                        <ProjectName>{recentProject.name}</ProjectName>
-                        <ProjectMeta>
-                          <span>
-                            <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                            {new Date(recentProject.createdAt).toLocaleDateString()}
-                          </span>
-                          <span>
-                            <Folder size={12} style={{ marginRight: '0.25rem' }} />
-                            {recentProject.models?.length || 0} diagrams
-                          </span>
-                        </ProjectMeta>
-                      </ProjectDetails>
-                      <div>
-                        <Button variant="outline-primary" size="sm">
-                          Open
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          className="ms-2"
-                          onClick={(e) => handleDeleteSpecificProject(recentProject, e)}
-                        >
-                          <Trash size={12} />
-                        </Button>
-                      </div>
-                    </ProjectInfo>
-                  </ProjectCard>
+                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Current Project:</h6>
+                  <ProjectCardComponent
+                    project={currentProject}
+                    onOpen={handleOpenSpecificProject}
+                    onDelete={handleDeleteSpecificProject}
+                    showDiagramCount={true}
+                    diagrams={currentProject.diagrams}
+                  />
                 </div>
               )}
 
-              {allProjects.filter(p => p.id !== recentProject?.id).length > 0 && (
+              {/* Recent Project Section (when no current project) */}
+              {recentProject && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h6 style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.5rem' }}>Recent Project:</h6>
+                  <ProjectCardComponent
+                    project={recentProject}
+                    onOpen={handleOpenSpecificProject}
+                    onDelete={handleDeleteSpecificProject}
+                  />
+                </div>
+              )}
+
+              {/* Other Projects Section */}
+              {hasOtherProjects && (
                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                   <ToggleButton 
-                    onClick={() => setShowAllProjects(!showAllProjects)}
-                    className="d-flex align-items-center justify-content-center"
+                    onClick={() => updateModalState({ showAllProjects: !modalState.showAllProjects })}
+                    aria-expanded={modalState.showAllProjects}
+                    aria-label={`${modalState.showAllProjects ? 'Hide' : 'Show'} other projects`}
                   >
-                    {showAllProjects ? (
+                    {modalState.showAllProjects ? (
                       <>
-                        <ChevronUp className="me-1" size={14} />
+                        <ChevronUp size={14} />
                         Hide Others
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="me-1" size={14} />
-                        Show All ({allProjects.filter(p => p.id !== recentProject?.id).length})
+                        <ChevronDown size={14} />
+                        Show All ({otherProjects.length})
                       </>
                     )}
                   </ToggleButton>
 
-                  {showAllProjects && (
+                  {modalState.showAllProjects && (
                     <AllProjectsList>
-                      {allProjects
-                        .filter(project => project.id !== recentProject?.id)
-                        .map(project => (
-                          <ProjectCard 
-                            key={project.id} 
-                            onClick={() => handleOpenSpecificProject(project)}
-                          >
-                            <ProjectInfo>
-                              <ProjectDetails>
-                                <ProjectName>{project.name}</ProjectName>
-                                <ProjectMeta>
-                                  <span>
-                                    <Clock size={12} style={{ marginRight: '0.25rem' }} />
-                                    {new Date(project.createdAt).toLocaleDateString()}
-                                  </span>
-                                  <span>
-                                    <Folder size={12} style={{ marginRight: '0.25rem' }} />
-                                    {project.models?.length || 0} diagrams
-                                  </span>
-                                </ProjectMeta>
-                              </ProjectDetails>
-                              <div>
-                                <Button variant="outline-primary" size="sm">
-                                  Open
-                                </Button>
-                                <Button 
-                                  variant="outline-danger" 
-                                  size="sm" 
-                                  className="ms-2"
-                                  onClick={(e) => handleDeleteSpecificProject(project, e)}
-                                >
-                                  <Trash size={12} />
-                                </Button>
-                              </div>
-                            </ProjectInfo>
-                          </ProjectCard>
-                        ))
-                      }
+                      {otherProjects.map(project => (
+                        <ProjectCardComponent
+                          key={project.id}
+                          project={project}
+                          onOpen={handleOpenSpecificProject}
+                          onDelete={handleDeleteSpecificProject}
+                        />
+                      ))}
                     </AllProjectsList>
                   )}
                 </div>

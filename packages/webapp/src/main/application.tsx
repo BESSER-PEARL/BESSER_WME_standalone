@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ApplicationBar } from './components/application-bar/application-bar';
 import { ApollonEditorComponent } from './components/apollon-editor-component/ApollonEditorComponent';
 import { ApollonEditor } from '@besser/wme';
-import { POSTHOG_HOST, POSTHOG_KEY } from './constant';
+import { POSTHOG_HOST, POSTHOG_KEY, localStorageLatestProject } from './constant';
 import { ApollonEditorProvider } from './components/apollon-editor-component/apollon-editor-context';
 import { FirefoxIncompatibilityHint } from './components/incompatability-hints/firefox-incompatibility-hint';
 import { ErrorPanel } from './components/error-handling/error-panel';
@@ -14,84 +14,147 @@ import { ApplicationStore } from './components/store/application-store';
 import { ApollonEditorComponentWithConnection } from './components/apollon-editor-component/ApollonEditorComponentWithConnection';
 import { VersionManagementSidebar } from './components/version-management-sidebar/VersionManagementSidebar';
 import { SidebarLayout } from './components/sidebar/SidebarLayout';
-import { HomePage } from './components/home/HomePage';
 import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
+import { useProject } from './hooks/useProject';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
 };
 
-export function RoutedApplication() {
+function AppContentInner() {
   const [editor, setEditor] = useState<ApollonEditor>();
   const [showHomeModal, setShowHomeModal] = useState(false);
+  const [hasCheckedForProject, setHasCheckedForProject] = useState(false);
+  const { currentProject, loadProject } = useProject();
+  const location = useLocation();
+  
+  // Check if current path contains a token (collaboration route)
+  const hasTokenInUrl = location.pathname !== '/' && location.pathname !== '/project-settings' && location.pathname !== '/teampage';
   
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
   };
   
-  // Show home modal automatically when visiting root URL
+  // Check for latest project on app startup
   useEffect(() => {
-    if (window.location.pathname === '/') {
-      setShowHomeModal(true);
+    const checkForLatestProject = async () => {
+      if (hasCheckedForProject) return;
+      
+      // If there's a token in the URL, don't show home modal
+      if (hasTokenInUrl) {
+        setShowHomeModal(false);
+        setHasCheckedForProject(true);
+        return;
+      }
+      
+      const latestProjectId = localStorage.getItem(localStorageLatestProject);
+      
+      if (latestProjectId) {
+        try {
+          await loadProject(latestProjectId);
+          setShowHomeModal(false);
+        } catch (error) {
+          // If loading fails, show the modal
+          setShowHomeModal(true);
+        }
+      } else {
+        // No latest project, show modal
+        setShowHomeModal(true);
+      }
+      
+      setHasCheckedForProject(true);
+    };
+    
+    checkForLatestProject();
+  }, [loadProject, hasCheckedForProject, hasTokenInUrl]);
+  
+  // Additional effect to handle currentProject changes
+  useEffect(() => {
+    if (hasCheckedForProject) {
+      // If there's a token in the URL, don't show home modal
+      if (hasTokenInUrl) {
+        setShowHomeModal(false);
+      } else if (!currentProject) {
+        setShowHomeModal(true);
+      } else {
+        setShowHomeModal(false);
+      }
     }
-  }, []);
+  }, [currentProject, hasCheckedForProject, hasTokenInUrl]);
   
   const isFirefox = useMemo(() => /Firefox/i.test(navigator.userAgent), []);
 
   return (
+    <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
+      <ApplicationBar onOpenHome={() => setShowHomeModal(true)} />
+      <ApplicationModal />
+      <VersionManagementSidebar />
+      {/* Home Modal */}
+      <HomeModal 
+        show={showHomeModal} 
+        onHide={() => {
+          // Only allow closing if there's a current project or if there's a token in URL
+          if (currentProject || hasTokenInUrl) {
+            setShowHomeModal(false);
+          }
+        }} 
+      />
+      {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
+      <Routes>
+        {/* Collaboration route with token */}
+        <Route 
+          path="/:token" 
+          element={
+            // <SidebarLayout>  No collaboration support yet
+              <ApollonEditorComponentWithConnection />
+            // </SidebarLayout>
+          } 
+        />
+        
+        {/* Main editor route */}
+        <Route 
+          path="/" 
+          element={
+            <SidebarLayout>
+              <ApollonEditorComponent />
+            </SidebarLayout>
+          } 
+        />
+        
+        {/* Project settings route */}
+        <Route 
+          path="/project-settings" 
+          element={
+            <SidebarLayout>
+              <ProjectSettingsScreen />
+            </SidebarLayout>
+          } 
+        />
+        
+        {/* Team page route */}
+        <Route path="/teampage" element={<TeamPage />} />
+      </Routes>
+      <ErrorPanel />
+      <ToastContainer />
+    </ApollonEditorProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <BrowserRouter>
+      <AppContentInner />
+    </BrowserRouter>
+  );
+}
+
+export function RoutedApplication() {
+  return (
     <PostHogProvider apiKey={POSTHOG_KEY} options={postHogOptions}>
       <ApplicationStore>
-        <BrowserRouter>
-          <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
-            <ApplicationBar onOpenHome={() => setShowHomeModal(true)} />
-            <ApplicationModal />
-            <VersionManagementSidebar />
-            {/* Home Modal that can be opened from anywhere */}
-            <HomeModal 
-              show={showHomeModal} 
-              onHide={() => setShowHomeModal(false)} 
-            />
-            {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
-            <Routes>
-              {/* Collaboration route with token */}
-              <Route 
-                path="/:token" 
-                element={
-                  // <SidebarLayout>  No collaboration support yet
-                    <ApollonEditorComponentWithConnection />
-                  // </SidebarLayout>
-                } 
-              />
-              
-              {/* Main editor route */}
-              <Route 
-                path="/" 
-                element={
-                  <SidebarLayout>
-                    <ApollonEditorComponent />
-                  </SidebarLayout>
-                } 
-              />
-              
-              {/* Project settings route */}
-              <Route 
-                path="/project-settings" 
-                element={
-                  <SidebarLayout>
-                    <ProjectSettingsScreen />
-                  </SidebarLayout>
-                } 
-              />
-              
-              {/* Team page route */}
-              <Route path="/teampage" element={<TeamPage />} />
-            </Routes>
-            <ErrorPanel />
-            <ToastContainer />
-          </ApollonEditorProvider>
-        </BrowserRouter>
+        <AppContent />
       </ApplicationStore>
     </PostHogProvider>
   );

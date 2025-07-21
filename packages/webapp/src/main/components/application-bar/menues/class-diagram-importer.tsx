@@ -10,28 +10,81 @@ import styled from 'styled-components';
 const ClassDiagramInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9em;
-  color: #ccc;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
   margin-right: 15px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 `;
 
 const ImportButton = styled(Nav.Link)`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
+  padding: 8px 12px !important;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  font-size: 0.9rem;
   
   &:hover {
     color: #fff !important;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const CloseButton = styled(Badge)`
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
 const StatusIndicator = styled.div<{ $hasData: boolean }>`
   display: flex;
   align-items: center;
-  gap: 5px;
-  color: ${props => props.$hasData ? '#28a745' : '#dc3545'};
+  gap: 6px;
+  color: ${props => props.$hasData ? '#4ade80' : '#f87171'};
+  font-weight: 500;
+  transition: color 0.3s ease;
 `;
 
 export const ClassDiagramImporter: React.FC = () => {
@@ -139,14 +192,12 @@ export const ClassDiagramImporter: React.FC = () => {
             <CheckCircle size={16} />
             <span>Class: {classDiagramTitle}</span>
           </StatusIndicator>
-          <Badge 
-            bg="secondary" 
-            style={{ cursor: 'pointer' }}
+          <CloseButton 
             onClick={clearClassDiagram}
             title="Clear class diagram data"
           >
             ×
-          </Badge>
+          </CloseButton>
         </ClassDiagramInfo>
       )}
       

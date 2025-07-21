@@ -67,9 +67,6 @@ export const ApollonEditorComponentWithConnection: React.FC = () => {
     const collaborators = { name, color };
     clientRef.current!.send(JSON.stringify({ token, collaborators }));
 
-    // Add debouncing for message handling to prevent flickering
-    let messageTimeout: NodeJS.Timeout | null = null;
-    
     clientRef.current.onmessage = async (message: IMessageEvent) => {
       const { originator, collaborators, diagram, patch, selection } = JSON.parse(message.data as string) as CollaborationMessage;
 
@@ -77,40 +74,22 @@ export const ApollonEditorComponentWithConnection: React.FC = () => {
       if (selfElementId) selfElementId.style.display = 'none';
 
       if (editorRef.current) {
-        // Clear any pending updates to prevent rapid successive changes
-        if (messageTimeout) {
-          clearTimeout(messageTimeout);
+        await editorRef.current.nextRender;
+
+        if (collaborators) {
+          dispatch(updateCollaborators(collaborators));
+          editorRef.current.pruneRemoteSelectors(collaborators);
         }
-        
-        // Batch updates with a small delay to prevent flickering
-        messageTimeout = setTimeout(() => {
-          if (!editorRef.current) return;
-          
-          // Process updates in order of priority
-          if (collaborators) {
-            dispatch(updateCollaborators(collaborators));
-            editorRef.current.pruneRemoteSelectors(collaborators);
-          }
-          
-          // Handle diagram updates - only update if there's a significant change
-          if (diagram?.model && editorRef.current) {
-            // Check if the model has actually changed to avoid unnecessary updates
-            const currentModel = editorRef.current.model;
-            if (!currentModel || JSON.stringify(currentModel) !== JSON.stringify(diagram.model)) {
-              editorRef.current.model = diagram.model;
-            }
-          }
-          
-          // Apply patches with minimal disruption
-          if (patch && editorRef.current) {
-            editorRef.current.importPatch(patch);
-          }
-          
-          // Handle selection changes last
-          if (selection && originator && editorRef.current) {
-            editorRef.current.remoteSelect(originator.name, originator.color, selection.selected, selection.deselected);
-          }
-        }, 16); // ~60fps to smooth out updates
+        if (diagram?.model && editorRef.current) {
+          dispatch(updateDiagramThunk({ model: diagram.model }));
+          editorRef.current.model = diagram.model;
+        }
+        if (patch && editorRef.current) {
+          editorRef.current?.importPatch(patch);
+        }
+        if (selection && originator && editorRef.current) {
+          editorRef.current?.remoteSelect(originator.name, originator.color, selection.selected, selection.deselected);
+        }
       }
     };
 

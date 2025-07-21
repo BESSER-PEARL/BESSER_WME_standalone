@@ -8,19 +8,11 @@ import {
   Gear,
   House
 } from 'react-bootstrap-icons';
-import { UMLDiagramType, diagramBridge } from '@besser/wme';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { 
-  changeDiagramType, 
-  setCreateNewEditor, 
-  loadDiagram, 
-  createDiagram 
-} from '../../services/diagram/diagramSlice';
-import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
+import { UMLDiagramType } from '@besser/wme';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { getLastProjectFromLocalStorage, saveProjectToLocalStorage, isInProjectContext } from '../../utils/localStorage';
-import { uuid } from '../../utils/uuid';
+import { useProject } from '../../hooks/useProject';
+import { toUMLDiagramType } from '../../types/project';
 
 const SidebarContainer = styled.div`
   width: 60px;
@@ -100,19 +92,16 @@ const sidebarItems: SidebarItem[] = [
 ];
 
 export const DiagramTypeSidebar: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const currentType = useAppSelector((state) => state.diagram.editorOptions.type);
-  const currentDiagram = useAppSelector((state) => state.diagram.diagram);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Save diagram changes when in project context
-  useEffect(() => {
-    if (currentDiagram && currentDiagram.model && isInProjectContext()) {
-      // Auto-save the current diagram when it changes and we're in project context
-      LocalStorageRepository.storeDiagram(currentDiagram);
-    }
-  }, [currentDiagram]);
+  
+  // Use the new project-based state management
+  const {
+    currentProject,
+    currentDiagram,
+    currentDiagramType,
+    switchDiagramType
+  } = useProject();
 
   const handleItemClick = (item: SidebarItem) => {
     // Handle navigation items (home, settings)
@@ -134,106 +123,16 @@ export const DiagramTypeSidebar: React.FC = () => {
     }
 
     // If it's the same type, don't do anything
-    if (diagramType === currentType) {
+    if (diagramType === toUMLDiagramType(currentDiagramType)) {
       return;
     }
 
-    // Save current diagram if it exists
-    if (currentDiagram && currentDiagram.model) {
-      // Only save by type if we're NOT in project context
-      // In project context, diagrams are saved individually and managed by the project
-      if (!isInProjectContext()) {
-        LocalStorageRepository.storeDiagramByType(currentType, currentDiagram);
-      }
-      
-      // Object Diagram Bridge Service
-      // If we're switching FROM a class diagram, update the bridge service
-      if (currentType === UMLDiagramType.ClassDiagram) {
-        diagramBridge.setClassDiagramData(currentDiagram.model);
-      }
+    // Switch to the selected diagram type using the project hook
+    try {
+      switchDiagramType(diagramType);
+    } catch (error) {
+      console.error('Failed to switch diagram type:', error);
     }
-
-    // If we're switching TO an object diagram, ensure bridge has class data
-    if (diagramType === UMLDiagramType.ObjectDiagram) {
-      // Try to get the latest class diagram data if bridge doesn't have it
-      if (!diagramBridge.hasClassDiagramData()) {
-        let classDiagram = null;
-        
-        if (isInProjectContext()) {
-          // In project context, look for class diagram within the project
-          const project = getLastProjectFromLocalStorage();
-          if (project && Array.isArray(project.models)) {
-            const allDiagrams = project.models
-              .map((id: string) => {
-                const diagramData = localStorage.getItem(`besser_diagram_${id}`);
-                if (diagramData) {
-                  try {
-                    return JSON.parse(diagramData);
-                  } catch {
-                    return null;
-                  }
-                }
-                return null;
-              })
-              .filter(Boolean);
-            
-            classDiagram = allDiagrams.find((d: any) => d.model?.type === UMLDiagramType.ClassDiagram);
-          }
-        } else {
-          // In standalone mode, use type-based storage
-          classDiagram = LocalStorageRepository.loadDiagramByType(UMLDiagramType.ClassDiagram);
-        }
-        
-        if (classDiagram && classDiagram.model) {
-          diagramBridge.setClassDiagramData(classDiagram.model);
-        }
-      }
-    }
-
-    // Try to load existing diagram of the selected type
-    let diagramToLoad = null;
-
-    // Check if we're in project context
-    if (isInProjectContext()) {
-      // We're in project mode - look for diagrams within the current project
-      const project = getLastProjectFromLocalStorage();
-      
-      if (project && Array.isArray(project.models)) {
-        // Find diagrams from the current project
-        const allDiagrams = project.models
-          .map((id: string) => {
-            const diagramData = localStorage.getItem(`besser_diagram_${id}`);
-            if (diagramData) {
-              try {
-                return JSON.parse(diagramData);
-              } catch {
-                return null;
-              }
-            }
-            return null;
-          })
-          .filter(Boolean);
-
-        diagramToLoad = allDiagrams.find((d: any) => d.model?.type === diagramType);
-      }
-    } else {
-      // We're in standalone mode - look for diagrams by type
-      diagramToLoad = LocalStorageRepository.loadDiagramByType(diagramType);
-    }
-
-    if (diagramToLoad) {
-      dispatch(loadDiagram(diagramToLoad));
-    } else {
-      // Create a new diagram of the selected type
-      // The diagram will be automatically added to the project if in project context
-      dispatch(createDiagram({
-        title: `New ${diagramType.replace('Diagram', ' Diagram')}`,
-        diagramType: diagramType,
-      }));
-    }
-
-    dispatch(changeDiagramType(diagramType));
-    dispatch(setCreateNewEditor(true));
   };
 
   const isItemActive = (item: SidebarItem): boolean => {
@@ -245,7 +144,7 @@ export const DiagramTypeSidebar: React.FC = () => {
       return location.pathname === '/';
     }
     
-    if (location.pathname === '/editor' && item.type === currentType) {
+    if (location.pathname === '/' && item.type === toUMLDiagramType(currentDiagramType)) {
       return true;
     }
     
@@ -256,7 +155,7 @@ export const DiagramTypeSidebar: React.FC = () => {
     <SidebarContainer>
       {sidebarItems.map((item, index) => {
         const isActive = isItemActive(item);
-        const isDividerAfter = index === 0 || index === sidebarItems.length - 2;
+        const isDividerAfter = index === sidebarItems.length - 2; // Only before settings
         
         return (
           <React.Fragment key={item.type}>

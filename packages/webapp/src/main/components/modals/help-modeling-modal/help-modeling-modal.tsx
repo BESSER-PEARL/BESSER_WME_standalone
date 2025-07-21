@@ -22,6 +22,22 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
           </Nav.Item>
           <Nav.Item>
             <Nav.Link
+              active={activePanel === 'object'}
+              onClick={() => setActivePanel('object')}
+            >
+              Object Diagram
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link
+              active={activePanel === 'statemachine'}
+              onClick={() => setActivePanel('statemachine')}
+            >
+              State Machine Diagram
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link
               active={activePanel === 'agent'}
               onClick={() => setActivePanel('agent')}
             >
@@ -138,6 +154,142 @@ export const HelpModelingModal: React.FC<ModalContentProps> = ({ close }) => {
                 <th>More info</th>
                 <td colSpan={2}>
                   You can access more info into the <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">BESSER documentation</a> or in the <a href="https://github.com/BESSER-PEARL/BESSER_WME_standalone" target="_blank" rel="noopener noreferrer" className="text-link">WME GitHub repository</a>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        ) : activePanel === 'object' ? (
+          <table className="table">
+            <tbody>
+              <tr>
+                <th>About Object Diagrams</th>
+                <td colSpan={2}>
+                  Object diagrams represent instances of classes from class diagrams at a particular point in time. They show how objects interact and what values they contain, providing a snapshot of the system's state.
+                </td>
+              </tr>
+              <tr>
+                <th>Add Object</th>
+                <td>
+                  To add an object, drag and drop the object element from the left panel onto the canvas. Objects represent instances of classes.
+                </td>
+                <td>
+                  <img width="300" src="/images/help/object/help-create-object.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Edit Object</th>
+                <td>
+                  To edit an object, double-click on it to open a popup where you can modify its name, type (class), and attribute values. 
+                  The object name should follow the format <code>objectName : ClassName</code>. You can specify attribute values 
+                  using the format <code>attributeName = value</code>, for example <code>name = "John"</code> or <code>age = 25</code>.
+                </td>
+                <td>
+                  <img width="300" src="/images/help/object/help-update-object.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Add Object Link</th>
+                <td>
+                  To create a link between objects, select the source object with a single click and you will see blue circles.
+                  Click and hold on one of those connection points and drag it to another object to create a link. Object links
+                  represent instances of associations from the class diagram.
+                </td>
+                <td>
+                  <img width="300" src="/images/help/object/help-create-object-link.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Edit Object Link</th>
+                <td>
+                  To edit an object link, double-click on it to open a popup where you can modify its properties, such as
+                  the link name and any associated values or roles.
+                </td>
+                <td>
+                  <img width="300" src="/images/help/object/help-update-object-link.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Delete Object or Link</th>
+                <td colSpan={2}>
+                  To delete an object or link, select it with a single click and either press <code>Delete</code> or{' '}
+                  <code>Backspace</code> on your keyboard.
+                </td>
+              </tr>
+              <tr>
+                <th>Move Object</th>
+                <td colSpan={2}>
+                  To move an object, select it with a single click and either use your keyboard arrows or drag and drop it to a new position.
+                </td>
+              </tr>
+              <tr>
+                <th>Best Practices</th>
+                <td colSpan={2}>
+                  Object diagrams work best when used in conjunction with class diagrams. They help validate your class design
+                  by showing concrete examples of how objects will interact in your system. Use meaningful names for objects
+                  and provide realistic attribute values to make the diagram more understandable.
+                </td>
+              </tr>
+              <tr>
+                <th>More info</th>
+                <td colSpan={2}>
+                  You can access more info in the <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">BESSER documentation</a> or in the <a href="https://github.com/BESSER-PEARL/BESSER_WME_standalone" target="_blank" rel="noopener noreferrer" className="text-link">WME GitHub repository</a>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        ) : activePanel === 'statemachine' ? (
+          <table className="table">
+            <tbody>
+              <tr>
+                <th>About State Machine Diagrams</th>
+                <td colSpan={2}>
+                  State machine diagrams model the dynamic behavior of a system by showing how objects change state in response to events.
+                  They are particularly useful for modeling reactive systems, user interfaces, and protocol specifications.
+                </td>
+              </tr>
+              <tr>
+                <th>Add Initial</th>
+                <td>
+                  Drag and drop the initial state (black circle) to mark where the state machine begins. Every state machine should have one initial state.
+                </td>
+                <td>
+                  <img width="300" src="/images/help/statemachine/help-initial-final-states.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Edit State</th>
+                <td>
+                  To edit a state, double-click on it to open a popup where you can modify its name and internal activities.
+                  You can define the <code>Body</code> (the main behavior of the state) and an optional <code>Fallback</code> (an
+                  action that executes if the state is entered without a specific trigger).
+                </td>
+                <td>
+                  <img width="300" src="/images/help/statemachine/help-update-state.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Link Code Block</th>
+                <td>
+                  To link a code block to a state, you can link a code block by specifying its function name directly. 
+                  This allows for precise mapping of behaviors to states.
+                  You can define the <code>Body</code> (the main behavior of the state) and an optional <code>Fallback</code> (an
+                  action that executes if the state is entered without a specific trigger).
+                </td>
+                <td>
+                  <img width="300" src="/images/help/statemachine/help-code-block.png" alt="Image not found" />
+                </td>
+              </tr>
+              <tr>
+                <th>Best Practices</th>
+                <td colSpan={2}>
+                  Keep state names concise and descriptive. Use guard conditions to make transitions conditional.
+                  Ensure every state is reachable and consider what happens when all possible events occur in each state.
+                </td>
+              </tr>
+              <tr>
+                <th>More info</th>
+                <td colSpan={2}>
+                  You can access more info in the <a href="https://besser.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer" className="text-link">BESSER documentation</a> or in the <a href="https://github.com/BESSER-PEARL/BESSER_WME_standalone" target="_blank" rel="noopener noreferrer" className="text-link">WME GitHub repository</a>.
                 </td>
               </tr>
             </tbody>

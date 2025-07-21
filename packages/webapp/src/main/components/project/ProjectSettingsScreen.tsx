@@ -3,14 +3,9 @@ import { Card, Form, Button, Row, Col, Badge, ListGroup } from 'react-bootstrap'
 import { toast } from 'react-toastify';
 import { Download, Trash, Plus } from 'react-bootstrap-icons';
 import styled from 'styled-components';
-import { UMLDiagramType } from '@besser/wme';
-import { BesserProject } from '../modals/create-project-modal/CreateProjectModal';
-import { exportProjectById } from '../../services/export/useExportProjectJSON';
-import { exportProjectAsBUMLZip } from '../../services/export/useExportProjectBUML';
-import { saveProjectToLocalStorage } from '../../utils/localStorage';
-import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { createDiagram, loadDiagram } from '../../services/diagram/diagramSlice';
-import { LocalStorageRepository } from '../../services/local-storage/local-storage-repository';
+import { settingsService } from '@besser/wme';
+import { useProject } from '../../hooks/useProject';
+import { SupportedDiagramType } from '../../types/project';
 
 const PageContainer = styled.div`
   padding: 40px 20px;
@@ -85,36 +80,8 @@ const DiagramItem = styled(ListGroup.Item)`
   }
 `;
 
-// Utility functions
-export const getLastProjectFromLocalStorage = (): BesserProject | null => {
-  const latestProjectId = localStorage.getItem('besser_latest_project');
-  if (latestProjectId) {
-    const projectData = localStorage.getItem(`besser_project_${latestProjectId}`);
-    if (projectData) {
-      try {
-        return JSON.parse(projectData);
-      } catch {
-        return null;
-      }
-    }
-  }
-  return null;
-};
-
-const exportProjectAsJson = (project: BesserProject) => {
-  const dataStr = JSON.stringify(project, null, 2);
-  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-  
-  const exportFileDefaultName = `${project.name || 'project'}.json`;
-  
-  const linkElement = document.createElement('a');
-  linkElement.setAttribute('href', dataUri);
-  linkElement.setAttribute('download', exportFileDefaultName);
-  linkElement.click();
-};
-
-const getDiagramTypeColor = (type: string): string => {
-  const colors: { [key: string]: string } = {
+const getDiagramTypeColor = (type: SupportedDiagramType): string => {
+  const colors: Record<SupportedDiagramType, string> = {
     'ClassDiagram': 'primary',
     'ObjectDiagram': 'success',
     'StateMachineDiagram': 'warning',
@@ -124,71 +91,47 @@ const getDiagramTypeColor = (type: string): string => {
 };
 
 export const ProjectSettingsScreen: React.FC = () => {
-  const [project, setProject] = useState<BesserProject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [diagrams, setDiagrams] = useState<any[]>([]);
+  const [showInstancedObjects, setShowInstancedObjects] = useState(false);
   
-  const dispatch = useAppDispatch();
-  const currentDiagram = useAppSelector((state) => state.diagram.diagram);
+  // Use the new project hook
+  const {
+    currentProject,
+    updateProject,
+    exportProject,
+    loading,
+    error
+  } = useProject();
 
+  // Initialize settings on component mount
   useEffect(() => {
-    loadProject();
+    const currentSetting = settingsService.shouldShowInstancedObjects();
+    setShowInstancedObjects(currentSetting);
   }, []);
 
-  const loadProject = () => {
-    const currentProject = getLastProjectFromLocalStorage();
-    if (currentProject) {
-      setProject(currentProject);
-      loadProjectDiagrams(currentProject);
-    }
-  };
-
-  const loadProjectDiagrams = (proj: BesserProject) => {
-    if (!proj.models) return;
-    
-    const loadedDiagrams = proj.models
-      .map(id => {
-        const diagramData = localStorage.getItem(`besser_diagram_${id}`);
-        if (diagramData) {
-          try {
-            return JSON.parse(diagramData);
-          } catch {
-            return null;
-          }
-        }
-        return null;
-      })
-      .filter(Boolean);
-    
-    setDiagrams(loadedDiagrams);
+  const handleShowInstancedObjectsToggle = (checked: boolean) => {
+    setShowInstancedObjects(checked);
+    settingsService.updateSetting('showInstancedObjects', checked);
+    toast.success(`Instanced objects ${checked ? 'enabled' : 'disabled'}`);
   };
 
   const handleProjectUpdate = (field: string, value: string) => {
-    if (!project) return;
+    if (!currentProject) return;
     
-    const updatedProject = { ...project, [field]: value };
-    setProject(updatedProject);
-  };
-
-  const handleSaveProject = async () => {
-    if (!project) return;
-    
-    setIsLoading(true);
     try {
-      saveProjectToLocalStorage(project);
-      toast.success('Project settings saved successfully!');
+      updateProject({ [field]: value } as any);
+      // toast.success('Project updated successfully!');
     } catch (error) {
-      console.error('Error saving project:', error);
-      toast.error('Failed to save project settings');
-    } finally {
-      setIsLoading(false);
+      console.error('Error updating project:', error);
+      toast.error('Failed to update project');
     }
   };
+
   const handleExportProject = async () => {
-    if (!project) return;
+    if (!currentProject) return;
     
     try {
-      await exportProjectById(project);
+      exportProject(currentProject.id);
       toast.success('Project exported successfully!');
     } catch (error) {
       console.error('Error exporting project:', error);
@@ -196,75 +139,41 @@ export const ProjectSettingsScreen: React.FC = () => {
     }
   };
 
-  const handleExportProjectBUML = async () => {
-    if (!project) {
-      toast.error('No project loaded');
-      return;
-    }
-    
-    try {
-      await exportProjectAsBUMLZip(project);
-    } catch (error) {
-      console.error('Error exporting project as BUML:', error);
-      toast.error('Failed to export project as BUML');
-    }
-  };
+  if (loading) {
+    return (
+      <PageContainer>
+        <ProjectCard>
+          <CardHeader>
+            <h3>Project Settings</h3>
+          </CardHeader>
+          <CardBody>
+            <div className="text-center text-muted">
+              <p>Loading project...</p>
+            </div>
+          </CardBody>
+        </ProjectCard>
+      </PageContainer>
+    );
+  }
 
-  const handleDeleteDiagram = (diagramId: string) => {
-    if (!project) return;
-    
-    if (window.confirm('Are you sure you want to delete this diagram? This action cannot be undone.')) {
-      // If we're deleting the currently active diagram, save it first
-      if (currentDiagram && currentDiagram.id === diagramId && currentDiagram.model) {
-        LocalStorageRepository.storeDiagram(currentDiagram);
-      }
-      
-      // Remove from localStorage
-      localStorage.removeItem(`besser_diagram_${diagramId}`);
-      
-      // Update project
-      const updatedProject = {
-        ...project,
-        models: project.models.filter(id => id !== diagramId)
-      };
-      
-      setProject(updatedProject);
-      saveProjectToLocalStorage(updatedProject);
-      loadProjectDiagrams(updatedProject);
-      
-      // If we deleted the currently active diagram, load another one or create a new one
-      if (currentDiagram && currentDiagram.id === diagramId) {
-        const remainingDiagrams = updatedProject.models;
-        if (remainingDiagrams.length > 0) {
-          // Load the first remaining diagram
-          const nextDiagramData = localStorage.getItem(`besser_diagram_${remainingDiagrams[0]}`);
-          if (nextDiagramData) {
-            try {
-              const nextDiagram = JSON.parse(nextDiagramData);
-              dispatch(loadDiagram(nextDiagram));
-            } catch (error) {
-              console.error('Error loading next diagram:', error);
-              // Fallback: create a new diagram
-              dispatch(createDiagram({
-                title: 'New Class Diagram',
-                diagramType: UMLDiagramType.ClassDiagram,
-              }));
-            }
-          }
-        } else {
-          // No diagrams left, create a new one
-          dispatch(createDiagram({
-            title: 'New Class Diagram',
-            diagramType: UMLDiagramType.ClassDiagram,
-          }));
-        }
-      }
-      
-      toast.success('Diagram deleted successfully');
-    }
-  };
+  if (error) {
+    return (
+      <PageContainer>
+        <ProjectCard>
+          <CardHeader>
+            <h3>Project Settings</h3>
+          </CardHeader>
+          <CardBody>
+            <div className="text-center text-danger">
+              <p>Error: {error}</p>
+            </div>
+          </CardBody>
+        </ProjectCard>
+      </PageContainer>
+    );
+  }
 
-  if (!project) {
+  if (!currentProject) {
     return (
       <PageContainer>
         <ProjectCard>
@@ -281,6 +190,12 @@ export const ProjectSettingsScreen: React.FC = () => {
     );
   }
 
+  // Get all diagrams from the current project
+  const diagrams = Object.entries(currentProject.diagrams).map(([type, diagram]) => ({
+    ...diagram,
+    type
+  }));
+
   return (
     <PageContainer>
       <ProjectCard>
@@ -296,7 +211,7 @@ export const ProjectSettingsScreen: React.FC = () => {
                   <Form.Label>Project Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={project.name}
+                    value={currentProject.name}
                     onChange={(e) => handleProjectUpdate('name', e.target.value)}
                     placeholder="Enter project name"
                   />
@@ -307,7 +222,7 @@ export const ProjectSettingsScreen: React.FC = () => {
                   <Form.Label>Owner</Form.Label>
                   <Form.Control
                     type="text"
-                    value={project.owner}
+                    value={currentProject.owner}
                     onChange={(e) => handleProjectUpdate('owner', e.target.value)}
                     placeholder="Project owner"
                   />
@@ -320,53 +235,41 @@ export const ProjectSettingsScreen: React.FC = () => {
               <Form.Control
                 as="textarea"
                 rows={3}
-                value={project.description}
+                value={currentProject.description}
                 onChange={(e) => handleProjectUpdate('description', e.target.value)}
                 placeholder="Project description"
               />
             </Form.Group>
 
             <SectionTitle>Project Diagrams ({diagrams.length})</SectionTitle>
-            {diagrams.length > 0 ? (
-              <ListGroup className="mb-4">
-                {diagrams.map((diagram) => (
-                  <DiagramItem key={diagram.id}>
-                    <div>
-                      <strong>{diagram.title}</strong>
-                      <div className="small text-muted">
-                        Last updated: {new Date(diagram.lastUpdate).toLocaleDateString()}
-                      </div>
+            <ListGroup className="mb-4">
+              {diagrams.map((diagram) => (
+                <DiagramItem key={diagram.type}>
+                  <div>
+                    <strong>{diagram.title}</strong>
+                    <div className="small text-muted">
+                      Last updated: {new Date(diagram.lastUpdate).toLocaleDateString()}
                     </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <Badge bg={getDiagramTypeColor(diagram.model?.type)}>
-                        {diagram.model?.type?.replace('Diagram', '') || 'Unknown'}
-                      </Badge>
-                      <ActionButton
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDeleteDiagram(diagram.id)}
-                        title="Delete diagram"
-                      >
-                        <Trash size={16} />
-                      </ActionButton>
-                    </div>
-                  </DiagramItem>
-                ))}
-              </ListGroup>
-            ) : (
-              <div className="text-center text-muted mb-4">
-                <p>No diagrams in this project yet.</p>
-              </div>
-            )}
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <Badge bg={getDiagramTypeColor(diagram.type as SupportedDiagramType)}>
+                      {diagram.type.replace('Diagram', '')}
+                    </Badge>
+                    {/* Note: In V2 architecture, diagrams are always part of project and cannot be deleted individually */}
+                    <span className="small text-muted">Built-in diagram</span>
+                  </div>
+                </DiagramItem>
+              ))}
+            </ListGroup>
 
             <SectionTitle>Project Information</SectionTitle>
             <Row>
               <Col md={6}>
                 <div className="mb-3">
-                  <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
+                  <strong>Created:</strong> {new Date(currentProject.createdAt).toLocaleDateString()}
                 </div>
                 <div className="mb-3">
-                  <strong>Project ID:</strong> <code>{project.id}</code>
+                  <strong>Project ID:</strong> <code>{currentProject.id}</code>
                 </div>
               </Col>
               <Col md={6}>
@@ -374,20 +277,26 @@ export const ProjectSettingsScreen: React.FC = () => {
                   <strong>Diagrams Count:</strong> {diagrams.length}
                 </div>
                 <div className="mb-3">
-                  <strong>Auto Save:</strong> {project.settings?.autoSave ? 'Enabled' : 'Disabled'}
+                  <strong>Current Diagram:</strong> {currentProject.currentDiagramType.replace('Diagram', '')}
                 </div>
               </Col>
             </Row>
 
+            <SectionTitle>Display Settings</SectionTitle>
+            <Form.Group className="mb-4">
+              <Form.Check
+                type="switch"
+                id="show-instanced-objects"
+                label="Show Instanced Objects"
+                checked={showInstancedObjects}
+                onChange={(e) => handleShowInstancedObjectsToggle(e.target.checked)}
+              />
+              <Form.Text className="text-muted">
+                Toggle the visibility of instanced objects in diagrams
+              </Form.Text>
+            </Form.Group>
+
             <div className="d-flex justify-content-end gap-3 mt-4">
-              <ActionButton
-                variant="outline-secondary"
-                onClick={handleExportProjectBUML}
-                className="d-flex align-items-center gap-2"
-              >
-                <Download size={16} />
-                Export B-UML
-              </ActionButton>
               <ActionButton
                 variant="outline-primary"
                 onClick={handleExportProject}
@@ -395,13 +304,6 @@ export const ProjectSettingsScreen: React.FC = () => {
               >
                 <Download size={16} />
                 Export Project
-              </ActionButton>
-              <ActionButton
-                variant="primary"
-                onClick={handleSaveProject}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Saving...' : 'Save Changes'}
               </ActionButton>
             </div>
           </Form>
