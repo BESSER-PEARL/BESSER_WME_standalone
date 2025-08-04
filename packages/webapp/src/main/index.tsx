@@ -7,7 +7,8 @@ import { createRoot } from 'react-dom/client';
 import { NO_HTTP_URL, SENTRY_DSN } from './constant';
 
 import 'bootstrap/dist/css/bootstrap.css';
-import './styles.css';
+import './styles/gui_editor.css';
+import './styles/styles.css';
 
 if (SENTRY_DSN) {
   Sentry.init({
