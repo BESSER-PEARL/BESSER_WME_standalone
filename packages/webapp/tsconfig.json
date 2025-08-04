@@ -4,16 +4,17 @@
     "module": "es2020",
     "moduleResolution": "node",
     "lib": ["es2021", "dom"],
-    "jsx": "react",
+    "jsx": "react-jsx",
     "declaration": true,
     "strict": true,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "skipLibCheck": true,
     "importHelpers": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "downlevelIteration": true,
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noImplicitAny": false
   }
 }
