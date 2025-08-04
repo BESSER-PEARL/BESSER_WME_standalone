@@ -6,6 +6,7 @@ import {
   Robot, 
   ArrowRepeat, 
   Gear,
+  PencilSquare,
   House
 } from 'react-bootstrap-icons';
 import { UMLDiagramType } from '@besser/wme';
@@ -73,7 +74,7 @@ const Divider = styled.hr`
   margin: 12px 0;
 `;
 
-type SidebarItemType = UMLDiagramType | 'home' | 'settings';
+type SidebarItemType = UMLDiagramType | 'home' | 'settings' | 'ui';
 
 interface SidebarItem {
   type: SidebarItemType;
@@ -88,6 +89,7 @@ const sidebarItems: SidebarItem[] = [
   { type: UMLDiagramType.ObjectDiagram, label: 'Object Diagram', icon: <Diagram2 size={20} /> },
   { type: UMLDiagramType.StateMachineDiagram, label: 'State Machine', icon: <ArrowRepeat size={20} /> },
   { type: UMLDiagramType.AgentDiagram, label: 'Agent Diagram', icon: <Robot size={20} /> },
+  { type: 'ui', label: 'UI design', icon: <PencilSquare size={20} />, path: '/ui-design' },
   { type: 'settings', label: 'Project Settings', icon: <Gear size={20} />, path: '/project-settings' },
 ];
 
