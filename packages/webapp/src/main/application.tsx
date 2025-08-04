@@ -18,6 +18,7 @@ import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
+import { GUI_editor } from './components/editor/GUI_editor';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
@@ -122,7 +123,18 @@ function AppContentInner() {
             </SidebarLayout>
           } 
         />
-        
+
+
+        {/* UI design route */}
+        <Route 
+          path="/ui-design" 
+          element={
+            <SidebarLayout>
+              <GUI_editor />
+            </SidebarLayout>
+          } 
+        />
+
         {/* Project settings route */}
         <Route 
           path="/project-settings" 
