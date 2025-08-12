@@ -23,11 +23,15 @@ const postHogOptions = {
   api_host: POSTHOG_HOST,
 };
 
-function AppContent() {
+function AppContentInner() {
   const [editor, setEditor] = useState<ApollonEditor>();
   const [showHomeModal, setShowHomeModal] = useState(false);
   const [hasCheckedForProject, setHasCheckedForProject] = useState(false);
   const { currentProject, loadProject } = useProject();
+  const location = useLocation();
+  
+  // Check if current path contains a token (collaboration route)
+  const hasTokenInUrl = location.pathname !== '/' && location.pathname !== '/project-settings' && location.pathname !== '/teampage';
   
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
@@ -37,6 +41,13 @@ function AppContent() {
   useEffect(() => {
     const checkForLatestProject = async () => {
       if (hasCheckedForProject) return;
+      
+      // If there's a token in the URL, don't show home modal
+      if (hasTokenInUrl) {
+        setShowHomeModal(false);
+        setHasCheckedForProject(true);
+        return;
+      }
       
       const latestProjectId = localStorage.getItem(localStorageLatestProject);
       
@@ -57,75 +68,84 @@ function AppContent() {
     };
     
     checkForLatestProject();
-  }, [loadProject, hasCheckedForProject]);
+  }, [loadProject, hasCheckedForProject, hasTokenInUrl]);
   
   // Additional effect to handle currentProject changes
   useEffect(() => {
     if (hasCheckedForProject) {
-      if (!currentProject) {
+      // If there's a token in the URL, don't show home modal
+      if (hasTokenInUrl) {
+        setShowHomeModal(false);
+      } else if (!currentProject) {
         setShowHomeModal(true);
       } else {
         setShowHomeModal(false);
       }
     }
-  }, [currentProject, hasCheckedForProject]);
+  }, [currentProject, hasCheckedForProject, hasTokenInUrl]);
   
   const isFirefox = useMemo(() => /Firefox/i.test(navigator.userAgent), []);
 
   return (
-    <BrowserRouter>
-      <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
-        <ApplicationBar onOpenHome={() => setShowHomeModal(true)} />
-        <ApplicationModal />
-        <VersionManagementSidebar />
-        {/* Home Modal */}
-        <HomeModal 
-          show={showHomeModal} 
-          onHide={() => {
-            // Only allow closing if there's a current project
-            if (currentProject) {
-              setShowHomeModal(false);
-            }
-          }} 
+    <ApollonEditorProvider value={{ editor, setEditor: handleSetEditor }}>
+      <ApplicationBar onOpenHome={() => setShowHomeModal(true)} />
+      <ApplicationModal />
+      <VersionManagementSidebar />
+      {/* Home Modal */}
+      <HomeModal 
+        show={showHomeModal} 
+        onHide={() => {
+          // Only allow closing if there's a current project or if there's a token in URL
+          if (currentProject || hasTokenInUrl) {
+            setShowHomeModal(false);
+          }
+        }} 
+      />
+      {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
+      <Routes>
+        {/* Collaboration route with token */}
+        <Route 
+          path="/:token" 
+          element={
+            // <SidebarLayout>  No collaboration support yet
+              <ApollonEditorComponentWithConnection />
+            // </SidebarLayout>
+          } 
         />
-        {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
-        <Routes>
-          {/* Collaboration route with token */}
-          <Route 
-            path="/:token" 
-            element={
-              // <SidebarLayout>  No collaboration support yet
-                <ApollonEditorComponentWithConnection />
-              // </SidebarLayout>
-            } 
-          />
-          
-          {/* Main editor route */}
-          <Route 
-            path="/" 
-            element={
-              <SidebarLayout>
-                <ApollonEditorComponent />
-              </SidebarLayout>
-            } 
-          />
-          
-          {/* Project settings route */}
-          <Route 
-            path="/project-settings" 
-            element={
-              <SidebarLayout>
-                <ProjectSettingsScreen />
-              </SidebarLayout>
-            } 
-          />
-          
-          {/* Team page route */}
-          <Route path="/teampage" element={<TeamPage />} />
-        </Routes>
-        <ErrorPanel />
-        <ToastContainer />
-      </ApollonEditorProvider>
+        
+        {/* Main editor route */}
+        <Route 
+          path="/" 
+          element={
+            <SidebarLayout>
+              <ApollonEditorComponent />
+            </SidebarLayout>
+          } 
+        />
+        
+        {/* Project settings route */}
+        <Route 
+          path="/project-settings" 
+          element={
+            <SidebarLayout>
+              <ProjectSettingsScreen />
+            </SidebarLayout>
+          } 
+        />
+        
+        {/* Team page route */}
+        <Route path="/teampage" element={<TeamPage />} />
+      </Routes>
+      <ErrorPanel />
+      <ToastContainer />
+    </ApollonEditorProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <BrowserRouter>
+      <AppContentInner />
     </BrowserRouter>
   );
 }

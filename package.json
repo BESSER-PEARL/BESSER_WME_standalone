@@ -42,7 +42,7 @@
     "crypto-js": "4.2.0"
   },
   "dependencies": {
-    "@besser/wme": "2.2.2",
+    "@besser/wme": "2.2.3",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1"
   },

@@ -67,6 +67,21 @@ Active elements that are interacted with by users in a session are highlighted i
 
 <!-- ![Real-time collaboration](/docs/images/RealTimeCollaboration.gif 'Real-time collaboration') -->
 
+## Under the Hood: Diagram Engine as an npm Package
+
+BESSER WME Standalone uses the core diagramming functionality provided by the [BESSER Web Modeling Editor (BESSER-WME)](https://github.com/BESSER-PEARL/BESSER-Web-Modeling-Editor), which is integrated as an [**npm package**](https://www.npmjs.com/package/@besser/wme) .
+
+This separation allows the standalone application to focus on delivering additional capabilities such as:
+
+- Real-time collaboration
+- Diagram sharing modes
+- Template management
+- Export/import/generationn to multiple formats
+- Hosting via application server or Docker
+- Redis-based storage
+
+Meanwhile, all **diagram rendering and editing** logic is delegated to the BESSER-WME library, ensuring consistency and reusability across multiple front-ends or integrations.
+
 
 ## Contributing
 
