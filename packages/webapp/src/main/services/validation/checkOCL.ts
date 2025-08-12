@@ -76,7 +76,7 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
     
     // Handle the separated valid and invalid constraints from backend
     if (result.valid_constraints && result.valid_constraints.length > 0) {
-      const validMessage = "Valid constraints:\n" + result.valid_constraints.join("\n");
+      const validMessage = "Valid constraints:\n\n" + result.valid_constraints.join("\n\n");
       toast.success(validMessage, {
         position: "top-right",
         autoClose: false,
@@ -89,13 +89,14 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px"
+          width: "350px",
+          whiteSpace: "pre-line"
         }
       });
     }
     
     if (result.invalid_constraints && result.invalid_constraints.length > 0) {
-      const invalidMessage = "Invalid constraints:\n" + result.invalid_constraints.join("\n");
+      const invalidMessage = "Invalid constraints:\n\n" + result.invalid_constraints.join("\n\n");
       toast.error(invalidMessage, {
         position: "top-right",
         autoClose: false,
@@ -108,14 +109,16 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px"
+          width: "350px",
+          whiteSpace: "pre-line"
         }
       });
     }
     
-    // If no constraints were found, show the general message
+    // If no constraints were found, show the general message (only if message exists)
     if ((!result.valid_constraints || result.valid_constraints.length === 0) && 
-        (!result.invalid_constraints || result.invalid_constraints.length === 0)) {
+        (!result.invalid_constraints || result.invalid_constraints.length === 0) &&
+        result.message && result.message.trim()) {
       toast.info(result.message, {
         position: "top-right",
         autoClose: false,
@@ -128,7 +131,8 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px"
+          width: "350px",
+          whiteSpace: "pre-line"
         }
       });
     }
