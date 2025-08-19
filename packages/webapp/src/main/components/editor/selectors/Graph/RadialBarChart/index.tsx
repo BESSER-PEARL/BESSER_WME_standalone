@@ -1,4 +1,4 @@
-import { UserComponent, useNode } from '@craftjs/core';
+import { UserComponent } from '@craftjs/core';
 import {
   RadialBarChart as RechartsRadialBarChart,
   RadialBar,
@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { RadialBarChartSettings } from './RadialBarChartSettings';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type RadialBarChartProps = {
   data: { name: string; value: number; fill: string }[];
@@ -17,21 +18,22 @@ export type RadialBarChartProps = {
   showLegend: boolean;
   showTooltip: boolean;
   legendPosition?: 'top' | 'bottom' | 'left' | 'right';
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  isDragging?: boolean;
 };
 
 export const RadialBarChart: UserComponent<Partial<RadialBarChartProps>> = (props) => {
   const {
-    connectors: { connect },
-  } = useNode();
-
-  const {
     data = [
-      { name: '18-24 años', value: 25.0, fill: '#8884d8' },
-      { name: '25-34 años', value: 30.0, fill: '#83a6ed' },
-      { name: '35-44 años', value: 20.0, fill: '#8dd1e1' },
-      { name: '45-54 años', value: 12.0, fill: '#82ca9d' },
-      { name: '55-64 años', value: 8.0, fill: '#a4de6c' },
-      { name: '65+ años', value: 5.0, fill: '#ffc658' },
+      { name: '18-24 years', value: 25.0, fill: '#8884d8' },
+      { name: '25-34 years', value: 30.0, fill: '#83a6ed' },
+      { name: '35-44 years', value: 20.0, fill: '#8dd1e1' },
+      { name: '45-54 years', value: 12.0, fill: '#82ca9d' },
+      { name: '55-64 years', value: 8.0, fill: '#a4de6c' },
+      { name: '65+ years', value: 5.0, fill: '#ffc658' },
     ],
     innerRadius = 10,
     outerRadius = 80,
@@ -40,11 +42,15 @@ export const RadialBarChart: UserComponent<Partial<RadialBarChartProps>> = (prop
     showLegend = true,
     showTooltip = true,
     legendPosition = 'right',
+    width,
+    height,
+    x,
+    y,
   } = props;
 
   return (
-    <div ref={(ref) => ref && connect(ref)} style={{ width: '100%', height: 300 }}>
-      <ResponsiveContainer>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <ResponsiveContainer width="100%" height="100%">
         <RechartsRadialBarChart
           cx="50%"
           cy="50%"
@@ -78,7 +84,7 @@ export const RadialBarChart: UserComponent<Partial<RadialBarChartProps>> = (prop
           {showTooltip && <Tooltip />}
         </RechartsRadialBarChart>
       </ResponsiveContainer>
-    </div>
+    </DraggableResizableWrapper>
   );
 };
 
@@ -86,12 +92,12 @@ RadialBarChart.craft = {
   displayName: 'RadialBarChart',
   props: {
     data : [
-      { name: '18-24 años', value: 25.0, fill: '#8884d8' },
-      { name: '25-34 años', value: 30.0, fill: '#83a6ed' },
-      { name: '35-44 años', value: 20.0, fill: '#8dd1e1' },
-      { name: '45-54 años', value: 12.0, fill: '#82ca9d' },
-      { name: '55-64 años', value: 8.0, fill: '#a4de6c' },
-      { name: '65+ años', value: 5.0, fill: '#ffc658' },
+      { name: '18-24 years', value: 25.0, fill: '#8884d8' },
+      { name: '25-34 years', value: 30.0, fill: '#83a6ed' },
+      { name: '35-44 years', value: 20.0, fill: '#8dd1e1' },
+      { name: '45-54 years', value: 12.0, fill: '#82ca9d' },
+      { name: '55-64 years', value: 8.0, fill: '#a4de6c' },
+      { name: '65+ years', value: 5.0, fill: '#ffc658' },
     ],
     innerRadius: 10,
     outerRadius: 100,
@@ -100,6 +106,11 @@ RadialBarChart.craft = {
     showLegend: true,
     showTooltip: true,
     legendPosition: 'right',
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 300,
+    isDragging: false,
   },
   related: {
     toolbar: RadialBarChartSettings,

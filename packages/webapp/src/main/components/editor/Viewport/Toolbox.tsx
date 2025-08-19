@@ -27,7 +27,6 @@ import { RadarChart } from '../selectors/Graph/RadarChart';
 import { RadialBarChart } from '../selectors/Graph/RadialBarChart';
 import { WorldMap } from '../selectors/Map/WorldMap';
 import { LocationMap } from '../selectors/Map/LocationMap';
-import { FreeElement } from '../selectors/FreeElement';
 
 import CustomizeIcon from '../../../public/icons/customize.svg';
 
@@ -125,7 +124,6 @@ export const Toolbox = () => {
     hoverRef.current = e.currentTarget as HTMLDivElement;
   };
 
-  // Ocultar tooltip:
   const onMouseLeave = () => {
     setTooltipText(null);
     setTooltipPos(null);
@@ -149,16 +147,9 @@ export const Toolbox = () => {
             <div
               ref={(ref) =>
                 safeCreate(
-                  ref,
-                  <Element
-                    canvas
-                    is={Container}
-                    background={{ r: 78, g: 78, b: 78, a: 1 }}
-                    color={{ r: 0, g: 0, b: 0, a: 1 }}
-                    height="300px"
-                    width="300px"
-                  />
-                )
+                ref,
+                <Element canvas is={Container} />
+              )
               }
             >
               <ItemWrapper
@@ -246,21 +237,6 @@ export const Toolbox = () => {
             <div ref={(ref) => safeCreate(ref, <LocationMap />)}>
               <ItemWrapper
                 onMouseEnter={(e) => onMouseEnter(e, 'Location Map')}
-                onMouseLeave={onMouseLeave}
-              >
-                <LocationMapIcon />
-              </ItemWrapper>
-            </div>
-            <div ref={(ref) =>
-              safeCreate(
-                ref,
-                <FreeElement x={0} y={0} width={200} height={150}>
-                  <div>Drag Me</div>
-                </FreeElement>
-              )
-            }>
-              <ItemWrapper
-                onMouseEnter={(e) => onMouseEnter(e, 'Free Element')}
                 onMouseLeave={onMouseLeave}
               >
                 <LocationMapIcon />

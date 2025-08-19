@@ -1,4 +1,4 @@
-import { UserComponent, useNode } from '@craftjs/core';
+import { UserComponent } from '@craftjs/core';
 import {
   RadarChart as RechartsRadarChart,
   Radar,
@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { RadarChartSettings } from './RadarChartSettings';
 import { normalizeColor } from '../../../../../utils/charts';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type RadarChartProps = {
   data: { subject: string; A: number; B: number }[];
@@ -17,13 +18,14 @@ export type RadarChartProps = {
   fillColor: string;
   showGrid: boolean;
   showTooltip: boolean;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  isDragging?: boolean;
 };
 
 export const RadarChart: UserComponent<Partial<RadarChartProps>> = (props) => {
-  const {
-    connectors: { connect },
-  } = useNode();
-
   const {
     data = [
       { subject: 'Math', A: 120, B: 110 },
@@ -37,14 +39,18 @@ export const RadarChart: UserComponent<Partial<RadarChartProps>> = (props) => {
     fillColor = '#8884d8',
     showGrid = true,
     showTooltip = true,
+    width,
+    height,
+    x,
+    y,
   } = props;
 
   const finalStrokeColor = normalizeColor(strokeColor, '#8884d8');
   const finalFillColor = normalizeColor(fillColor, '#8884d8');
 
   return (
-    <div ref={(ref) => ref && connect(ref)} style={{ width: '100%', height: 300 }}>
-      <ResponsiveContainer>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <ResponsiveContainer width="100%" height="100%">
         <RechartsRadarChart data={data}>
           {showGrid && <PolarGrid />}
           <PolarAngleAxis dataKey="subject" />
@@ -59,7 +65,7 @@ export const RadarChart: UserComponent<Partial<RadarChartProps>> = (props) => {
           />
         </RechartsRadarChart>
       </ResponsiveContainer>
-    </div>
+    </DraggableResizableWrapper>
   );
 };
 
@@ -78,6 +84,11 @@ RadarChart.craft = {
     fillColor: '#8884d8',
     showGrid: true,
     showTooltip: true,
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 200,
+    isDragging: false,
   },
   related: {
     toolbar: RadarChartSettings,

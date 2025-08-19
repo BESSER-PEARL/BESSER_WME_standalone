@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { BarChartSettings } from './BarChartSettings';
 import { normalizeColor, safeNumber, safeMargin } from '../../../../../utils/charts';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type BarChartProps = {
   data: { name: string; value: number }[];
@@ -19,13 +20,14 @@ export type BarChartProps = {
   gridColor: string;
   margin: [number, number, number, number];
   barSize: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  isDragging?: boolean;
 };
 
 export const BarChart: UserComponent<Partial<BarChartProps>> = (props) => {
-  const {
-    connectors: { connect },
-  } = useNode();
-
   const {
     data = [],
     barColor,
@@ -34,6 +36,11 @@ export const BarChart: UserComponent<Partial<BarChartProps>> = (props) => {
     fontSize,
     barSize,
     margin,
+    width,
+    height,
+    x,
+    y,
+    isDragging,
   } = props;
 
   const finalBarColor = normalizeColor(barColor, '#8884d8');
@@ -44,13 +51,8 @@ export const BarChart: UserComponent<Partial<BarChartProps>> = (props) => {
   const finalMargin = safeMargin(margin);
 
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(ref);
-      }}
-      style={{ width: '100%', height: 300 }}
-    >
-      <ResponsiveContainer>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart
           data={data}
           margin={{
@@ -62,20 +64,13 @@ export const BarChart: UserComponent<Partial<BarChartProps>> = (props) => {
           barSize={finalBarSize}
         >
           <CartesianGrid stroke={finalGridColor} strokeDasharray="3 3" />
-          <XAxis
-            dataKey="name"
-            stroke={finalAxisColor}
-            tick={{ fontSize: finalFontSize }}
-          />
-          <YAxis
-            stroke={finalAxisColor}
-            tick={{ fontSize: finalFontSize }}
-          />
+          <XAxis dataKey="name" stroke={finalAxisColor} tick={{ fontSize: finalFontSize }} />
+          <YAxis stroke={finalAxisColor} tick={{ fontSize: finalFontSize }} />
           <Tooltip />
           <Bar dataKey="value" fill={finalBarColor} />
         </RechartsBarChart>
       </ResponsiveContainer>
-    </div>
+    </DraggableResizableWrapper>
   );
 };
 
@@ -96,6 +91,11 @@ BarChart.craft = {
     gridColor: '#e0e0e0',
     margin: [20, 30, 0, 10],
     barSize: 30,
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 200,
+    isDragging: false,
   },
   related: {
     toolbar: BarChartSettings,

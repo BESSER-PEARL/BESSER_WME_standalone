@@ -47,6 +47,7 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
     deletable,
     connectors: { drag },
     parent,
+    props,
   } = useNode((node) => ({
     isHover: node.events.hovered,
     dom: node.dom,
@@ -67,41 +68,32 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
   }, [dom, isActive, isHover]);
 
   const getPos = React.useCallback((element: HTMLElement | null) => {
-    if (!element) {
-      return { top: '0px', left: '0px' };
-    }
+    if (!element) return { top: '0px', left: '0px' };
     const { top, left, bottom } = element.getBoundingClientRect();
-    return {
-      top: `${top > 0 ? top : bottom}px`,
-      left: `${left}px`,
-    };
+    return { top: `${top > 0 ? top : bottom}px`, left: `${left}px` };
   }, []);
 
   const scroll = React.useCallback(() => {
-    const { current: currentDOM } = currentRef;
-    if (!currentDOM) return;
-
+    if (!currentRef.current || !dom) return;
     const { top, left } = getPos(dom);
-    currentDOM.style.top = top;
-    currentDOM.style.left = left;
+    currentRef.current.style.top = top;
+    currentRef.current.style.left = left;
   }, [dom, getPos]);
 
   React.useEffect(() => {
     const container = document.querySelector('.craftjs-renderer');
     if (!container) return;
-
     container.addEventListener('scroll', scroll);
-    return () => {
-      container.removeEventListener('scroll', scroll);
-    };
+    return () => container.removeEventListener('scroll', scroll);
   }, [scroll]);
 
-  // Obtener el contenedor donde hacer portal, validando que exista
   const portalContainer = document.querySelector('.page-container');
+
+  const showIndicator = (isHover || isActive) && portalContainer && !props?.isDragging;
 
   return (
     <>
-      {(isHover || isActive) && portalContainer
+      {showIndicator
         ? ReactDOM.createPortal(
             <IndicatorDiv
               ref={currentRef}
@@ -126,9 +118,7 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
               {id !== ROOT_NODE && parent ? (
                 <Btn
                   className="mr-2 cursor-pointer"
-                  onClick={() => {
-                    actions.selectNode(parent);
-                  }}
+                  onClick={() => actions.selectNode(parent)}
                 >
                   <ArrowUp viewBox="-4 -1 24 24" />
                 </Btn>

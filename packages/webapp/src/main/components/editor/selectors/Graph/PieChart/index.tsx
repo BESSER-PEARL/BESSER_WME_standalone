@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { PieChartSettings } from './PieChartSettings';
 import { normalizeColor } from '../../../../../utils/charts';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type PieChartProps = {
   data: { name: string; value: number; color: string }[];
@@ -20,6 +21,11 @@ export type PieChartProps = {
   labelPosition: 'inside' | 'outside';
   showLegend?: boolean;
   legendPosition?: 'top' | 'bottom' | 'left' | 'right';
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  isDragging?: boolean;
 };
 
 const RADIAN = Math.PI / 180;
@@ -52,10 +58,6 @@ const renderCustomizedLabel = (labelColor: string) => (props: any) => {
 
 export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
   const {
-    connectors: { connect },
-  } = useNode();
-
-  const {
     data = [],
     innerRadius = 10,
     outerRadius = 80,
@@ -64,7 +66,11 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
     labelColor = '#000',
     labelPosition = 'outside',
     showLegend = true,
-    legendPosition = 'bottom',
+    legendPosition = 'left',
+    width,
+    height,
+    x,
+    y,
   } = props;
 
   const normalizedLabelColor = normalizeColor(labelColor, '#000');
@@ -112,13 +118,8 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
   }
 
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(ref);
-      }}
-      style={{ width: '100%', height: 300, display: 'flex', flexDirection: 'column' }}
-    >
-      <ResponsiveContainer>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Tooltip />
           {showLegend && (
@@ -149,7 +150,7 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
           </Pie>
         </RechartsPieChart>
       </ResponsiveContainer>
-    </div>
+    </DraggableResizableWrapper>
   );
 };
 
@@ -169,7 +170,12 @@ PieChart.craft = {
     labelColor: '#FFFFFF',
     labelPosition: 'inside',
     showLegend: true,
-    legendPosition: 'bottom',
+    legendPosition: 'left',
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 220,
+    isDragging: false,
   },
   related: {
     toolbar: PieChartSettings,

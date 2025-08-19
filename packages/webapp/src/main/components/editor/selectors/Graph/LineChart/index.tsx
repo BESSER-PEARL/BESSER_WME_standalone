@@ -9,12 +9,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { LineChartSettings } from './LineChartSettings';
-import {
-  normalizeColor,
-  safeNumber,
-  safeMargin,
-} from '../../../../../utils/charts';
-import { Resizer } from '../../Resizer';
+import { normalizeColor, safeNumber, safeMargin } from '../../../../../utils/charts';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type LineChartProps = {
   data: { name: string; value: number }[];
@@ -24,15 +20,13 @@ export type LineChartProps = {
   gridColor: string;
   lineWidth: number;
   margin: [number, number, number, number];
-  width: string;
-  height: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
-  const {
-    connectors: { connect },
-  } = useNode();
-
   const {
     data = [],
     color,
@@ -41,8 +35,10 @@ export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
     fontSize,
     lineWidth,
     margin,
-    width = '100%',
-    height = '300px',
+    x = 100,
+    y = 100,
+    width = 300,
+    height = 200,
   } = props;
 
   const finalColor = normalizeColor(color, '#8884d8');
@@ -53,15 +49,7 @@ export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
   const finalMargin = safeMargin(margin);
 
   return (
-    <Resizer
-      propKey={{ width: 'width', height: 'height' }}
-      ref={(ref) => ref && connect(ref)}
-      style={{
-        width,
-        height,
-        position: 'relative',
-      }}
-    >
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsLineChart
           data={data}
@@ -92,7 +80,7 @@ export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
           />
         </RechartsLineChart>
       </ResponsiveContainer>
-    </Resizer>
+    </DraggableResizableWrapper>
   );
 };
 
@@ -115,8 +103,10 @@ LineChart.craft = {
     gridColor: '#e0e0e0',
     lineWidth: 2,
     margin: [20, 30, 0, 10],
-    width: '100%',
-    height: '300px',
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 200,
   },
   related: {
     toolbar: LineChartSettings,
