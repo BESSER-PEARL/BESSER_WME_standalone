@@ -1,98 +1,142 @@
 import React from 'react';
-
+import { Rnd } from 'react-rnd';
+import { useNode, UserComponent } from '@craftjs/core';
 import { ContainerSettings } from './ContainerSettings';
-import { Resizer } from '../Resizer';
+import { normalizeColor, safeNumber, safeMargin } from '../../../../utils/charts';
 
 export type ContainerProps = {
-  background: Record<'r' | 'g' | 'b' | 'a', number>;
-  color: Record<'r' | 'g' | 'b' | 'a', number>;
-  flexDirection: string;
-  alignItems: string;
-  justifyContent: string;
-  fillSpace: string;
-  width: string;
-  height: string;
-  padding: string[];
-  margin: string[];
-  marginTop: number;
-  marginLeft: number;
-  marginBottom: number;
-  marginRight: number;
-  shadow: number;
-  children: React.ReactNode;
-  radius: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  background?: string | { r: number; g: number; b: number; a?: number };
+  borderColor?: string | { r: number; g: number; b: number; a?: number };
+  padding?: [number, number, number, number];
+  radius?: number;
+  shadow?: number;
+  isDragging?: boolean;
+  children?: React.ReactNode;
 };
 
-const defaultProps: Required<Omit<ContainerProps, 'marginTop' | 'marginLeft' | 'marginBottom' | 'marginRight' | 'children'>> = {
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  justifyContent: 'flex-start',
-  fillSpace: 'no',
-  padding: ['0', '0', '0', '0'],
-  margin: ['0', '0', '0', '0'],
-  background: { r: 255, g: 255, b: 255, a: 1 },
-  color: { r: 0, g: 0, b: 0, a: 1 },
-  shadow: 0,
-  radius: 0,
-  width: '100%',
-  height: 'auto',
-};
-
-export const Container = (props: Partial<ContainerProps>) => {
-  const mergedProps: Required<ContainerProps> = {
-    ...defaultProps,
-    ...props,
-    marginTop: props.marginTop ?? 0,
-    marginLeft: props.marginLeft ?? 0,
-    marginBottom: props.marginBottom ?? 0,
-    marginRight: props.marginRight ?? 0,
-    children: props.children ?? null,
-  };
+export const Container: UserComponent<Partial<ContainerProps>> = (props) => {
+  const {
+    connectors: { connect },
+    selected,
+    actions: { setProp },
+  } = useNode((node) => ({
+    selected: node.events.selected,
+  }));
 
   const {
-    flexDirection,
-    alignItems,
-    justifyContent,
-    fillSpace,
+    x = 100,
+    y = 100,
+    width = 300,
+    height = 200,
     background,
-    color,
+    borderColor,
     padding,
-    margin,
-    shadow,
     radius,
+    shadow,
     children,
-  } = mergedProps;
+  } = props;
+
+  const finalBg = normalizeColor(background, '#fff');
+  const finalBorderColor = normalizeColor(borderColor, '#ccc');
+  const finalPadding = safeMargin(padding); 
+  const finalRadius = safeNumber(radius, 4);
+  const finalShadow = safeNumber(shadow, 0);
+
+  const handleDragStart = (e: any) => {
+    e.stopPropagation();
+    setProp((p: any) => { p.isDragging = true; });
+  };
+
+  const handleDragStop = (e: any, d: any) => {
+    e.stopPropagation();
+    setProp((p: any) => {
+      p.x = d.x;
+      p.y = d.y;
+      p.isDragging = false;
+    }, 500);
+  };
+
+  const handleResizeStop = (e: any, dir: any, ref: HTMLElement, delta: any, pos: any) => {
+    e.stopPropagation();
+    setProp((p: any) => {
+      p.width = ref.offsetWidth;
+      p.height = ref.offsetHeight;
+      p.x = pos.x;
+      p.y = pos.y;
+      p.isDragging = false;
+    }, 500);
+  };
 
   return (
-    <Resizer
-      propKey={{ width: 'width', height: 'height' }}
-      style={{
-        position: 'relative',
-        justifyContent,
-        flexDirection,
-        alignItems,
-        background: `rgba(${Object.values(background)})`,
-        color: `rgba(${Object.values(color)})`,
-        padding: `${padding[0]}px ${padding[1]}px ${padding[2]}px ${padding[3]}px`,
-        margin: `${margin[0]}px ${margin[1]}px ${margin[2]}px ${margin[3]}px`,
-        boxShadow:
-          shadow === 0
-            ? 'none'
-            : `0px 3px 100px ${shadow}px rgba(0, 0, 0, 0.13)`,
-        borderRadius: `${radius}px`,
-        flex: fillSpace === 'yes' ? 1 : 'unset',
+    <Rnd
+      size={{ width, height }}
+      position={{ x, y }}
+      bounds="parent"
+      dragGrid={[1, 1]}
+      resizeGrid={[1, 1]}
+      cancel=".child-draggable"
+      onDragStart={handleDragStart}
+      onDragStop={handleDragStop}
+      onResizeStop={handleResizeStop}
+      enableResizing={{
+        top: true,
+        right: true,
+        bottom: true,
+        left: true,
+        topRight: true,
+        bottomRight: true,
+        bottomLeft: true,
+        topLeft: true,
       }}
     >
-      {children}
-    </Resizer>
+      <div
+        ref={connect}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          userSelect: 'none',
+          background: finalBg,
+          border: selected
+            ? `2px solid #2680eb`
+            : `1px solid ${finalBorderColor}`,
+          borderRadius: finalRadius,
+          boxShadow:
+            finalShadow === 0
+              ? 'none'
+              : `0px ${finalShadow}px ${finalShadow * 2}px rgba(0, 0, 0, 0.13)`,
+          padding: `${finalPadding[0]}px ${finalPadding[1]}px ${finalPadding[2]}px ${finalPadding[3]}px`,
+          boxSizing: 'border-box',
+        }}
+      >
+        {children}
+      </div>
+    </Rnd>
   );
 };
 
 Container.craft = {
-  displayName: 'Container',
-  props: defaultProps,
+  displayName: 'Free Element',
+  props: {
+    x: 100,
+    y: 100,
+    width: 300,
+    height: 200,
+    background: '#fff',
+    borderColor: '#ccc',
+    padding: [10, 10, 10, 10],
+    radius: 4,
+    shadow: 0,
+    isDragging: false,
+  },
   rules: {
     canDrag: () => true,
+    canMoveIn: () => true,
+    canMoveOut: () => true,
   },
   related: {
     toolbar: ContainerSettings,
