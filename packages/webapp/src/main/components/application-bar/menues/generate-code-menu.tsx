@@ -33,7 +33,7 @@ export const GenerateCodeMenu: React.FC = () => {
                             (BACKEND_URL ?? '').includes('127.0.0.1');
 
   const handleGenerateCode = async (generatorType: string) => {
-    if (!editor || !diagram?.title) {
+    if (!editor) {
       toast.error('No diagram available to generate code from');
       return;
     }
