@@ -1,5 +1,6 @@
 import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
 import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const BarChartSettings = () => {
   return (
@@ -15,12 +16,9 @@ export const BarChartSettings = () => {
         <ToolbarItem full propKey="fontSize" type="slider" label="Axis Font Size" />
       </ToolbarSection>
 
-      <ToolbarSection title="Margin" props={['margin']}>
-        <ToolbarItem propKey="margin" index={0} type="slider" label="Top" />
-        <ToolbarItem propKey="margin" index={1} type="slider" label="Right" />
-        <ToolbarItem propKey="margin" index={2} type="slider" label="Bottom" />
-        <ToolbarItem propKey="margin" index={3} type="slider" label="Left" />
-      </ToolbarSection>
+      <DimensionsSettings />
+      <MarginSettings />
+      <PositionSettings />
     </>
   );
 };

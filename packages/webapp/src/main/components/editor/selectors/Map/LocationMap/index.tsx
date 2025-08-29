@@ -4,8 +4,9 @@ import type { LatLngExpression } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LocationSettings } from './LocationMapSettings';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
-// Fix para íconos de marcador (importante para Vite o Webpack moderno)
+// Fix for marker icons (important for Vite or modern Webpack)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -21,55 +22,67 @@ export type LocationMapProps = {
   longitude: number;
   zoom: number;
   showMarker: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 export const LocationMap: UserComponent<Partial<LocationMapProps>> = (props) => {
-  const {
-    connectors: { connect },
-  } = useNode();
+  const { connectors: { connect } } = useNode();
 
   const {
-    latitude = 40.7128,
-    longitude = -74.006,
+    latitude = 49.6117,
+    longitude = 6.13,
     zoom = 13,
     showMarker = true,
+    x = 0,
+    y = 0,
+    width = 400,
+    height = 300,
   } = props;
 
   const center: LatLngExpression = [latitude, longitude];
 
   return (
-    <div ref={(ref) => ref && connect(ref)} style={{ width: '100%', height: 300 }}>
-      <MapContainer
-        {...({
-          center,
-          zoom,
-          scrollWheelZoom: false,
-          style: { width: '100%', height: '100%' },
-        } as any)}
-      >
-        <TileLayer
-        {...({
-            attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
-            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        } as any)}
-        />
-        {showMarker && (
-          <Marker position={center}>
-            <Popup>Ubicación seleccionada</Popup>
-          </Marker>
-        )}
-      </MapContainer>
-    </div>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <div ref={connect} style={{ width: '100%', height: '100%' }}>
+        <MapContainer
+          {...({
+            center,
+            zoom,
+            scrollWheelZoom: false,
+            style: { width: '100%', height: '100%' },
+          } as any)}
+        >
+          <TileLayer
+            {...({
+              attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
+              url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            } as any)}
+          />
+          {showMarker && (
+            <Marker position={center}>
+              <Popup>Selected Location</Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      </div>
+    </DraggableResizableWrapper>
   );
 };
 
 LocationMap.craft = {
   displayName: 'LocationMap',
   props: {
-    latitude: 40.7128,
-    longitude: -74.006,
+    latitude: 49.6117,
+    longitude: 6.13,
     zoom: 13,
     showMarker: true,
+    x: 0,
+    y: 0,
+    width: 400,
+    height: 300,
   },
   related: {
     toolbar: LocationSettings,

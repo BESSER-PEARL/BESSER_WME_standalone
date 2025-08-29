@@ -1,11 +1,10 @@
-import React from 'react';
-
 import { ToolbarSection } from '../../Toolbar/ToolbarSection';
 import { ToolbarItem } from '../../Toolbar/ToolbarItem';
+import { PositionSettings } from '../CommonSettings';
 
 export const VideoSettings = () => {
   return (
-    <React.Fragment>
+    <>
       <ToolbarSection title="Youtube">
         <ToolbarItem
           full={true}
@@ -14,6 +13,7 @@ export const VideoSettings = () => {
           label="Video ID"
         />
       </ToolbarSection>
-    </React.Fragment>
+      <PositionSettings />
+    </>
   );
 };

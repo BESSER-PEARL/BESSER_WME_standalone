@@ -1,11 +1,13 @@
-import React from 'react';
 import { ToolbarSection } from '../../Toolbar/ToolbarSection';
 import { ToolbarItem } from '../../Toolbar/ToolbarItem';
+import { DimensionsSettings, PositionSettings } from '../CommonSettings';
 
 export const ContainerSettings = () => {
   return (
     <>
-      {/* Position */}
+      <PositionSettings />
+      <DimensionsSettings />
+
       <ToolbarSection
         title="Position"
         props={['x', 'y']}

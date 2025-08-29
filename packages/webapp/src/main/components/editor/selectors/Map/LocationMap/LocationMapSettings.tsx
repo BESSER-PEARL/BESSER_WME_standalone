@@ -1,5 +1,6 @@
 import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
 import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const LocationSettings = () => {
   return (
@@ -23,15 +24,6 @@ export const LocationSettings = () => {
           max={180}
           step={0.0001}
         />
-        <ToolbarItem
-          full
-          propKey="zoom"
-          type="slider"
-          label="Zoom"
-          min={1}
-          max={18}
-          step={1}
-        />
       </ToolbarSection>
 
       <ToolbarSection title="Opciones" props={['showMarker']}>
@@ -42,6 +34,10 @@ export const LocationSettings = () => {
           label="Mostrar marcador"
         />
       </ToolbarSection>
+
+      <DimensionsSettings />
+      <MarginSettings />
+      <PositionSettings />
     </>
   );
 };

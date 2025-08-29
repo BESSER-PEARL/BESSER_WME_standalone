@@ -1,8 +1,9 @@
-import { useNode, useEditor } from '@craftjs/core';
+import { useNode, useEditor, UserComponent } from '@craftjs/core';
 import YouTube from 'react-youtube';
 import { styled } from 'styled-components';
 
 import { VideoSettings } from './VideoSettings';
+import { DraggableResizableWrapper } from '../DragResizableWrapper';
 
 const YoutubeDiv = styled.div<{ $enabled: boolean }>`
   width: 100%;
@@ -12,45 +13,59 @@ const YoutubeDiv = styled.div<{ $enabled: boolean }>`
   }
   iframe {
     pointer-events: ${(props) => (props.$enabled ? 'none' : 'auto')};
-    // width:100%!important;
-    // height:100%!important;
   }
 `;
 
-export const Video = (props: any) => {
+export type VideoProps = {
+  videoId?: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+};
+
+export const Video: UserComponent<Partial<VideoProps>> = ({
+  videoId = '4lnH9Kxdy-k',
+  x = 100,
+  y = 100,
+  width = 400,
+  height = 250,
+}) => {
   const { enabled } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
   const {
     connectors: { connect },
-  } = useNode((node) => ({
-    selected: node.events.selected,
-  }));
-
-  const { videoId } = props;
+  } = useNode();
 
   return (
-    <YoutubeDiv
-      ref={(dom) => {
-        if (dom) connect(dom);
-      }}
-      $enabled={enabled}
-    >
-      <YouTube
-        videoId={videoId}
-        opts={{
-          width: '100%',
-          height: '100%',
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <YoutubeDiv
+        ref={(dom) => {
+          if (dom) connect(dom);
         }}
-      />
-    </YoutubeDiv>
+        $enabled={enabled}
+      >
+        <YouTube
+          videoId={videoId}
+          opts={{
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      </YoutubeDiv>
+    </DraggableResizableWrapper>
   );
 };
 
 Video.craft = {
   displayName: 'Video',
   props: {
-    videoId: 'IwzUs1IMdyQ',
+    videoId: '4lnH9Kxdy-k',
+    x: 100,
+    y: 100,
+    width: 400,
+    height: 250,
   },
   related: {
     toolbar: VideoSettings,

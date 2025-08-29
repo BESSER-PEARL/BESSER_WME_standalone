@@ -1,5 +1,6 @@
 import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
 import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const PieChartSettings = () => {
   return (
@@ -43,6 +44,10 @@ export const PieChartSettings = () => {
           ]}
         />
       </ToolbarSection>
+
+      <DimensionsSettings />
+      <MarginSettings />
+      <PositionSettings />
     </>
   );
 };

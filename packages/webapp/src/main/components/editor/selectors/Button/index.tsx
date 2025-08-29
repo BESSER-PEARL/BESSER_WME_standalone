@@ -1,89 +1,93 @@
+import React from 'react';
 import { UserComponent, useNode } from '@craftjs/core';
-import cx from 'classnames';
-import { styled } from 'styled-components';
-
+import { DraggableResizableWrapper } from '../DragResizableWrapper';
 import { ButtonSettings } from './ButtonSettings';
+import { normalizeColor, safeNumber } from '../../../../utils/charts';
 
-import { Text } from '../Text';
-
-type ButtonProps = {
-  background?: Record<'r' | 'g' | 'b' | 'a', number>;
-  color?: Record<'r' | 'g' | 'b' | 'a', number>;
-  buttonStyle?: string;
-  margin?: (number | string)[];
+export type ButtonProps = {
   text?: string;
-  textComponent?: any;
+  textSize?: number;
+  background?: Record<'r' | 'g' | 'b' | 'a', number> | string;
+  color?: Record<'r' | 'g' | 'b' | 'a', number>;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
 };
 
-// Alias required StyledComponent props for Transient Props
-type StyledButtonProps = {
-  $background?: Record<'r' | 'g' | 'b' | 'a', number>;
-  $buttonStyle?: string;
-  $margin?: (number | string)[];
-};
-
-const StyledButton = styled.button<StyledButtonProps>`
-  background: ${(props) =>
-    props.$buttonStyle === 'full' && props.$background
-      ? `rgba(${Object.values(props.$background).join(', ')})`
-      : 'transparent'};
-  border: 2px solid transparent;
-  border-color: ${(props) =>
-    props.$buttonStyle === 'outline' && props.$background
-      ? `rgba(${Object.values(props.$background).join(', ')})`
-      : 'transparent'};
-  margin: ${({ $margin }) =>
-    $margin && $margin.length === 4
-      ? `${$margin[0]}px ${$margin[1]}px ${$margin[2]}px ${$margin[3]}px`
-      : '0'};
-`;
-
-export const Button: UserComponent<ButtonProps> = ({
-  text,
-  textComponent,
-  color,
-  buttonStyle,
-  background,
-  margin,
-}: ButtonProps) => {
+export const Button: UserComponent<Partial<ButtonProps>> = (props) => {
   const {
-    connectors: { connect },
-  } = useNode((node) => ({
-    selected: node.events.selected,
-  }));
+    connectors: { connect, drag },
+  } = useNode();
+
+  const {
+    text = 'Button',
+    textSize = 14,
+    background,
+    color,
+    x = 100,
+    y = 100,
+    width = 120,
+    height = 40,
+  } = props;
+
+  const finalColor = color 
+    ? `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a !== undefined ? color.a : 1})`
+    : 'rgba(255, 255, 255, 1)';
+
+  const finalBg = normalizeColor(background, 'rgba(76,175,80,1)');
+  const finalTextSize = safeNumber(textSize, 14);
 
   return (
-    <StyledButton
-      ref={(dom) => {
-        if (dom) connect(dom);
-      }}
-      className={cx([
-        'rounded w-full px-4 py-2',
-        {
-          'shadow-lg': buttonStyle === 'full',
-        },
-      ])}
-      $buttonStyle={buttonStyle}
-      $background={background}
-      $margin={margin}
-    >
-      <Text {...textComponent} text={text} color={color} />
-    </StyledButton>
+    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: finalBg,
+          borderRadius: 4,
+          cursor: 'pointer',
+          padding: '8px 16px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <span 
+          style={{ 
+            fontSize: `${finalTextSize}px`,
+            color: finalColor,
+            textAlign: 'center',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            width: '100%',
+            fontFamily: 'inherit',
+            fontWeight: 'normal',
+          }}
+        >
+          {text}
+        </span>
+      </div>
+    </DraggableResizableWrapper>
   );
 };
 
 Button.craft = {
   displayName: 'Button',
   props: {
-    background: { r: 255, g: 255, b: 255, a: 0.5 },
-    color: { r: 92, g: 90, b: 90, a: 1 },
-    buttonStyle: 'full',
     text: 'Button',
-    margin: [5, 0, 5, 0],
-    textComponent: {
-      ...Text.craft.props,
-      textAlign: 'center',
-    },
+    textSize: 14,
+    background: 'rgba(76,175,80,1)',
+    color: { r: 255, g: 255, b: 255, a: 1 },
+    x: 100,
+    y: 100,
+    width: 120,
+    height: 40,
   },
   related: {
     toolbar: ButtonSettings,

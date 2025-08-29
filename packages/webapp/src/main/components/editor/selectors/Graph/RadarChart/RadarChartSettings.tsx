@@ -1,7 +1,6 @@
-// components/selectors/Graph/RadarChart/RadarChartSettings.tsx
-
 import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
 import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const RadarChartSettings = () => {
   return (
@@ -15,6 +14,10 @@ export const RadarChartSettings = () => {
         <ToolbarItem full propKey="showGrid" type="checkbox" label="Show Grid" />
         <ToolbarItem full propKey="showTooltip" type="checkbox" label="Show Tooltip" />
       </ToolbarSection>
+
+      <DimensionsSettings />
+      <MarginSettings />
+      <PositionSettings />
     </>
   );
 };

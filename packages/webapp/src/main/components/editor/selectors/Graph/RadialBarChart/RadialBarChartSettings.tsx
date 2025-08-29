@@ -1,8 +1,6 @@
-import React from 'react';
-
 import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
 import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
-import { ToolbarRadio } from '../../../Toolbar/ToolbarRadio';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const RadialBarChartSettings = () => {
   return (
@@ -48,6 +46,10 @@ export const RadialBarChartSettings = () => {
           step={1}
         />
       </ToolbarSection>
+
+      <DimensionsSettings />
+      <MarginSettings />
+      <PositionSettings />
     </>
   );
 };

@@ -120,7 +120,7 @@ export const Container: UserComponent<Partial<ContainerProps>> = (props) => {
 };
 
 Container.craft = {
-  displayName: 'Free Element',
+  displayName: 'Container',
   props: {
     x: 100,
     y: 100,
