@@ -53,12 +53,11 @@ export function GUI_editor() {
               <Element
                 canvas
                 is={UICanvas}
-                width="800px"
+                width="900px"
                 height="1000px"
                 background={{ r: 255, g: 255, b: 255, a: 1 }}
                 custom={{ displayName: 'Canvas' }}
               >
-                <Element canvas is={Container} x={100} y={100} width={300} height={200} />
 
               </Element>
             </Frame>

@@ -67,7 +67,6 @@ const ItemWrapper = styled.div`
   }
 `;
 
-// Tooltip renderizado con portal:
 const TooltipPortal: React.FC<{ text: string; position: { top: number; left: number } | null }> = ({
   text,
   position,
