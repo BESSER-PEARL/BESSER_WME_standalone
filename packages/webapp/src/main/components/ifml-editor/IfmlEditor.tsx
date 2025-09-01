@@ -7,7 +7,7 @@ const IfmlContainer = styled.div`
   flex-grow: 1;
   overflow: hidden;
   width: 100%;
-  height: calc(100vh - 60px);
+  height: 100%;
   background-color: var(--apollon-background, #ffffff);
 `;
 
