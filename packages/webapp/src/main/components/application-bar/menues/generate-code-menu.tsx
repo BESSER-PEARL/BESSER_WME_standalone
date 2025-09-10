@@ -64,11 +64,7 @@ export const GenerateCodeMenu: React.FC = () => {
 
     try {
       if (generatorType === 'agent' && languages) {
-        if (Array.isArray(languages)) {
-          await generateCode(editor, generatorType, diagram.title, { languages: languages });
-        } else {
-          await generateCode(editor, generatorType, diagram.title);
-        }
+        await generateCode(editor, generatorType, diagram.title, { languages: languages });
       } else {
         await generateCode(editor, generatorType, diagram.title);
       }
