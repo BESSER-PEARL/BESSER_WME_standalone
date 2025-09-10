@@ -19,6 +19,7 @@ import { ProjectSettingsScreen } from './components/project/ProjectSettingsScree
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
 import { IfmlEditor } from './components/ifml-editor/IfmlEditor';
+import { UMLBotWidget } from './components/uml-bot-widget/UMLBotWidgetRefactored';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
@@ -151,6 +152,7 @@ function AppContentInner() {
         <Route path="/teampage" element={<TeamPage />} />
       </Routes>
       <ErrorPanel />
+      <UMLBotWidget />
       <ToastContainer />
     </ApollonEditorProvider>
   );
