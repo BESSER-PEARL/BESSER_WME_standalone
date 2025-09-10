@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig, JSONSchemaConfig } from '../../../services/generate-code/useGenerateCode';
+import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig, JSONSchemaConfig, AgentConfig } from '../../../services/generate-code/useGenerateCode';
 import { useDeployLocally } from '../../../services/generate-code/useDeployLocally';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
@@ -36,9 +36,14 @@ export const GenerateCodeMenu: React.FC = () => {
                             (BACKEND_URL ?? '').includes('localhost') || 
                             (BACKEND_URL ?? '').includes('127.0.0.1');
 
-  const handleGenerateCode = async (generatorType: string, languages?: string[]) => {
+  const handleGenerateCode = async (generatorType: string) => {
     if (!editor || !diagram?.title) {
       toast.error('No diagram available to generate code from');
+      return;
+    }
+
+    if (generatorType === 'agent') {
+      setShowAgentLanguageModal(true);
       return;
     }
 
@@ -63,11 +68,7 @@ export const GenerateCodeMenu: React.FC = () => {
     }
 
     try {
-      if (generatorType === 'agent' && languages) {
-        await generateCode(editor, generatorType, diagram.title, { languages: languages });
-      } else {
-        await generateCode(editor, generatorType, diagram.title);
-      }
+      await generateCode(editor, generatorType, diagram.title);
     } catch (error) {
       console.error('Error in code generation:', error);
       toast.error('Code generation failed. Check console for details.');
@@ -80,6 +81,19 @@ export const GenerateCodeMenu: React.FC = () => {
     // - Can only contain letters, numbers, and underscores
     const pattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
     return pattern.test(name);
+  };
+
+  const handleAgentGenerate = async () => {
+    try {
+      const agentConfig: AgentConfig = {
+        languages: selectedAgentLanguages
+      };
+      await generateCode(editor!, 'agent', diagram.title, agentConfig);
+      setShowAgentLanguageModal(false);
+    } catch (error) {
+      console.error('Error in Agent code generation:', error);
+      toast.error('Agent code generation failed');
+    }
   };
 
   const handleDjangoGenerate = async () => {
@@ -188,8 +202,8 @@ export const GenerateCodeMenu: React.FC = () => {
     <>
       <NavDropdown title="Generate" className="pt-0 pb-0">
         {isAgentDiagram ? (
-          // Agent Diagram: Show agent generation option, but open language modal
-          <Dropdown.Item onClick={() => setShowAgentLanguageModal(true)}>BESSER Agent</Dropdown.Item>
+          // Agent Diagram: Show agent generation option
+          <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
         ) : currentDiagramType === UMLDiagramType.ClassDiagram ? (
           // ...existing code...
           <>
@@ -322,7 +336,7 @@ export const GenerateCodeMenu: React.FC = () => {
           <Button variant="secondary" onClick={() => setShowAgentLanguageModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={() => { setShowAgentLanguageModal(false); handleGenerateCode('agent', selectedAgentLanguages); }}>
+          <Button variant="primary" onClick={handleAgentGenerate}>
             Generate
           </Button>
         </Modal.Footer>
