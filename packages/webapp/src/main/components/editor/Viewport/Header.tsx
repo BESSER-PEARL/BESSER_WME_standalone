@@ -12,7 +12,7 @@ import UndoSvg from '../../../public/icons/toolbox/undo.svg';
 const HeaderDiv = styled.div`
   width: 100%;
   height: 45px;
-  z-index: 99999;
+  z-index: 1;
   position: relative;
   padding: 0px 10px;
   background: #d4d4d4;

@@ -7,7 +7,9 @@ import { SidebarItem } from './SidebarItem';
 
 import CustomizeIcon from '../../../../public/icons/customize.svg';
 import LayerIcon from '../../../../public/icons/layers.svg';
-import { Toolbar } from '../../Toolbar';
+import DataIcon from '../../../../public/icons/db.svg'
+import { Toolbar } from '../../editor-bars/Toolbar';
+import { Databar } from '../../editor-bars/Databar';
 
 export const SidebarDiv = styled.div<{ $enabled: boolean }>`
   width: 280px;
@@ -17,8 +19,9 @@ export const SidebarDiv = styled.div<{ $enabled: boolean }>`
 `;
 
 export const Sidebar = () => {
-  const [layersVisible, setLayerVisible] = useState(true);
-  const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [layersVisible, setLayerVisible] = useState(false);
+  const [styleVisible, setStyleVisible] = useState(false);
+  const [dataVisible, setDataVisible] = useState(false);
   const { enabled } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
@@ -28,20 +31,30 @@ export const Sidebar = () => {
       <div className="flex flex-col h-full">
         <SidebarItem
           icon={CustomizeIcon}
-          title="Customize"
-          height={!layersVisible ? 'full' : '55%'}
-          visible={toolbarVisible}
-          onChange={(val) => setToolbarVisible(val)}
+          title="Style"
+          height={!layersVisible ? 'full' : '33%'}
+          visible={styleVisible}
+          onChange={setStyleVisible}
           className="overflow-auto"
         >
           <Toolbar />
         </SidebarItem>
         <SidebarItem
+          icon={DataIcon}
+          title="Data"
+          height={!layersVisible ? 'full' : '33%'}
+          visible={dataVisible}
+          onChange={setDataVisible}
+          className="overflow-auto"
+        >
+          <Databar />
+        </SidebarItem>
+        <SidebarItem
           icon={LayerIcon}
           title="Layers"
-          height={!toolbarVisible ? 'full' : '45%'}
+          height={!styleVisible && !dataVisible ? 'full' : '33%'}
           visible={layersVisible}
-          onChange={(val) => setLayerVisible(val)}
+          onChange={setLayerVisible}
         >
           <div className="">
             <Layers expandRootOnLoad={true} />
