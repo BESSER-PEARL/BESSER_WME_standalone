@@ -1,13 +1,13 @@
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 
 // Supported diagram types in projects
-export type SupportedDiagramType = 'ClassDiagram' | 'ObjectDiagram' | 'StateMachineDiagram' | 'AgentDiagram';
+export type SupportedDiagramType = 'ClassDiagram' | 'ObjectDiagram' | 'StateMachineDiagram' | 'AgentDiagram' | 'GUIDiagram';
 
 // Diagram structure within a project
 export interface ProjectDiagram {
   id: string;
   title: string;
-  model?: UMLModel;
+  model?: UMLModel | any;
   lastUpdate: string;
   description?: string;
 }
@@ -26,6 +26,7 @@ export interface BesserProject {
     ObjectDiagram: ProjectDiagram;
     StateMachineDiagram: ProjectDiagram;
     AgentDiagram: ProjectDiagram;
+    GUIDiagram: ProjectDiagram;
   };
   settings: {
     defaultDiagramType: SupportedDiagramType;
@@ -33,6 +34,37 @@ export interface BesserProject {
     collaborationEnabled: boolean;
   };
 }
+// Factory for empty GUI diagram
+export const createEmptyGUIDiagram = (title: string): ProjectDiagram => ({
+  id: crypto.randomUUID(),
+  title,
+  model: {
+    ROOT: {
+      type: { resolvedName: 'UICanvas' },
+      isCanvas: true,
+      props: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        fillSpace: 'no',
+        padding: Array(4).fill('0'),
+        margin: Array(4).fill('0'),
+        background: { r: 255, g: 255, b: 255, a: 1 },
+        color: { r: 0, g: 0, b: 0, a: 1 },
+        shadow: 0,
+        radius: 0,
+        width: '900px',
+        height: '1000px',
+      },
+      displayName: 'UICanvas',
+      custom: { displayName: 'Canvas' },
+      hidden: false,
+      nodes: [],
+      linkedNodes: {},
+    },
+  },
+  lastUpdate: new Date().toISOString(),
+});
 
 // Helper to convert UMLDiagramType to SupportedDiagramType
 export const toSupportedDiagramType = (type: UMLDiagramType): SupportedDiagramType => {
@@ -101,6 +133,7 @@ export const createDefaultProject = (
       ObjectDiagram: createEmptyDiagram('Object Diagram', UMLDiagramType.ObjectDiagram),
       StateMachineDiagram: createEmptyDiagram('State Machine Diagram', UMLDiagramType.StateMachineDiagram),
       AgentDiagram: createEmptyDiagram('Agent Diagram', UMLDiagramType.AgentDiagram),
+      GUIDiagram: createEmptyGUIDiagram('GUIDiagram'),
     },
     settings: {
       defaultDiagramType: 'ClassDiagram',
