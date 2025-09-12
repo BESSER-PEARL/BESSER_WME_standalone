@@ -1,12 +1,12 @@
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
-export const ToolbarDropdown = ({ title, value, onChange, options = [] }: any) => {
+export const ToolbarDropdown = ({ label, value, onChange, options = [] }: any) => {
   return (
     <FormControl fullWidth size="small" margin="dense">
-      <InputLabel>{title}</InputLabel>
+      <InputLabel>{label}</InputLabel>
       <Select
         value={value}
-        label={title}
+        label={label}
         onChange={(e) => onChange(e.target.value)}
         native={false}
       >

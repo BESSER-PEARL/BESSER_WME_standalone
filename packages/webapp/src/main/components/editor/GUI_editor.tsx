@@ -1,4 +1,5 @@
-import { Editor, Frame, Element } from '@craftjs/core';
+import React from 'react';
+import { Editor, Frame } from '@craftjs/core';
 import { createTheme, ThemeProvider } from '@mui/material';
 
 import { Viewport, RenderNode } from '.';
@@ -13,6 +14,8 @@ import { RadialBarChart } from './selectors/Graph/RadialBarChart';
 import { WorldMap } from './selectors/Map/WorldMap';
 import { LocationMap } from './selectors/Map/LocationMap';
 import { UICanvas } from './selectors/UICanvas';
+import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
+import { SupportedDiagramType } from '../../types/project';
 
 const theme = createTheme({
   typography: {
@@ -27,6 +30,29 @@ const theme = createTheme({
 });
 
 export function GUI_editor() {
+  // Get GUIModel from the current project (localStorage-backed)
+  const currentProject = ProjectStorageRepository.getCurrentProject();
+  const guiModel = currentProject?.diagrams?.GUIDiagram?.model || null;
+
+  // Auto-save GUI diagram on editor node changes
+  const handleNodesChange = (query) => {
+    const guiJson = query.serialize();
+    const projectId = ProjectStorageRepository.getCurrentProject()?.id;
+    if (projectId) {
+      ProjectStorageRepository.updateDiagram(
+        projectId,
+        'GUIDiagram' as SupportedDiagramType,
+        {
+          id: crypto.randomUUID(),
+          title: 'GUI Diagram',
+          model: JSON.parse(guiJson),
+          lastUpdate: new Date().toISOString(),
+          description: 'Stores GUI editor state',
+        }
+      );
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className="h-full h-screen">
@@ -47,19 +73,11 @@ export function GUI_editor() {
           }}
           enabled={false}
           onRender={RenderNode}
+          onNodesChange={handleNodesChange}
         >
           <Viewport>
-            <Frame>
-              <Element
-                canvas
-                is={UICanvas}
-                width="900px"
-                height="1000px"
-                background={{ r: 255, g: 255, b: 255, a: 1 }}
-                custom={{ displayName: 'Canvas' }}
-              >
-
-              </Element>
+            <Frame data={guiModel ? JSON.stringify(guiModel) : undefined}>
+              {/* The canvas and nodes will be loaded from the GUIModel, or blank if none exists */}
             </Frame>
           </Viewport>
         </Editor>
