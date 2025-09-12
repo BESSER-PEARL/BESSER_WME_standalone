@@ -1,5 +1,5 @@
-import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
-import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
+import { ToolbarItem } from '../../../editor-bars/ToolbarItem';
+import { ToolbarSection } from '../../../editor-bars/ToolbarSection';
 import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const BarChartSettings = () => {
