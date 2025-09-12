@@ -1,5 +1,5 @@
-import { ToolbarSection } from '../../../Toolbar/ToolbarSection';
-import { ToolbarItem } from '../../../Toolbar/ToolbarItem';
+import { ToolbarSection } from '../../../editor-bars/ToolbarSection';
+import { ToolbarItem } from '../../../editor-bars/ToolbarItem';
 import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
 
 export const LineChartSettings = () => {
@@ -7,9 +7,9 @@ export const LineChartSettings = () => {
     <>
       <ToolbarSection
         title="Appearance"
-        props={['color', 'lineWidth', 'gridColor', 'axisColor']}
+        props={['lineColor', 'lineWidth', 'gridColor', 'axisColor']}
       >
-        <ToolbarItem full propKey="color" type="color" label="Line Color" />
+        <ToolbarItem full propKey="lineColor" type="color" label="Line Color" />
         <ToolbarItem full propKey="lineWidth" type="slider" label="Line Width" />
         <ToolbarItem full propKey="gridColor" type="color" label="Grid Color" />
         <ToolbarItem full propKey="axisColor" type="color" label="Axis/Text Color" />

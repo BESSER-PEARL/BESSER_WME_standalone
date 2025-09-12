@@ -1,4 +1,3 @@
-import React from 'react';
 import { UserComponent, useNode } from '@craftjs/core';
 import { DraggableResizableWrapper } from '../DragResizableWrapper';
 import { ButtonSettings } from './ButtonSettings';
@@ -25,8 +24,8 @@ export const Button: UserComponent<Partial<ButtonProps>> = (props) => {
     textSize = 14,
     background,
     color,
-    x = 100,
-    y = 100,
+    x = 0,
+    y = 0,
     width = 120,
     height = 40,
   } = props;
@@ -84,8 +83,8 @@ Button.craft = {
     textSize: 14,
     background: 'rgba(76,175,80,1)',
     color: { r: 255, g: 255, b: 255, a: 1 },
-    x: 100,
-    y: 100,
+    x: 0,
+    y: 0,
     width: 120,
     height: 40,
   },

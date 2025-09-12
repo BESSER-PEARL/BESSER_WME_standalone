@@ -28,8 +28,8 @@ export const Container: UserComponent<Partial<ContainerProps>> = (props) => {
   }));
 
   const {
-    x = 100,
-    y = 100,
+    x = 0,
+    y = 0,
     width = 300,
     height = 200,
     background,
@@ -122,8 +122,8 @@ export const Container: UserComponent<Partial<ContainerProps>> = (props) => {
 Container.craft = {
   displayName: 'Container',
   props: {
-    x: 100,
-    y: 100,
+    x: 0,
+    y: 0,
     width: 300,
     height: 200,
     background: '#fff',

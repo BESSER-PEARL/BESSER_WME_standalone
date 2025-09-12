@@ -1,5 +1,5 @@
-import { ToolbarSection } from '../../Toolbar/ToolbarSection';
-import { ToolbarItem } from '../../Toolbar/ToolbarItem';
+import { ToolbarSection } from '../../editor-bars/ToolbarSection';
+import { ToolbarItem } from '../../editor-bars/ToolbarItem';
 import { DimensionsSettings, PositionSettings } from '../CommonSettings';
 
 export const ContainerSettings = () => {
@@ -7,25 +7,6 @@ export const ContainerSettings = () => {
     <>
       <PositionSettings />
       <DimensionsSettings />
-
-      <ToolbarSection
-        title="Position"
-        props={['x', 'y']}
-        summary={({ x, y }: any) => `${x || 0}px, ${y || 0}px`}
-      >
-        <ToolbarItem propKey="x" type="text" label="X" />
-        <ToolbarItem propKey="y" type="text" label="Y" />
-      </ToolbarSection>
-
-      {/* Dimensions */}
-      <ToolbarSection
-        title="Dimensions"
-        props={['width', 'height']}
-        summary={({ width, height }: any) => `${width || 0}px × ${height || 0}px`}
-      >
-        <ToolbarItem propKey="width" type="text" label="Width" />
-        <ToolbarItem propKey="height" type="text" label="Height" />
-      </ToolbarSection>
 
       {/* Colors */}
       <ToolbarSection

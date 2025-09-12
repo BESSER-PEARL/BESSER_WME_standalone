@@ -49,7 +49,7 @@ export const RadarChart: UserComponent<Partial<RadarChartProps>> = (props) => {
   const finalFillColor = normalizeColor(fillColor, '#8884d8');
 
   return (
-    <DraggableResizableWrapper x={x} y={y} width={width} height={height}>
+    
       <ResponsiveContainer width="100%" height="100%">
         <RechartsRadarChart data={data}>
           {showGrid && <PolarGrid />}
@@ -65,7 +65,7 @@ export const RadarChart: UserComponent<Partial<RadarChartProps>> = (props) => {
           />
         </RechartsRadarChart>
       </ResponsiveContainer>
-    </DraggableResizableWrapper>
+    
   );
 };
 
@@ -84,8 +84,8 @@ RadarChart.craft = {
     fillColor: '#8884d8',
     showGrid: true,
     showTooltip: true,
-    x: 100,
-    y: 100,
+    x: 0,
+    y: 0,
     width: 300,
     height: 200,
     isDragging: false,

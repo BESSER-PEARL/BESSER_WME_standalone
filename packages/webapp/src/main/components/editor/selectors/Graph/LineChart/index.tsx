@@ -9,12 +9,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { LineChartSettings } from './LineChartSettings';
+import { LineChartData } from './LineChartData';
 import { normalizeColor, safeNumber, safeMargin } from '../../../../../utils/charts';
 import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type LineChartProps = {
   data: { name: string; value: number }[];
-  color: string;
+  lineColor: string;
   axisColor: string;
   fontSize: number;
   gridColor: string;
@@ -29,19 +30,19 @@ export type LineChartProps = {
 export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
   const {
     data = [],
-    color,
+    lineColor,
     axisColor,
     gridColor,
     fontSize,
     lineWidth,
     margin,
-    x = 100,
-    y = 100,
+    x = 0,
+    y = 0,
     width = 300,
     height = 200,
   } = props;
 
-  const finalColor = normalizeColor(color, '#8884d8');
+  const finalLineColor = normalizeColor(lineColor, '#8884d8');
   const finalAxisColor = normalizeColor(axisColor, '#666');
   const finalGridColor = normalizeColor(gridColor, '#e0e0e0');
   const finalFontSize = safeNumber(fontSize, 12);
@@ -74,7 +75,7 @@ export const LineChart: UserComponent<Partial<LineChartProps>> = (props) => {
           <Line
             type="monotone"
             dataKey="value"
-            stroke={finalColor}
+            stroke={finalLineColor}
             strokeWidth={finalLineWidth}
             dot={{ r: 4 }}
           />
@@ -97,8 +98,8 @@ LineChart.craft = {
       { name: 'Jul', value: 690 },
       { name: 'Aug', value: 750 },
     ],
-    color: '#8884d8',
-    axisColor: '#666',
+    lineColor: '#8884d8',
+    axisColor: '#666666',
     fontSize: 12,
     gridColor: '#e0e0e0',
     lineWidth: 2,
@@ -110,5 +111,6 @@ LineChart.craft = {
   },
   related: {
     toolbar: LineChartSettings,
+    databar: LineChartData,
   },
 };

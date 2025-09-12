@@ -1,7 +1,7 @@
 import { capitalize, weightDescription } from '../../../../utils/text';
-import { ToolbarSection } from '../../Toolbar/ToolbarSection';
-import { ToolbarItem } from '../../Toolbar/ToolbarItem';
-import { ToolbarRadio } from '../../Toolbar/ToolbarRadio';
+import { ToolbarSection } from '../../editor-bars/ToolbarSection';
+import { ToolbarItem } from '../../editor-bars/ToolbarItem';
+import { ToolbarRadio } from '../../editor-bars/ToolbarRadio';
 import { DimensionsSettings, MarginSettings, PositionSettings } from '../CommonSettings';
 
 export const TextSettings = () => {
