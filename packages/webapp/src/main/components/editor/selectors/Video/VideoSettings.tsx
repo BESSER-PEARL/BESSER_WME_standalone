@@ -1,5 +1,5 @@
-import { ToolbarSection } from '../../Toolbar/ToolbarSection';
-import { ToolbarItem } from '../../Toolbar/ToolbarItem';
+import { ToolbarSection } from '../../editor-bars/ToolbarSection';
+import { ToolbarItem } from '../../editor-bars/ToolbarItem';
 import { PositionSettings } from '../CommonSettings';
 
 export const VideoSettings = () => {

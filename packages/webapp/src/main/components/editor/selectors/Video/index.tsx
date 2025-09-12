@@ -26,8 +26,8 @@ export type VideoProps = {
 
 export const Video: UserComponent<Partial<VideoProps>> = ({
   videoId = '4lnH9Kxdy-k',
-  x = 100,
-  y = 100,
+  x = 0,
+  y = 0,
   width = 400,
   height = 250,
 }) => {
@@ -62,8 +62,8 @@ Video.craft = {
   displayName: 'Video',
   props: {
     videoId: '4lnH9Kxdy-k',
-    x: 100,
-    y: 100,
+    x: 0,
+    y: 0,
     width: 400,
     height: 250,
   },
