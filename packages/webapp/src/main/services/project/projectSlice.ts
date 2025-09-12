@@ -3,6 +3,11 @@ import { UMLModel, UMLDiagramType } from '@besser/wme';
 import { BesserProject, ProjectDiagram, SupportedDiagramType, toSupportedDiagramType, toUMLDiagramType } from '../../types/project';
 import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
 import { localStorageLatestProject } from '../../constant';
+import { GUIModel } from '../../types/guiModel';
+
+function isUMLModel(model: UMLModel | GUIModel | undefined): model is UMLModel {
+  return !!model && 'version' in model;
+}
 
 // Project state interface
 export interface ProjectState {
@@ -52,17 +57,29 @@ export const loadProjectThunk = createAsyncThunk(
       const diagramType = toUMLDiagramType(project.currentDiagramType);
       
       // Create a compatible diagram object for the diagram slice
-      const compatibleDiagram = {
-        id: currentDiagram.id,
-        title: currentDiagram.title,
-        model: currentDiagram.model,
-        lastUpdate: currentDiagram.lastUpdate,
-      };
+      //const compatibleDiagram = {
+      //  id: currentDiagram.id,
+      //  title: currentDiagram.title,
+      //  model: currentDiagram.model,
+      //  lastUpdate: currentDiagram.lastUpdate,
+      //};
       
       // Update the diagram slice
       console.log('Syncing project load to diagram slice...');
       dispatch(changeDiagramType(diagramType));
-      dispatch(loadDiagram(compatibleDiagram));
+      //dispatch(loadDiagram(compatibleDiagram));
+      if (isUMLModel(currentDiagram.model)) {
+        dispatch(loadDiagram({
+          id: currentDiagram.id,
+          title: currentDiagram.title,
+          model: currentDiagram.model,
+          lastUpdate: currentDiagram.lastUpdate,
+          description: currentDiagram.description,
+        }));
+      } else if (currentDiagram.model) {
+        // Handle GUIModel here, e.g.:
+        // dispatch(loadGUIDiagram({ ... }))
+      }
       dispatch(setCreateNewEditor(true));
       console.log('Successfully synced project load');
     } catch (error) {
@@ -86,17 +103,29 @@ export const createProjectThunk = createAsyncThunk(
       const diagramType = toUMLDiagramType(project.currentDiagramType);
       
       // Create a compatible diagram object for the diagram slice
-      const compatibleDiagram = {
-        id: currentDiagram.id,
-        title: currentDiagram.title,
-        model: currentDiagram.model,
-        lastUpdate: currentDiagram.lastUpdate,
-      };
+      //const compatibleDiagram = {
+      //  id: currentDiagram.id,
+      //  title: currentDiagram.title,
+      //  model: currentDiagram.model,
+      //  lastUpdate: currentDiagram.lastUpdate,
+      //};
       
       // Update the diagram slice
       console.log('Syncing project creation to diagram slice...');
       dispatch(changeDiagramType(diagramType));
-      dispatch(loadDiagram(compatibleDiagram));
+      //dispatch(loadDiagram(compatibleDiagram));
+      if (isUMLModel(currentDiagram.model)) {
+        dispatch(loadDiagram({
+          id: currentDiagram.id,
+          title: currentDiagram.title,
+          model: currentDiagram.model,
+          lastUpdate: currentDiagram.lastUpdate,
+          description: currentDiagram.description,
+        }));
+      } else if (currentDiagram.model) {
+        // Handle GUIModel here, e.g.:
+        // dispatch(loadGUIDiagram({ ... }))
+      }
       dispatch(setCreateNewEditor(true));
       console.log('Successfully synced project creation');
     } catch (error) {
@@ -161,7 +190,9 @@ export const switchDiagramTypeThunk = createAsyncThunk(
         try {
           const { diagramBridge } = await import('@besser/wme');
           // Set the class diagram data in the bridge so Object Diagram can reference it
-          diagramBridge.setClassDiagramData(classDiagram.model);
+          if (isUMLModel(classDiagram.model)) {
+            diagramBridge.setClassDiagramData(classDiagram.model);
+          }
           console.log('Set class diagram reference for object diagram');
         } catch (error) {
           console.warn('Could not set class diagram reference:', error);
@@ -174,17 +205,30 @@ export const switchDiagramTypeThunk = createAsyncThunk(
       const { changeDiagramType, setCreateNewEditor, loadDiagram } = await import('../diagram/diagramSlice');
       
       // Create a compatible diagram object for the diagram slice
-      const compatibleDiagram = {
-        id: diagram.id,
-        title: diagram.title,
-        model: diagram.model,
-        lastUpdate: diagram.lastUpdate,
-      };
+      //const compatibleDiagram = {
+      //  id: diagram.id,
+      //  title: diagram.title,
+      //  model: diagram.model,
+      //  lastUpdate: diagram.lastUpdate,
+      //};
       
       // Update the diagram slice
       console.log('Syncing diagram type switch to diagram slice...');
       dispatch(changeDiagramType(diagramType));
-      dispatch(loadDiagram(compatibleDiagram));
+      //dispatch(loadDiagram(compatibleDiagram));
+      if (isUMLModel(diagram.model)) {
+        dispatch(loadDiagram({
+          id: diagram.id,
+          title: diagram.title,
+          model: diagram.model,
+          lastUpdate: diagram.lastUpdate,
+          description: diagram.description,
+        }));
+      } else if (diagram.model) {
+        // Handle GUIModel here, e.g.:
+        // dispatch(loadGUIDiagram({ ... }))
+      }
+
       dispatch(setCreateNewEditor(true));
       console.log('Successfully synced diagram type switch');
     } catch (error) {
