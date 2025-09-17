@@ -13,6 +13,7 @@ export const GenerateCodeMenu: React.FC = () => {
   const [showAgentLanguageModal, setShowAgentLanguageModal] = useState(false);
   const [selectedAgentLanguages, setSelectedAgentLanguages] = useState<string[]>([]);
   const [dropdownLanguage, setDropdownLanguage] = useState<string>('none');
+  const [sourceLanguage, setSourceLanguage] = useState<string>('none');
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
   const [showSqlConfig, setShowSqlConfig] = useState(false);
   const [showSqlAlchemyConfig, setShowSqlAlchemyConfig] = useState(false);
@@ -87,9 +88,13 @@ export const GenerateCodeMenu: React.FC = () => {
   const handleAgentGenerate = async () => {
     setLoadingAgent(true);
     try {
-      const agentConfig: AgentConfig = {
-        languages: selectedAgentLanguages
-      };
+      let agentConfig: AgentConfig = {};
+      if (selectedAgentLanguages.length > 0) {
+        agentConfig.languages = {
+          source: sourceLanguage,
+          target: selectedAgentLanguages
+        };
+      }
       await generateCode(editor!, 'agent', diagram.title, agentConfig);
       setShowAgentLanguageModal(false);
     } catch (error) {
@@ -278,7 +283,7 @@ export const GenerateCodeMenu: React.FC = () => {
       </NavDropdown>
 
       {/* Agent Language Selection Modal (dropdown + removable list) */}
-      <Modal show={showAgentLanguageModal} onHide={() => setShowAgentLanguageModal(false)}>
+  <Modal show={showAgentLanguageModal} onHide={() => setShowAgentLanguageModal(false)}>
         {loadingAgent && (
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
@@ -292,12 +297,28 @@ export const GenerateCodeMenu: React.FC = () => {
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
+              <Form.Label>Source language (optional)</Form.Label>
+              <Form.Select
+                value={sourceLanguage}
+                onChange={e => setSourceLanguage(e.target.value)}
+              >
+                <option value="none">Select language...</option>
+                <option value="english">English</option>
+                <option value="french">French</option>
+                <option value="german">German</option>
+                <option value="luxembourgish">Luxembourgish</option>
+                <option value="portuguese">Portuguese</option>
+                <option value="spanish">Spanish</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3">
               <Form.Label>Add spoken language for agent translation</Form.Label>
               <Form.Select
                 value={dropdownLanguage}
                 onChange={(e) => setDropdownLanguage(e.target.value)}
               >
                 <option value="none">Select language...</option>
+                <option value="english">English</option>
                 <option value="french">French</option>
                 <option value="german">German</option>
                 <option value="luxembourgish">Luxembourgish</option>
@@ -317,12 +338,12 @@ export const GenerateCodeMenu: React.FC = () => {
               >
                 Add Language
               </Button>
-        <Form.Text className="text-muted d-block mt-2">
-          The agent will be translated to all selected spoken languages.
-        </Form.Text>
-        <div className="text-warning small mt-1">
-          <span role="img" aria-label="warning">⚠️</span> Adding more languages will increase the generation time.
-        </div>
+              <Form.Text className="text-muted d-block mt-2">
+                The agent will be translated to all selected spoken languages.
+              </Form.Text>
+              <div className="text-warning small mt-1">
+                <span role="img" aria-label="warning">⚠️</span> Adding more languages will increase the generation time.
+              </div>
             </Form.Group>
             {/* List of selected languages with remove option */}
             {selectedAgentLanguages.length > 0 && (
