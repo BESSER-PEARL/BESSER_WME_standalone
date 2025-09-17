@@ -24,11 +24,19 @@ export interface JSONSchemaConfig {
   mode: 'regular' | 'smart_data';
 }
 
+export interface AgentConfig {
+  languages?: {
+    source: string;
+    target: string[];
+  };
+}
+
 export type GeneratorConfig = {
   django: DjangoConfig;
   sql: SQLConfig;
   sqlalchemy: SQLAlchemyConfig;
   jsonschema: JSONSchemaConfig;
+  agent: AgentConfig;
   [key: string]: any;
 };
 

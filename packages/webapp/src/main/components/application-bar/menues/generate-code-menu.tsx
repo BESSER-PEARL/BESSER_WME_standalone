@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Dropdown, NavDropdown, Modal, Form, Button } from 'react-bootstrap';
 import { ApollonEditorContext } from '../../apollon-editor-component/apollon-editor-context';
-import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig, JSONSchemaConfig } from '../../../services/generate-code/useGenerateCode';
+import { useGenerateCode, DjangoConfig, SQLConfig, SQLAlchemyConfig, JSONSchemaConfig, AgentConfig } from '../../../services/generate-code/useGenerateCode';
 import { useDeployLocally } from '../../../services/generate-code/useDeployLocally';
 import { useAppSelector } from '../../store/hooks';
 import { toast } from 'react-toastify';
@@ -9,6 +9,11 @@ import { BACKEND_URL } from '../../../constant';
 import { UMLDiagramType } from '@besser/wme';
 
 export const GenerateCodeMenu: React.FC = () => {
+  // Modal for spoken language selection for agent diagrams
+  const [showAgentLanguageModal, setShowAgentLanguageModal] = useState(false);
+  const [selectedAgentLanguages, setSelectedAgentLanguages] = useState<string[]>([]);
+  const [dropdownLanguage, setDropdownLanguage] = useState<string>('none');
+  const [sourceLanguage, setSourceLanguage] = useState<string>('none');
   const [showDjangoConfig, setShowDjangoConfig] = useState(false);
   const [showSqlConfig, setShowSqlConfig] = useState(false);
   const [showSqlAlchemyConfig, setShowSqlAlchemyConfig] = useState(false);
@@ -19,6 +24,7 @@ export const GenerateCodeMenu: React.FC = () => {
   const [sqlDialect, setSqlDialect] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
   const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
   const [jsonSchemaMode, setJsonSchemaMode] = useState<'regular' | 'smart_data'>('regular');
+  const [loadingAgent, setLoadingAgent] = useState(false);
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -35,6 +41,11 @@ export const GenerateCodeMenu: React.FC = () => {
   const handleGenerateCode = async (generatorType: string) => {
     if (!editor || !diagram?.title) {
       toast.error('No diagram available to generate code from');
+      return;
+    }
+
+    if (generatorType === 'agent') {
+      setShowAgentLanguageModal(true);
       return;
     }
 
@@ -72,6 +83,26 @@ export const GenerateCodeMenu: React.FC = () => {
     // - Can only contain letters, numbers, and underscores
     const pattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
     return pattern.test(name);
+  };
+
+  const handleAgentGenerate = async () => {
+    setLoadingAgent(true);
+    try {
+      let agentConfig: AgentConfig = {};
+      if (selectedAgentLanguages.length > 0) {
+        agentConfig.languages = {
+          source: sourceLanguage,
+          target: selectedAgentLanguages
+        };
+      }
+      await generateCode(editor!, 'agent', diagram.title, agentConfig);
+      setShowAgentLanguageModal(false);
+    } catch (error) {
+      console.error('Error in Agent code generation:', error);
+      toast.error('Agent code generation failed');
+    } finally {
+      setLoadingAgent(false);
+    }
   };
 
   const handleDjangoGenerate = async () => {
@@ -179,77 +210,172 @@ export const GenerateCodeMenu: React.FC = () => {
   return (
     <>
       <NavDropdown title="Generate" className="pt-0 pb-0">
-      {isAgentDiagram ? (
-        // Agent Diagram: Only show agent generation option
-        <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
-      ) : currentDiagramType === UMLDiagramType.ClassDiagram ? (
-        // Class Diagram: Show all other options
-        <>
-          {/* Web Dropdown */}
-          <Dropdown drop="end">
-            <Dropdown.Toggle
-              id="dropdown-basic"
-              split
-              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-            >
-              <span className="flex-grow-1">Web</span>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+        {isAgentDiagram ? (
+          // Agent Diagram: Show agent generation option
+          <Dropdown.Item onClick={() => handleGenerateCode('agent')}>BESSER Agent</Dropdown.Item>
+        ) : currentDiagramType === UMLDiagramType.ClassDiagram ? (
+          // ...existing code...
+          <>
+            {/* Web Dropdown */}
+            <Dropdown drop="end">
+              <Dropdown.Toggle
+                id="dropdown-basic"
+                split
+                className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+              >
+                <span className="flex-grow-1">Web</span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
 
-          {/* Database Dropdown */}
-          <Dropdown drop="end">
-            <Dropdown.Toggle
-              id="dropdown-basic"
-              split
-              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-            >
-              <span className="flex-grow-1">Database</span>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL DDL</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy DDL</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+            {/* Database Dropdown */}
+            <Dropdown drop="end">
+              <Dropdown.Toggle
+                id="dropdown-basic"
+                split
+                className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+              >
+                <span className="flex-grow-1">Database</span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleGenerateCode('sql')}>SQL DDL</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('sqlalchemy')}>SQLAlchemy DDL</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
 
-          {/* OOP Dropdown */}
-          <Dropdown drop="end">
-            <Dropdown.Toggle
-              id="dropdown-basic"
-              split
-              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-            >
-              <span className="flex-grow-1">OOP</span>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+            {/* OOP Dropdown */}
+            <Dropdown drop="end">
+              <Dropdown.Toggle
+                id="dropdown-basic"
+                split
+                className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+              >
+                <span className="flex-grow-1">OOP</span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleGenerateCode('python')}>Python Classes</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('java')}>Java Classes</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
 
-          {/* Schema Dropdown */}
-          <Dropdown drop="end">
-            <Dropdown.Toggle
-              id="dropdown-basic"
-              split
-              className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
-            >
-              <span className="flex-grow-1">Schema</span>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleGenerateCode('jsonschema')}>JSON Schema</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </>
-      ) : (
-        // Not yet available
-        <Dropdown.Item disabled>Not yet available</Dropdown.Item>
-      )}
-    </NavDropdown>
+            {/* Schema Dropdown */}
+            <Dropdown drop="end">
+              <Dropdown.Toggle
+                id="dropdown-basic"
+                split
+                className="bg-transparent w-100 text-start ps-3 d-flex align-items-center"
+              >
+                <span className="flex-grow-1">Schema</span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('jsonschema')}>JSON Schema</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </>
+        ) : (
+          // Not yet available
+          <Dropdown.Item disabled>Not yet available</Dropdown.Item>
+        )}
+      </NavDropdown>
+
+      {/* Agent Language Selection Modal (dropdown + removable list) */}
+  <Modal show={showAgentLanguageModal} onHide={() => setShowAgentLanguageModal(false)}>
+        {loadingAgent && (
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+        <Modal.Header closeButton>
+          <Modal.Title>Select Agent Languages</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Source language (optional)</Form.Label>
+              <Form.Select
+                value={sourceLanguage}
+                onChange={e => setSourceLanguage(e.target.value)}
+              >
+                <option value="none">Select language...</option>
+                <option value="english">English</option>
+                <option value="french">French</option>
+                <option value="german">German</option>
+                <option value="luxembourgish">Luxembourgish</option>
+                <option value="portuguese">Portuguese</option>
+                <option value="spanish">Spanish</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Add spoken language for agent translation</Form.Label>
+              <Form.Select
+                value={dropdownLanguage}
+                onChange={(e) => setDropdownLanguage(e.target.value)}
+              >
+                <option value="none">Select language...</option>
+                <option value="english">English</option>
+                <option value="french">French</option>
+                <option value="german">German</option>
+                <option value="luxembourgish">Luxembourgish</option>
+                <option value="portuguese">Portuguese</option>
+                <option value="spanish">Spanish</option>
+              </Form.Select>
+              <Button
+                className="mt-2"
+                variant="primary"
+                disabled={dropdownLanguage === 'none' || selectedAgentLanguages.includes(dropdownLanguage)}
+                onClick={() => {
+                  if (dropdownLanguage !== 'none' && !selectedAgentLanguages.includes(dropdownLanguage)) {
+                    setSelectedAgentLanguages([...selectedAgentLanguages, dropdownLanguage]);
+                    setDropdownLanguage('none');
+                  }
+                }}
+              >
+                Add Language
+              </Button>
+              <Form.Text className="text-muted d-block mt-2">
+                The agent will be translated to all selected spoken languages.
+              </Form.Text>
+              <div className="text-warning small mt-1">
+                <span role="img" aria-label="warning">⚠️</span> Adding more languages will increase the generation time.
+              </div>
+            </Form.Group>
+            {/* List of selected languages with remove option */}
+            {selectedAgentLanguages.length > 0 && (
+              <div className="mb-3">
+                <strong>Selected Languages:</strong>
+                <ul className="list-unstyled mt-2">
+                  {selectedAgentLanguages.map(lang => (
+                    <li key={lang} className="d-flex align-items-center mb-1">
+                      <span className="me-2">{lang.charAt(0).toUpperCase() + lang.slice(1)}</span>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => setSelectedAgentLanguages(selectedAgentLanguages.filter(l => l !== lang))}
+                      >
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAgentLanguageModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleAgentGenerate}>
+            Generate
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Django Configuration Modal */}
       <Modal show={showDjangoConfig} onHide={() => setShowDjangoConfig(false)}>
