@@ -23,6 +23,7 @@ export const GenerateCodeMenu: React.FC = () => {
   const [sqlDialect, setSqlDialect] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
   const [sqlAlchemyDbms, setSqlAlchemyDbms] = useState<'sqlite' | 'postgresql' | 'mysql' | 'mssql' | 'mariadb'>('sqlite');
   const [jsonSchemaMode, setJsonSchemaMode] = useState<'regular' | 'smart_data'>('regular');
+  const [loadingAgent, setLoadingAgent] = useState(false);
 
   const apollonEditor = useContext(ApollonEditorContext);
   const generateCode = useGenerateCode();
@@ -84,6 +85,7 @@ export const GenerateCodeMenu: React.FC = () => {
   };
 
   const handleAgentGenerate = async () => {
+    setLoadingAgent(true);
     try {
       const agentConfig: AgentConfig = {
         languages: selectedAgentLanguages
@@ -93,6 +95,8 @@ export const GenerateCodeMenu: React.FC = () => {
     } catch (error) {
       console.error('Error in Agent code generation:', error);
       toast.error('Agent code generation failed');
+    } finally {
+      setLoadingAgent(false);
     }
   };
 
@@ -275,6 +279,13 @@ export const GenerateCodeMenu: React.FC = () => {
 
       {/* Agent Language Selection Modal (dropdown + removable list) */}
       <Modal show={showAgentLanguageModal} onHide={() => setShowAgentLanguageModal(false)}>
+        {loadingAgent && (
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
         <Modal.Header closeButton>
           <Modal.Title>Select Agent Languages</Modal.Title>
         </Modal.Header>
@@ -306,9 +317,12 @@ export const GenerateCodeMenu: React.FC = () => {
               >
                 Add Language
               </Button>
-              <Form.Text className="text-muted d-block mt-2">
-                The agent will be translated to all selected spoken languages.
-              </Form.Text>
+        <Form.Text className="text-muted d-block mt-2">
+          The agent will be translated to all selected spoken languages.
+        </Form.Text>
+        <div className="text-warning small mt-1">
+          <span role="img" aria-label="warning">⚠️</span> Adding more languages will increase the generation time.
+        </div>
             </Form.Group>
             {/* List of selected languages with remove option */}
             {selectedAgentLanguages.length > 0 && (
