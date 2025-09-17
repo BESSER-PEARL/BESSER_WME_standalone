@@ -51,7 +51,7 @@ const SectionTitle = styled.h5`
 
 
 export const AgentConfigScreen: React.FC = () => {
-    // Only keep language, input/output modalities, and platform
+    // Only keep language, input/output modalities, platform, and LLM
     const configKey = 'agentConfig';
     // Load from localStorage if available
     const getInitialConfig = () => {
@@ -59,6 +59,12 @@ export const AgentConfigScreen: React.FC = () => {
             const stored = localStorage.getItem(configKey);
             if (stored) {
                 const config = JSON.parse(stored);
+                let llmProvider = '';
+                let llmModel = '';
+                if (config.llm && typeof config.llm === 'object') {
+                    llmProvider = config.llm.provider || '';
+                    llmModel = config.llm.model || '';
+                }
                 return {
                     agentLanguage: config.agentLanguage || 'english',
                     inputModalities: config.inputModalities || ['text'],
@@ -66,6 +72,8 @@ export const AgentConfigScreen: React.FC = () => {
                     agentPlatform: config.agentPlatform || 'streamlit',
                     responseTiming: config.responseTiming || 'instant',
                     agentStyle: config.agentStyle || 'formal',
+                    llmProvider,
+                    llmModel,
                 };
             }
         } catch {}
@@ -76,6 +84,8 @@ export const AgentConfigScreen: React.FC = () => {
             agentPlatform: 'streamlit',
             responseTiming: 'instant',
             agentStyle: 'formal',
+            llmProvider: '',
+            llmModel: '',
         };
     };
 
@@ -85,6 +95,9 @@ export const AgentConfigScreen: React.FC = () => {
     const [agentPlatform, setAgentPlatform] = useState(getInitialConfig().agentPlatform);
     const [responseTiming, setResponseTiming] = useState(getInitialConfig().responseTiming);
     const [agentStyle, setAgentStyle] = useState(getInitialConfig().agentStyle);
+    const [llmProvider, setLlmProvider] = useState(getInitialConfig().llmProvider);
+    const [llmModel, setLlmModel] = useState(getInitialConfig().llmModel);
+    const [customModel, setCustomModel] = useState('');
 
     // Sync state with localStorage on mount
     useEffect(() => {
@@ -98,6 +111,13 @@ export const AgentConfigScreen: React.FC = () => {
                 setAgentPlatform(config.agentPlatform || 'streamlit');
                 setResponseTiming(config.responseTiming || 'instant');
                 setAgentStyle(config.agentStyle || 'formal');
+                if (config.llm && typeof config.llm === 'object') {
+                    setLlmProvider(config.llm.provider || '');
+                    setLlmModel(config.llm.model || '');
+                } else {
+                    setLlmProvider('');
+                    setLlmModel('');
+                }
             } catch {}
         }
     }, []);
@@ -126,6 +146,7 @@ export const AgentConfigScreen: React.FC = () => {
         agentPlatform,
         responseTiming,
         agentStyle,
+        llm: llmProvider && (llmModel || customModel) ? { provider: llmProvider, model: llmModel === 'other' ? customModel : llmModel } : {},
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -161,6 +182,21 @@ export const AgentConfigScreen: React.FC = () => {
                 setAgentPlatform(config.agentPlatform || 'streamlit');
                 setResponseTiming(config.responseTiming || 'instant');
                 setAgentStyle(config.agentStyle || 'formal');
+                if (config.llm && typeof config.llm === 'object') {
+                    setLlmProvider(config.llm.provider || '');
+                    if (['openai','huggingface','huggingfaceapi','replicate'].includes(config.llm.provider) &&
+                        ['gpt-5','gpt-5-mini','gpt-5-nano','mistral-7b','falcon-40b','llama-3-8b','bloom-176b'].includes(config.llm.model)) {
+                        setLlmModel(config.llm.model);
+                        setCustomModel('');
+                    } else {
+                        setLlmModel('other');
+                        setCustomModel(config.llm.model || '');
+                    }
+                } else {
+                    setLlmProvider('');
+                    setLlmModel('');
+                    setCustomModel('');
+                }
                 localStorage.setItem(configKey, JSON.stringify(config));
                 alert('Configuration loaded!');
             } catch {
@@ -277,15 +313,77 @@ export const AgentConfigScreen: React.FC = () => {
                         </Row>
                         <SectionTitle>System Configuration</SectionTitle>
                         <Row>
-                            <Col md={12}>
+                            <Col md={6}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Platform</Form.Label>
                                     <Form.Select value={agentPlatform} onChange={e => setAgentPlatform(e.target.value)}>
                                         <option value="websocket">WebSocket</option>
-                                        <option value="websocket">WebSocket with Streamlit interface</option>
+                                        <option value="streamlit">WebSocket with Streamlit interface</option>
                                         <option value="telegram">Telegram</option>
                                     </Form.Select>
                                 </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label style={{ cursor: 'help', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span
+                                            title="Required if you want the agent to automatically generate responses using LLMs."
+                                            style={{ cursor: 'help' }}
+                                        >
+                                            LLM Provider (optional)
+                                        </span>
+                                        <span
+                                            title="Required if you want the agent to automatically generate responses using LLMs."
+                                            style={{ cursor: 'help', fontSize: '1.1em', color: '#007bff', userSelect: 'none' }}
+                                        >
+                                            <b>i</b>
+                                        </span>
+                                    </Form.Label>
+                                    <Form.Select value={llmProvider} onChange={e => { setLlmProvider(e.target.value); setLlmModel(''); }}>
+                                        <option value="">None</option>
+                                        <option value="openai">OpenAI</option>
+                                        <option value="huggingface">HuggingFace</option>
+                                        <option value="huggingfaceapi">HuggingFace API</option>
+                                        <option value="replicate">Replicate</option>
+                                    </Form.Select>
+                                </Form.Group>
+                                {(llmProvider === 'openai') && (
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>OpenAI Model</Form.Label>
+                                        <Form.Select value={llmModel} onChange={e => { setLlmModel(e.target.value); if (e.target.value !== 'other') setCustomModel(''); }} disabled={!llmProvider}>
+                                            <option value="">None</option>
+                                            <option value="gpt-5">GPT-5</option>
+                                            <option value="gpt-5-mini">GPT-5 Mini</option>
+                                            <option value="gpt-5-nano">GPT-5 Nano</option>
+                                            <option value="other">Other</option>
+                                        </Form.Select>
+                                        {llmModel === 'other' && (
+                                            <Form.Group className="mt-2">
+                                                <Form.Label>Custom Model Name</Form.Label>
+                                                <Form.Control type="text" value={customModel} onChange={e => setCustomModel(e.target.value)} placeholder="Enter model name" />
+                                            </Form.Group>
+                                        )}
+                                    </Form.Group>
+                                )}
+                                {(llmProvider === 'huggingface' || llmProvider === 'huggingfaceapi' || llmProvider === 'replicate') && (
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>{llmProvider === 'huggingface' ? 'HuggingFace Model' : llmProvider === 'huggingfaceapi' ? 'HuggingFace API Model' : 'Replicate Model'}</Form.Label>
+                                        <Form.Select value={llmModel} onChange={e => { setLlmModel(e.target.value); if (e.target.value !== 'other') setCustomModel(''); }} disabled={!llmProvider}>
+                                            <option value="">None</option>
+                                            <option value="mistral-7b">Mistral-7B</option>
+                                            <option value="falcon-40b">Falcon-40B</option>
+                                            <option value="llama-3-8b">Llama-3 8B</option>
+                                            <option value="bloom-176b">Bloom-176B</option>
+                                            <option value="other">Other</option>
+                                        </Form.Select>
+                                        {llmModel === 'other' && (
+                                            <Form.Group className="mt-2">
+                                                <Form.Label>Custom Model Name</Form.Label>
+                                                <Form.Control type="text" value={customModel} onChange={e => setCustomModel(e.target.value)} placeholder="Enter model name" />
+                                            </Form.Group>
+                                        )}
+                                    </Form.Group>
+                                )}
                             </Col>
                         </Row>
                         <div className="d-flex justify-content-end gap-3 mt-4">

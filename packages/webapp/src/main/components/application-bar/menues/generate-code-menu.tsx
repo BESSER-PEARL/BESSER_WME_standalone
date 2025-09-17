@@ -85,9 +85,18 @@ export const GenerateCodeMenu: React.FC = () => {
 
   const handleAgentGenerate = async () => {
     try {
-      const agentConfig: AgentConfig = {
-        languages: selectedAgentLanguages
-      };
+      let agentConfig: AgentConfig;
+      if (selectedAgentLanguages.length === 0) {
+        // Load config from localStorage
+        const stored = localStorage.getItem('agentConfig');
+        if (stored) {
+          agentConfig = { ...JSON.parse(stored) };
+        } else {
+          agentConfig = { languages: [] };
+        }
+      } else {
+        agentConfig = { languages: selectedAgentLanguages };
+      }
       await generateCode(editor!, 'agent', diagram.title, agentConfig);
       setShowAgentLanguageModal(false);
     } catch (error) {
