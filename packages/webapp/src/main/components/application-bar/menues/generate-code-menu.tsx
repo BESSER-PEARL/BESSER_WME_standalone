@@ -69,6 +69,19 @@ export const GenerateCodeMenu: React.FC = () => {
       return;
     }
 
+    if (generatorType === 'smartdata') {
+      try {
+        const jsonSchemaConfig: JSONSchemaConfig = {
+          mode: 'smart_data'
+        };
+        await generateCode(editor, 'jsonschema', diagram.title, jsonSchemaConfig);
+      } catch (error) {
+        console.error('Error in Smart Data Models generation:', error);
+        toast.error('Smart Data Models generation failed. Check console for details.');
+      }
+      return;
+    }
+
     try {
       await generateCode(editor, generatorType, diagram.title);
     } catch (error) {
@@ -273,6 +286,7 @@ export const GenerateCodeMenu: React.FC = () => {
               <Dropdown.Menu>
                 <Dropdown.Item onClick={() => handleGenerateCode('pydantic')}>Pydantic Models</Dropdown.Item>
                 <Dropdown.Item onClick={() => handleGenerateCode('jsonschema')}>JSON Schema</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('smartdata')}>Smart Data Models</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </>
