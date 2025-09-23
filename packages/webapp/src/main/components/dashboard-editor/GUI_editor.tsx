@@ -1,4 +1,3 @@
-import React from 'react';
 import { Editor, Frame } from '@craftjs/core';
 import { createTheme, ThemeProvider } from '@mui/material';
 

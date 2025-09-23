@@ -18,7 +18,7 @@ import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
-import { GUI_editor } from './components/editor/GUI_editor';
+import { GUI_editor } from './components/dashboard-editor/GUI_editor';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
