@@ -2,7 +2,6 @@ import { useNode } from '@craftjs/core';
 import { ToolbarSection } from '../../../editor-bars/ToolbarSection';
 import { ToolbarItem } from '../../../editor-bars/ToolbarItem';
 import { getClassOptions, getAttributeOptionsByClassId, getEndsByClassId } from '../../../helpers/ClassData';
-import { Class } from '@mui/icons-material';
 
 export const LineChartData = () => {
   const classOptions = getClassOptions();

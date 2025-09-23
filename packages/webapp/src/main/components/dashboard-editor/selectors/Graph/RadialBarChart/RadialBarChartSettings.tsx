@@ -1,6 +1,6 @@
 import { ToolbarSection } from '../../../editor-bars/ToolbarSection';
 import { ToolbarItem } from '../../../editor-bars/ToolbarItem';
-import { DimensionsSettings, MarginSettings, PositionSettings } from '../../CommonSettings';
+import { DimensionsSettings, MarginSettings, PositionSettings } from '../../../../dashboard-editor/selectors/CommonSettings';
 
 export const RadialBarChartSettings = () => {
   return (

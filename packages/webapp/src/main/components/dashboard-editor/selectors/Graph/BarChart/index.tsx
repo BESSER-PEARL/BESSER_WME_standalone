@@ -9,8 +9,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { BarChartSettings } from './BarChartSettings';
+import { BarChartData } from './BarChartData';
 import { normalizeColor, safeNumber, safeMargin } from '../../../../../utils/charts';
-import { DraggableResizableWrapper } from '../../DragResizableWrapper';
+import { DraggableResizableWrapper } from '../../../../dashboard-editor/selectors/DragResizableWrapper';
 
 export type BarChartProps = {
   data: { name: string; value: number }[];
@@ -99,5 +100,6 @@ BarChart.craft = {
   },
   related: {
     toolbar: BarChartSettings,
+    databar: BarChartData,
   },
 };

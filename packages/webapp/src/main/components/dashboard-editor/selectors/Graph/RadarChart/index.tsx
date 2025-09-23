@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { RadarChartSettings } from './RadarChartSettings';
 import { normalizeColor } from '../../../../../utils/charts';
-import { DraggableResizableWrapper } from '../../DragResizableWrapper';
+import { DraggableResizableWrapper } from '../../../../dashboard-editor/selectors/DragResizableWrapper';
 
 export type RadarChartProps = {
   data: { subject: string; A: number; B: number }[];
