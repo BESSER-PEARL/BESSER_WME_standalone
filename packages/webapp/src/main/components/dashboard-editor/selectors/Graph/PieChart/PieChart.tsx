@@ -11,6 +11,26 @@ import { PieChartSettings } from './PieChartSettings';
 import { PieChartData } from './PieChartData';
 import { normalizeColor } from '../../../../../utils/charts';
 import { DraggableResizableWrapper } from '../../DragResizableWrapper';
+import chroma from 'chroma-js';
+
+const colorPalettes: Record<string, string[]> = {
+  'blues': ['#cce5ff', '#66b3ff', '#3399ff', '#0066cc'],
+  'warm': ['#ffcc99', '#ff9966', '#ff6633', '#cc3300'],
+  'cool': ['#99ffcc', '#33ff99', '#00cc66', '#00994d'],
+  'vibrant': ['#ff0080', '#ff6600', '#ffff00', '#00ff00', '#00ffff', '#8000ff'],
+  'greenBlue': ['#1B4F72', '#2E86C1', '#117A65', '#1ABC9C', '#148F77'],
+  'warmPro': ['#D35400', '#E67E22', '#F39C12', '#D68910', '#BA4A00'],
+  'neutral': ['#34495E', '#5D6D7E', '#85929E', '#AAB7B8', '#CCD1D1'],
+};
+
+const getColorsFromPalette = (paletteName: string, count: number) => {
+  const palette = colorPalettes[paletteName] || ['#8884d8', '#82ca9d'];
+  if (palette.length >= count) {
+    return palette.slice(0, count);
+  }
+  // Interpolar si hay menos colores que slices
+  return chroma.scale(palette).mode('lab').colors(count);
+};
 
 export type PieChartProps = {
   data: { name: string; value: number; color: string }[];
@@ -27,6 +47,7 @@ export type PieChartProps = {
   width?: number;
   height?: number;
   isDragging?: boolean;
+  colorPalette?: string;
 };
 
 const RADIAN = Math.PI / 180;
@@ -73,6 +94,8 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
     x,
     y,
   } = props;
+
+  const colors = getColorsFromPalette(props.colorPalette || 'Blues', data.length);
 
   const normalizedLabelColor = normalizeColor(labelColor, '#000');
 
@@ -145,7 +168,7 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={normalizeColor(entry.color, '#8884d8')}
+                fill={colors[index]}
               />
             ))}
           </Pie>
@@ -177,6 +200,7 @@ PieChart.craft = {
     width: 300,
     height: 220,
     isDragging: false,
+    colorPalette: 'Blues',
   },
   related: {
     toolbar: PieChartSettings,

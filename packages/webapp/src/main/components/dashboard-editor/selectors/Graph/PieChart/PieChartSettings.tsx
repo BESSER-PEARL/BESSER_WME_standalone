@@ -12,6 +12,21 @@ export const PieChartSettings = () => {
 
       <ToolbarSection title="Slice" props={['paddingAngle']}>
         <ToolbarItem full propKey="paddingAngle" type="slider" label="Padding Angle" />
+        <ToolbarItem
+          full
+          propKey="colorPalette"
+          type="select"
+          label="Palette"
+          options={[
+            { value: 'blues', label: 'Blues' },
+            { value: 'warm', label: 'Warm' },
+            { value: 'cool', label: 'Cool' },
+            { value: 'vibrant', label: 'Vibrant' },
+            { value: 'greenBlue', label: 'Green Blue' },
+            { value: 'warmPro', label: 'Warm Professional' },
+            { value: 'neutral', label: 'Neutral' },
+          ]}
+        />
       </ToolbarSection>
 
       <ToolbarSection title="Labels" props={['showLabels', 'labelColor', 'labelPosition']}>
