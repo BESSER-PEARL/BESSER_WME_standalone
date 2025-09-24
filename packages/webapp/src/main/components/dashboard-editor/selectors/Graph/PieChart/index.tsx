@@ -8,6 +8,7 @@ import {
   Legend,
 } from 'recharts';
 import { PieChartSettings } from './PieChartSettings';
+import { PieChartData } from './PieChartData';
 import { normalizeColor } from '../../../../../utils/charts';
 import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
@@ -179,5 +180,6 @@ PieChart.craft = {
   },
   related: {
     toolbar: PieChartSettings,
+    databar: PieChartData,
   },
 };
