@@ -5,14 +5,15 @@ import { DimensionsSettings, MarginSettings, PositionSettings } from '../../../.
 export const RadarChartSettings = () => {
   return (
     <>
-      <ToolbarSection title="Appearance" props={['strokeColor', 'fillColor']}>
-        <ToolbarItem full propKey="strokeColor" type="color" label="Stroke Color" />
+      <ToolbarSection title="Appearance" props={['borderColor', 'fillColor']}>
+        <ToolbarItem full propKey="borderColor" type="color" label="Border Color" />
         <ToolbarItem full propKey="fillColor" type="color" label="Fill Color" />
       </ToolbarSection>
 
-      <ToolbarSection title="Options" props={['showGrid', 'showTooltip']}>
+      <ToolbarSection title="Options" props={['showGrid', 'showTooltip', 'showRadiusAxis']}>
         <ToolbarItem full propKey="showGrid" type="checkbox" label="Show Grid" />
         <ToolbarItem full propKey="showTooltip" type="checkbox" label="Show Tooltip" />
+        <ToolbarItem full propKey="showRadiusAxis" type="checkbox" label="Show Radius Axis" />
       </ToolbarSection>
 
       <DimensionsSettings />
