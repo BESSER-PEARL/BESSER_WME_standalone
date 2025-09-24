@@ -11,7 +11,7 @@ import {
 import { BarChartSettings } from './BarChartSettings';
 import { BarChartData } from './BarChartData';
 import { normalizeColor, safeNumber, safeMargin } from '../../../../../utils/charts';
-import { DraggableResizableWrapper } from '../../../../dashboard-editor/selectors/DragResizableWrapper';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type BarChartProps = {
   data: { name: string; value: number }[];

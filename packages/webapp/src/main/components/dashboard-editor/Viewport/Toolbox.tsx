@@ -16,17 +16,17 @@ import RadialChartIcon from '../icons/RadialChart';
 import WorldMapIcon from '../icons/WorldMap';
 import LocationMapIcon from '../icons/LocationMap';
 
-import { Button } from '../selectors/Button';
-import { Container } from '../selectors/Container';
-import { Text } from '../selectors/Text';
-import { Video } from '../selectors/Video';
-import { LineChart } from '../selectors/Graph/LineChart';
-import { BarChart } from '../selectors/Graph/BarChart';
-import { PieChart } from '../selectors/Graph/PieChart';
-import { RadarChart } from '../selectors/Graph/RadarChart';
-import { RadialBarChart } from '../selectors/Graph/RadialBarChart';
-import { WorldMap } from '../selectors/Map/WorldMap';
-import { LocationMap } from '../selectors/Map/LocationMap';
+import { Button } from '../selectors/Button/Button';
+import { Container } from '../selectors/Container/Container';
+import { Text } from '../selectors/Text/Text';
+import { Video } from '../selectors/Video/Video';
+import { LineChart } from '../selectors/Graph/LineChart/LineChart';
+import { BarChart } from '../selectors/Graph/BarChart/BarChart';
+import { PieChart } from '../selectors/Graph/PieChart/PieChart';
+import { RadarChart } from '../selectors/Graph/RadarChart/RadarChart';
+import { RadialBarChart } from '../selectors/Graph/RadialBarChart/RadialBarChart';
+import { WorldMap } from '../selectors/Map/WorldMap/WorldMap';
+import { LocationMap } from '../selectors/Map/LocationMap/LocationMap';
 
 import CustomizeIcon from '../../../public/icons/customize.svg';
 

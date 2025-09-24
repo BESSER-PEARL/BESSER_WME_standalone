@@ -7,7 +7,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { RadialBarChartSettings } from './RadialBarChartSettings';
-import { DraggableResizableWrapper } from '../../../../dashboard-editor/selectors/DragResizableWrapper';
+import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 
 export type RadialBarChartProps = {
   data: { name: string; value: number; fill: string }[];
