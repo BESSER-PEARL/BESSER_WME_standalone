@@ -5,27 +5,6 @@ import { DimensionsSettings, MarginSettings, PositionSettings } from '../../../.
 export const RadialBarChartSettings = () => {
   return (
     <>
-      <ToolbarSection title="Radius" props={['innerRadius', 'outerRadius']}>
-        <ToolbarItem
-          full
-          propKey="innerRadius"
-          type="slider"
-          label="Inner Radius"
-          min={0}
-          max={150}
-          step={1}
-        />
-        <ToolbarItem
-          full
-          propKey="outerRadius"
-          type="slider"
-          label="Outer Radius"
-          min={0}
-          max={150}
-          step={1}
-        />
-      </ToolbarSection>
-
       <ToolbarSection title="Angles" props={['startAngle', 'endAngle']}>
         <ToolbarItem
           full
@@ -44,6 +23,25 @@ export const RadialBarChartSettings = () => {
           min={-360}
           max={360}
           step={1}
+        />
+      </ToolbarSection>
+
+      <ToolbarSection title="Colors" props={['colorPalette']}>
+        <ToolbarItem
+          full
+          propKey="colorPalette"
+          type="select"
+          label="Palette"
+          options={[
+            { value: 'default', label: 'Default' },
+            { value: 'blues', label: 'Blues' },
+            { value: 'warm', label: 'Warm' },
+            { value: 'cool', label: 'Cool' },
+            { value: 'vibrant', label: 'Vibrant' },
+            { value: 'greenBlue', label: 'Green Blue' },
+            { value: 'warmPro', label: 'Warm Professional' },
+            { value: 'neutral', label: 'Neutral' },
+          ]}
         />
       </ToolbarSection>
 
