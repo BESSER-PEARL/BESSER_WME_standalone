@@ -13,7 +13,7 @@ import { normalizeColor } from '../../../../../utils/charts';
 import { DraggableResizableWrapper } from '../../DragResizableWrapper';
 import chroma from 'chroma-js';
 
-const colorPalettes: Record<string, string[]> = {
+export const colorPalettes: Record<string, string[]> = {
   'blues': ['#cce5ff', '#66b3ff', '#3399ff', '#0066cc'],
   'warm': ['#ffcc99', '#ff9966', '#ff6633', '#cc3300'],
   'cool': ['#99ffcc', '#33ff99', '#00cc66', '#00994d'],
@@ -21,6 +21,8 @@ const colorPalettes: Record<string, string[]> = {
   'greenBlue': ['#1B4F72', '#2E86C1', '#117A65', '#1ABC9C', '#148F77'],
   'warmPro': ['#D35400', '#E67E22', '#F39C12', '#D68910', '#BA4A00'],
   'neutral': ['#34495E', '#5D6D7E', '#85929E', '#AAB7B8', '#CCD1D1'],
+  'classic': ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'],
+  'default': ['#8884d8', '#82ca9d', '#8B9CC5', '#89B3B2'],
 };
 
 const getColorsFromPalette = (paletteName: string, count: number) => {
@@ -34,8 +36,6 @@ const getColorsFromPalette = (paletteName: string, count: number) => {
 
 export type PieChartProps = {
   data: { name: string; value: number; color: string }[];
-  innerRadius: number;
-  outerRadius: number;
   paddingAngle: number;
   showLabels: boolean;
   labelColor: string;
@@ -81,8 +81,6 @@ const renderCustomizedLabel = (labelColor: string) => (props: any) => {
 export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
   const {
     data = [],
-    innerRadius = 10,
-    outerRadius = 80,
     paddingAngle = 2,
     showLabels = true,
     labelColor = '#000',
@@ -159,8 +157,8 @@ export const PieChart: UserComponent<Partial<PieChartProps>> = (props) => {
             data={data}
             dataKey="value"
             nameKey="name"
-            innerRadius={innerRadius}
-            outerRadius={outerRadius}
+            innerRadius="20%"
+            outerRadius="80%"
             paddingAngle={paddingAngle}
             labelLine={labelPosition === 'outside'}
             {...pieLabelProps}
@@ -187,8 +185,6 @@ PieChart.craft = {
       { name: 'Group C', value: 300, color: '#FFBB28' },
       { name: 'Group D', value: 200, color: '#FF8042' },
     ],
-    innerRadius: 10,
-    outerRadius: 80,
     paddingAngle: 2,
     showLabels: true,
     labelColor: '#FFFFFF',
@@ -200,7 +196,7 @@ PieChart.craft = {
     width: 300,
     height: 220,
     isDragging: false,
-    colorPalette: 'Blues',
+    colorPalette: 'default',
   },
   related: {
     toolbar: PieChartSettings,

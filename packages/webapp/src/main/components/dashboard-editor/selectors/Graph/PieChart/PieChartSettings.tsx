@@ -5,11 +5,6 @@ import { DimensionsSettings, MarginSettings, PositionSettings } from '../../Comm
 export const PieChartSettings = () => {
   return (
     <>
-      <ToolbarSection title="Radius" props={['innerRadius', 'outerRadius']}>
-        <ToolbarItem full propKey="innerRadius" type="slider" label="Inner Radius" />
-        <ToolbarItem full propKey="outerRadius" type="slider" label="Outer Radius" />
-      </ToolbarSection>
-
       <ToolbarSection title="Slice" props={['paddingAngle']}>
         <ToolbarItem full propKey="paddingAngle" type="slider" label="Padding Angle" />
         <ToolbarItem
@@ -18,6 +13,7 @@ export const PieChartSettings = () => {
           type="select"
           label="Palette"
           options={[
+            { value: 'default', label: 'Default' },
             { value: 'blues', label: 'Blues' },
             { value: 'warm', label: 'Warm' },
             { value: 'cool', label: 'Cool' },
