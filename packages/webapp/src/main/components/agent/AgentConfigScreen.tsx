@@ -66,7 +66,7 @@ export const AgentConfigScreen: React.FC = () => {
                     llmModel = config.llm.model || '';
                 }
                 return {
-                    agentLanguage: config.agentLanguage || 'english',
+                    agentLanguage: config.agentLanguage || 'original',
                     inputModalities: config.inputModalities || ['text'],
                     outputModalities: config.outputModalities || ['text'],
                     agentPlatform: config.agentPlatform || 'streamlit',
@@ -78,7 +78,7 @@ export const AgentConfigScreen: React.FC = () => {
             }
         } catch {}
         return {
-            agentLanguage: 'english',
+            agentLanguage: 'original',
             inputModalities: ['text'],
             outputModalities: ['text'],
             agentPlatform: 'streamlit',
@@ -105,7 +105,7 @@ export const AgentConfigScreen: React.FC = () => {
         if (stored) {
             try {
                 const config = JSON.parse(stored);
-                setAgentLanguage(config.agentLanguage || 'english');
+                setAgentLanguage(config.agentLanguage || 'original');
                 setInputModalities(config.inputModalities || ['text']);
                 setOutputModalities(config.outputModalities || ['text']);
                 setAgentPlatform(config.agentPlatform || 'streamlit');
@@ -176,7 +176,7 @@ export const AgentConfigScreen: React.FC = () => {
         reader.onload = (event) => {
             try {
                 const config = JSON.parse(event.target?.result as string);
-                setAgentLanguage(config.agentLanguage || 'english');
+                setAgentLanguage(config.agentLanguage || 'original');
                 setInputModalities(config.inputModalities || ['text']);
                 setOutputModalities(config.outputModalities || ['text']);
                 setAgentPlatform(config.agentPlatform || 'streamlit');
@@ -220,6 +220,7 @@ export const AgentConfigScreen: React.FC = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Language</Form.Label>
                                     <Form.Select value={agentLanguage} onChange={e => setAgentLanguage(e.target.value)}>
+                                        <option value="none">Original</option>
                                         <option value="english">English</option>
                                         <option value="french">French</option>
                                         <option value="german">German</option>
