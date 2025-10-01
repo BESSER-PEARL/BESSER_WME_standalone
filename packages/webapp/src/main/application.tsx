@@ -16,7 +16,6 @@ import { VersionManagementSidebar } from './components/version-management-sideba
 import { SidebarLayout } from './components/sidebar/SidebarLayout';
 import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
-import { AgentConfigScreen } from './components/agent/AgentConfigScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
 
@@ -32,7 +31,7 @@ function AppContentInner() {
   const location = useLocation();
   
   // Check if current path contains a token (collaboration route)
-  const hasTokenInUrl = location.pathname !== '/' && location.pathname !== '/project-settings' && location.pathname !== '/teampage' && location.pathname !== '/agent-config';
+  const hasTokenInUrl = location.pathname !== '/' && location.pathname !== '/project-settings' && location.pathname !== '/teampage';
   
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
@@ -130,16 +129,6 @@ function AppContentInner() {
           element={
             <SidebarLayout>
               <ProjectSettingsScreen />
-            </SidebarLayout>
-          } 
-        />
-
-        {/* Agent configuration route */}
-        <Route 
-          path="/agent-config" 
-          element={
-            <SidebarLayout>
-              <AgentConfigScreen />
             </SidebarLayout>
           } 
         />
