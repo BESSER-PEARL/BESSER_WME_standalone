@@ -88,8 +88,16 @@ export const GenerateCodeMenu: React.FC = () => {
   const handleAgentGenerate = async () => {
     setLoadingAgent(true);
     try {
-      let agentConfig: AgentConfig = {};
-      if (selectedAgentLanguages.length > 0) {
+      let agentConfig: AgentConfig;
+      if (selectedAgentLanguages.length === 0) {
+        // Load config from localStorage
+        const stored = localStorage.getItem('agentConfig');
+        if (stored) {
+          agentConfig = { ...JSON.parse(stored) };
+        } else {
+          agentConfig = { languages: [] };
+        }
+      } else {
         agentConfig.languages = {
           source: sourceLanguage,
           target: selectedAgentLanguages
