@@ -1,0 +1,125 @@
+/* GrapesJS Editor Styles */
+.editor-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  height: 100%;
+  width: 100%;
+}
+
+.panel__top {
+  display: flex;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background: #3d3d3d;
+  padding: 0;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+}
+
+.panel__basic-actions {
+  display: flex;
+  padding: 0 10px;
+}
+
+.panel__devices {
+  display: flex;
+  padding: 0 10px;
+}
+
+.panel__switcher {
+  display: flex;
+  padding: 0 10px;
+}
+
+.editor-canvas {
+  flex-grow: 1;
+  position: relative;
+  padding-top: 40px;
+}
+
+.panel__right {
+  flex-basis: 230px;
+  position: relative;
+  overflow-y: auto;
+  background: #3d3d3d;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+  padding-top: 40px;
+}
+
+.layers-container,
+.styles-container,
+.traits-container {
+  width: 100%;
+}
+
+/* Ensure GrapesJS canvas fills the space */
+.gjs-cv-canvas {
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+}
+
+/* Button styles */
+.panel__top button,
+.panel__top .gjs-pn-btn {
+  background: transparent;
+  border: none;
+  color: #ddd;
+  cursor: pointer;
+  padding: 8px 12px;
+  margin: 0 2px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.panel__top button:hover,
+.panel__top .gjs-pn-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.panel__top button.active,
+.panel__top .gjs-pn-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Override some GrapesJS defaults for better integration */
+.gjs-block {
+  width: auto;
+  padding: 10px;
+  background: #444;
+  color: #ddd;
+  border-radius: 3px;
+  margin: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gjs-block:hover {
+  background: #555;
+  color: #fff;
+}
+
+.gjs-block__media {
+  margin-bottom: 5px;
+}
+
+.gjs-toolbar {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 3px;
+}
+
+.gjs-toolbar-item {
+  color: #fff;
+}
+
+.gjs-toolbar-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
