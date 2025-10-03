@@ -71,19 +71,19 @@ export const AgentConfigScreen: React.FC = () => {
                     outputModalities: config.outputModalities || ['text'],
                     agentPlatform: config.agentPlatform || 'streamlit',
                     responseTiming: config.responseTiming || 'instant',
-                    agentStyle: config.agentStyle || 'formal',
+                    agentStyle: config.agentStyle || 'original',
                     llmProvider,
                     llmModel,
                 };
             }
-        } catch {}
+        } catch { }
         return {
             agentLanguage: 'original',
             inputModalities: ['text'],
             outputModalities: ['text'],
             agentPlatform: 'streamlit',
             responseTiming: 'instant',
-            agentStyle: 'formal',
+            agentStyle: 'original',
             llmProvider: '',
             llmModel: '',
         };
@@ -110,7 +110,7 @@ export const AgentConfigScreen: React.FC = () => {
                 setOutputModalities(config.outputModalities || ['text']);
                 setAgentPlatform(config.agentPlatform || 'streamlit');
                 setResponseTiming(config.responseTiming || 'instant');
-                setAgentStyle(config.agentStyle || 'formal');
+                setAgentStyle(config.agentStyle || 'original');
                 if (config.llm && typeof config.llm === 'object') {
                     setLlmProvider(config.llm.provider || '');
                     setLlmModel(config.llm.model || '');
@@ -118,7 +118,7 @@ export const AgentConfigScreen: React.FC = () => {
                     setLlmProvider('');
                     setLlmModel('');
                 }
-            } catch {}
+            } catch { }
         }
     }, []);
     const handleInputModalityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,11 +181,11 @@ export const AgentConfigScreen: React.FC = () => {
                 setOutputModalities(config.outputModalities || ['text']);
                 setAgentPlatform(config.agentPlatform || 'streamlit');
                 setResponseTiming(config.responseTiming || 'instant');
-                setAgentStyle(config.agentStyle || 'formal');
+                setAgentStyle(config.agentStyle || 'original');
                 if (config.llm && typeof config.llm === 'object') {
                     setLlmProvider(config.llm.provider || '');
-                    if (['openai','huggingface','huggingfaceapi','replicate'].includes(config.llm.provider) &&
-                        ['gpt-5','gpt-5-mini','gpt-5-nano','mistral-7b','falcon-40b','llama-3-8b','bloom-176b'].includes(config.llm.model)) {
+                    if (['openai', 'huggingface', 'huggingfaceapi', 'replicate'].includes(config.llm.provider) &&
+                        ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'mistral-7b', 'falcon-40b', 'llama-3-8b', 'bloom-176b'].includes(config.llm.model)) {
                         setLlmModel(config.llm.model);
                         setCustomModel('');
                     } else {
@@ -278,6 +278,15 @@ export const AgentConfigScreen: React.FC = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Style</Form.Label>
                                     <div className="d-flex gap-3">
+                                        <Form.Check
+                                            type="radio"
+                                            label="Original"
+                                            name="agentStyle"
+                                            id="agentStyleOriginal"
+                                            value="original"
+                                            checked={agentStyle === 'original'}
+                                            onChange={e => setAgentStyle(e.target.value)}
+                                        />
                                         <Form.Check
                                             type="radio"
                                             label="Formal"

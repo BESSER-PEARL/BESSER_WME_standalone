@@ -25,7 +25,10 @@ export interface JSONSchemaConfig {
 }
 
 export interface AgentConfig {
-  languages: string[];
+  languages?: {
+    source: string;
+    target: string[];
+  };
 }
 
 export type GeneratorConfig = {
