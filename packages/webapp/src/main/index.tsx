@@ -18,22 +18,15 @@ if (SENTRY_DSN) {
 
   Sentry.setTag('package', 'webapp');
 }
+const themePreference = LocalStorageRepository.getUserThemePreference();
 
-const themePreference: string | null = LocalStorageRepository.getUserThemePreference();
-
-if (!themePreference) {
-  // Get from System Dark/Mode theme preference
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    // Dark mode
-    LocalStorageRepository.setSystemThemePreference('dark');
-    setTheme('dark');
-  } else {
-    // Light Mode
-    LocalStorageRepository.setSystemThemePreference('light');
-    setTheme('light');
-  }
+if (themePreference === 'dark') {
+  // Set user theme preference to dark if it was set
+  setTheme('dark');
 } else {
-  setTheme(themePreference);
+  // Always set system theme preference to light if no user preference is set
+  LocalStorageRepository.setSystemThemePreference('light');
+  setTheme('light');
 }
 
 const container = document.getElementById('root') as HTMLElement;

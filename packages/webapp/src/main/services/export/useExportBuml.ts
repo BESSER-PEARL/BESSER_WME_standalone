@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
-import { ApollonEditor } from '@besser/wme';
+import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
 import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
+import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 
 
 export const useExportBUML = () => {
@@ -24,16 +25,17 @@ export const useExportBUML = () => {
         toast.error('No diagram to export');
         return;
       }
+      try {        // Prepare the model data 
+        let modelData = editor.model;
 
-      try {
         const response = await fetch(`${BACKEND_URL}/export-buml`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json, text/plain, */*',
+            'Accept': 'application/json, text/plain, application/zip, */*',
           },
           body: JSON.stringify({
-            elements: editor.model,
+            elements: modelData,
             generator: 'buml',
             diagramTitle: diagramTitle
           }),
@@ -58,10 +60,35 @@ export const useExportBUML = () => {
           }
 
           throw new Error(`HTTP error! status: ${response.status}`);
+        }        const blob = await response.blob();
+        
+        // Get the filename from the response headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'exported_buml.py'; // Default filename
+        
+        if (contentDisposition) {
+          // Try multiple patterns to extract filename
+          const patterns = [
+            /filename="([^"]+)"/,
+            /filename=([^;\s]+)/, 
+            /filename="?([^";\s]+)"?/ 
+          ];
+          
+          for (const pattern of patterns) {
+            const match = contentDisposition.match(pattern);
+            if (match) {
+              filename = match[1];
+              break;
+            }
+          }
+        } else {
+          // Default filename based on diagram type
+          if (editor.model.type === 'ObjectDiagram') {
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}_object.py`;
+          } else {
+            filename = `${diagramTitle.toLowerCase().replace(/\s+/g, '_')}.py`;
+          }
         }
-
-        const blob = await response.blob();
-        const filename = 'domain_model.py';
 
         downloadFile({ file: blob, filename });
         toast.success('BUML export completed successfully');

@@ -1,7 +1,9 @@
 // webpack environment constants
 export const APPLICATION_SERVER_VERSION = process.env.APPLICATION_SERVER_VERSION;
 export const DEPLOYMENT_URL = process.env.DEPLOYMENT_URL;
-export const BACKEND_URL = process.env.BACKEND_URL; 
+export const BACKEND_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:9000/besser_api' 
+  : process.env.BACKEND_URL;
 export const SENTRY_DSN = process.env.SENTRY_DSN;
 export const POSTHOG_HOST = process.env.POSTHOG_HOST;
 export const POSTHOG_KEY = process.env.POSTHOG_KEY;
@@ -10,7 +12,7 @@ export const NO_HTTP_URL = DEPLOYMENT_URL?.split('//')[1] || '';
 export const WS_PROTOCOL = DEPLOYMENT_URL?.startsWith('https') ? 'wss' : 'ws';
 
 // prefixes
-export const localStoragePrefix = 'apollon_';
+export const localStoragePrefix = 'besser_';
 export const localStorageDiagramPrefix = localStoragePrefix + 'diagram_';
 
 // keys
@@ -20,6 +22,12 @@ export const localStorageCollaborationName = localStoragePrefix + 'collaboration
 export const localStorageCollaborationColor = localStoragePrefix + 'collaborationColor';
 export const localStorageUserThemePreference = localStoragePrefix + 'userThemePreference';
 export const localStorageSystemThemePreference = localStoragePrefix + 'systemThemePreference';
+
+// Project constants
+export const localStorageProjectPrefix = localStoragePrefix + 'project_';
+export const localStorageLatestProject = localStoragePrefix + 'latest_project';
+export const localStorageProjectsList = localStoragePrefix + 'projects';
+
 // date formats
 export const longDate = 'MMMM Do YYYY, h:mm:ss a';
 

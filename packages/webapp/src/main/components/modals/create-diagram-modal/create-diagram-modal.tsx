@@ -13,6 +13,7 @@ const diagramsInBeta: string[] = ['BPMN'];
 const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   ClassDiagram: 'Class Diagram',
   StateMachineDiagram: 'State Machine Diagram',
+  AgentDiagram: 'Agent Diagram',
   ObjectDiagram: 'Object Diagram',
   ActivityDiagram: 'Activity Diagram',
   UseCaseDiagram: 'Use Case Diagram',
@@ -24,6 +25,7 @@ const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   SyntaxTree: 'Syntax Tree',
   Flowchart: 'Flowchart',
   BPMN: 'BPMN Diagram',
+  UserDiagram: 'User Diagram',
 };
 
 // Commenting out behavioral diagrams
@@ -40,8 +42,9 @@ const behavioralDiagrams = [
 
 const structuralDiagrams = [
   'ClassDiagram',
+  'ObjectDiagram',
   'StateMachineDiagram',
-  // 'ObjectDiagram',
+  'AgentDiagram',
   // 'ComponentDiagram',
   // 'DeploymentDiagram',
   // 'Flowchart',

@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@besser/wme';
 import { uuid } from '../../utils/uuid';
-import { LocalStorageRepository } from '../local-storage/local-storage-repository';
-
-import { localStorageDiagramPrefix, localStorageLatest } from '../../constant';
+import { addDiagramToCurrentProject } from '../../utils/localStorage';
+import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
+import { toUMLDiagramType } from '../../types/project';
 import { DeepPartial } from '../../utils/types';
 
 export type Diagram = {
@@ -38,28 +38,51 @@ export const defaultEditorOptions: EditorOptions = {
 };
 
 const getInitialEditorOptions = (): EditorOptions => {
-  const latestId = window.localStorage.getItem(localStorageLatest);
   const editorOptions = defaultEditorOptions;
 
-  if (latestId) {
-    const latestDiagram: Diagram = JSON.parse(window.localStorage.getItem(localStorageDiagramPrefix + latestId)!);
-    editorOptions.type = latestDiagram?.model?.type ? latestDiagram.model.type : editorOptions.type;
+  // Always try to get from current project first
+  try {
+    const currentProject = ProjectStorageRepository.getCurrentProject();
+    if (currentProject) {
+      const diagramType = toUMLDiagramType(currentProject.currentDiagramType);
+      editorOptions.type = diagramType;
+      return editorOptions;
+    }
+  } catch (error) {
+    console.warn('Error loading project for initial editor options:', error);
   }
 
+  // If no project, return default options
   return editorOptions;
 };
 
 const getInitialDiagram = (): Diagram => {
-  const latestId: string | null = window.localStorage.getItem(localStorageLatest);
-  let diagram: Diagram;
-  if (latestId) {
-    const latestDiagram: Diagram = JSON.parse(window.localStorage.getItem(localStorageDiagramPrefix + latestId)!);
-    diagram = latestDiagram;
-  } else {
-    diagram = { id: uuid(), title: 'UMLClassDiagram', model: undefined, lastUpdate: new Date().toISOString() };
+  // Always get from current project - no localStorage fallback
+  try {
+    const currentProject = ProjectStorageRepository.getCurrentProject();
+    if (currentProject) {
+      const currentDiagram = currentProject.diagrams[currentProject.currentDiagramType];
+
+      return {
+        id: currentDiagram.id,
+        title: currentDiagram.title,
+        model: currentDiagram.model,
+        lastUpdate: currentDiagram.lastUpdate,
+      };
+    }
+  } catch (error) {
+    console.warn('Error loading project for initial diagram:', error);
   }
 
-  return diagram;
+  // If no project found, create a default diagram
+  // This should only happen during development or if there's an issue with project creation
+  console.warn('No project found - creating default diagram. This might indicate a project setup issue.');
+  return { 
+    id: uuid(), 
+    title: 'UMLClassDiagram', 
+    model: undefined, 
+    lastUpdate: new Date().toISOString() 
+  };
 };
 
 const initialState = {
@@ -72,8 +95,8 @@ const initialState = {
 };
 
 export const updateDiagramThunk = createAsyncThunk(
-  'diagram/updateWithLocalStorage',
-  async (diagram: Partial<Diagram>, { getState }) => {
+  'diagram/updateWithProject',
+  async (diagram: Partial<Diagram>, { getState, dispatch }) => {
     const state = getState() as any;
     const currentDiagram = state.diagram.diagram;
     
@@ -86,9 +109,32 @@ export const updateDiagramThunk = createAsyncThunk(
       model: diagram.model || currentDiagram.model
     };
 
-    // Store in localStorage
-    LocalStorageRepository.storeDiagram(updatedDiagram);
-    window.localStorage.setItem(localStorageLatest, updatedDiagram.id);
+    // Always use project system - no localStorage fallback
+    try {
+      // Import the project thunk dynamically to avoid circular imports
+      const { updateCurrentDiagramThunk } = await import('../project/projectSlice');
+      
+      // Prepare updates for the project system
+      const projectUpdates: any = {};
+      if (updatedDiagram.model) {
+        projectUpdates.model = updatedDiagram.model;
+      }
+      if (diagram.title !== undefined) {
+        projectUpdates.title = diagram.title;
+      }
+      if (diagram.description !== undefined) {
+        projectUpdates.description = diagram.description;
+      }
+      
+      // Only update project if we have something to update
+      if (Object.keys(projectUpdates).length > 0) {
+        await dispatch(updateCurrentDiagramThunk(projectUpdates));
+        // console.log('Successfully synced to project system');
+      }
+    } catch (error) {
+      console.error('Project sync failed:', error);
+      throw error; // Propagate the error since we no longer fall back to localStorage
+    }
 
     return updatedDiagram;
   }
@@ -117,19 +163,33 @@ const diagramSlice = createSlice({
       state,
       action: PayloadAction<{ title: string; diagramType: UMLDiagramType; template?: UMLModel }>,
     ) => {
+      const newDiagramId = uuid();
       state.diagram = {
-        id: uuid(),
+        id: newDiagramId,
         title: action.payload.title,
         model: action.payload.template,
         lastUpdate: new Date().toISOString(),
       };
       state.editorOptions.type = action.payload.diagramType;
       state.createNewEditor = true;
+      
+      // Automatically add the new diagram to the current project if in project context
+      // This ensures all diagram creation flows (drag-drop, modals, imports) work with projects
+      addDiagramToCurrentProject(newDiagramId);
     },
     loadDiagram: (state, action: PayloadAction<Diagram>) => {
       state.diagram = action.payload;
       state.createNewEditor = true;
       state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+    },
+    loadImportedDiagram: (state, action: PayloadAction<Diagram>) => {
+      // Like loadDiagram but also adds to project if in project context
+      state.diagram = action.payload;
+      state.createNewEditor = true;
+      state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+      
+      // Add imported diagram to current project if in project context
+      addDiagramToCurrentProject(action.payload.id);
     },
     setCreateNewEditor: (state, action: PayloadAction<boolean>) => {
       state.createNewEditor = action.payload;
@@ -169,6 +229,7 @@ export const {
   changeDiagramType,
   createDiagram,
   loadDiagram,
+  loadImportedDiagram,
   setDisplayUnpublishedVersion,
 } = diagramSlice.actions;
 

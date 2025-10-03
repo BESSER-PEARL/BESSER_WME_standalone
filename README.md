@@ -52,20 +52,23 @@ To do that, all they have to do is click on `File > Start from Template` and sel
 Users can share the diagram in BESSER WME Standalone in four different types.
 
 - `Edit`: In this mode of sharing, the user will be able to make changes to the shared diagram.
-- `Collaborate`: In this mode of sharing, users joining the collaboration session will be able to work on the diagram collaboratively with other users.
 - `Embed`: In this mode of sharing, the user embeds the diagram in a Git issue/pull request. The embedding displays the latest version of the diagram.
 - `Give Feedback`: In this mode of sharing, the user will not be able to make changes to the shared diagram, but can only provide feedback to it.
 - `See Feedback`: In this mode of sharing, the user can view feedback provided to the shared diagram.
 
-<!-- ![Real-time collaboration](/docs/images/ShareDialog.png 'Real-time collaboration') -->
+## Under the Hood: Diagram Engine as an npm Package
 
-### Collaborate in real-time
+BESSER WME Standalone uses the core diagramming functionality provided by the [BESSER Web Modeling Editor (BESSER-WME)](https://github.com/BESSER-PEARL/BESSER-Web-Modeling-Editor), which is integrated as an [**npm package**](https://www.npmjs.com/package/@besser/wme) .
 
-BESSER WME Standalone can be used as a collaborative modeling canvas, where multiple users can work collaboratively.
-Any changes made by one user will be visible throughout the canvas of all other users that are in collaboration sessions in real-time.
-Active elements that are interacted with by users in a session are highlighted in the canvas.
+This separation allows the standalone application to focus on delivering additional capabilities such as:
 
-<!-- ![Real-time collaboration](/docs/images/RealTimeCollaboration.gif 'Real-time collaboration') -->
+- Diagram sharing modes
+- Template management
+- Export/import/generationn to multiple formats
+- Hosting via application server or Docker
+- Redis-based storage
+
+Meanwhile, all **diagram rendering and editing** logic is delegated to the BESSER-WME library, ensuring consistency and reusability across multiple front-ends or integrations.
 
 
 ## Contributing

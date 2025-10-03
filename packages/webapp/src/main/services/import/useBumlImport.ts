@@ -3,8 +3,11 @@ import { useAppDispatch } from '../../components/store/hooks';
 import { displayError } from '../error-management/errorManagementSlice';
 import { createDiagram } from '../diagram/diagramSlice';
 import { toast } from 'react-toastify';
-import { UMLDiagramType, UMLModel } from '@besser/wme';
+import { UMLDiagramType, UMLModel, diagramBridge } from '@besser/wme';
 import { BACKEND_URL } from '../../constant';
+import { uuid } from '../../utils/uuid';
+import { LocalStorageRepository } from '../local-storage/local-storage-repository';
+import { Diagram } from '../diagram/diagramSlice';
 
 
 export const useBumlImport = () => {
@@ -39,15 +42,26 @@ export const useBumlImport = () => {
         }
 
       const data = await response.json();
-      const modelType = data.model.type === 'StateMachineDiagram' ? 
-        UMLDiagramType.StateMachineDiagram :// UMLDiagramType.StateMachineDiagram : 
-        UMLDiagramType.ClassDiagram;
-      
+      let modelType: UMLDiagramType;
+      switch (data.model.type) {
+        case 'StateMachineDiagram':
+          modelType = UMLDiagramType.StateMachineDiagram;
+          break;
+        case 'AgentDiagram':
+          modelType = UMLDiagramType.AgentDiagram;
+          break;
+        case 'ObjectDiagram':
+          modelType = UMLDiagramType.ObjectDiagram;
+          break;
+        default:
+          modelType = UMLDiagramType.ClassDiagram;
+}
+
       // Create template model with proper type
       const template: UMLModel = {
         ...data.model,
         type: modelType
-      };
+      };      // If importing an ObjectDiagram with embedded class diagram data
 
       dispatch(createDiagram({
         title: data.title,

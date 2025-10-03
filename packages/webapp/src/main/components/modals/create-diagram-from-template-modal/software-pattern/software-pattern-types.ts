@@ -5,6 +5,8 @@ export enum SoftwarePatternCategory {
   CREATIONAL = 'Creational',
   STRUCTURAL = 'Class Diagram',
   BEHAVIORAL = 'Behavioral',
+  AGENT = 'Agent Diagram',
+  STATE_MACHINE = 'State Machine Diagram',
 }
 
 export enum SoftwarePatternType {
@@ -12,11 +14,16 @@ export enum SoftwarePatternType {
   LIBRARY = 'Library',
   TEAMOCL = 'Team Player with OCL',
   DPP = 'Digital Product Passport ',
+  AISANDBOX = 'AI Sandbox',
   // Behavioral pattern
   COMMAND = 'Command',
   OBSERVER = 'Observer',
   // Creational patterns
   FACTORY = 'Factory',
+  // Agent patterns
+  GREET_AGENT = 'Greeting Agent',
+  // State Machine patterns
+  TRAFIC_LIGHT = 'Traffic Light',
 }
 
 export class SoftwarePatternTemplate extends Template {
