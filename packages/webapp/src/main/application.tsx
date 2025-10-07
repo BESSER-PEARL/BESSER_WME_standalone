@@ -18,7 +18,7 @@ import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
-import { GrapesJsEditor } from './components/grapesjs-editor';
+import { GrapesJsEditor, GrapesJsStudioEditor } from './components/grapesjs-editor';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
@@ -128,9 +128,19 @@ function AppContentInner() {
         />
 
 
-        {/* GrapesJS Editor route */}
+        {/* GrapesJS Studio Editor route - Multi-page support */}
         <Route 
           path="/grapesjs"
+          element={
+            <SidebarLayout>
+              <GrapesJsStudioEditor />
+            </SidebarLayout>
+          } 
+        />
+
+        {/* Legacy GrapesJS Editor route - Single page */}
+        <Route 
+          path="/grapesjs-legacy"
           element={
             <SidebarLayout>
               <GrapesJsEditor />
