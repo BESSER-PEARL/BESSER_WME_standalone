@@ -4,50 +4,211 @@ import StudioEditor from '@grapesjs/studio-sdk/react';
 import '@grapesjs/studio-sdk/style';
 import { canvasAbsoluteMode } from '@grapesjs/studio-sdk-plugins';
 import { LineChartComponent } from './LineChartComponent';
+import { BarChartComponent } from './BarChartComponent';
+import { PieChartComponent } from './PieChartComponent';
+import { RadarChartComponent } from './RadarChartComponent';
+import { RadialBarChartComponent } from './RadialBarChartComponent';
+import { MapComponent } from './MapComponent';
+
+// Chart configuration interface
+interface ChartConfig {
+  id: string;
+  label: string;
+  component: React.FC<any>;
+  defaultColor: string;
+  defaultTitle: string;
+  icon: string;
+  traits: Array<{ type: string; label: string; name: string; value: any; changeProp: number }>;
+}
+
+// Centralized chart configurations
+const chartConfigs: ChartConfig[] = [
+  {
+    id: 'line-chart',
+    label: '📈 Line Chart',
+    component: LineChartComponent,
+    defaultColor: '#4CAF50',
+    defaultTitle: 'Sales Over Time',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3,13.5L2.25,12H7.5L6.9,10.5H9L11,16L13.5,2L15.5,10.5H22.5L23.25,12H17.5L16,8L14,16L12.5,10.5H10.5L9.5,13.5H3Z"/></svg>',
+    traits: [
+      { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#4CAF50', changeProp: 1 },
+      { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Sales Over Time', changeProp: 1 },
+    ],
+  },
+  {
+    id: 'bar-chart',
+    label: '📊 Bar Chart',
+    component: BarChartComponent,
+    defaultColor: '#3498db',
+    defaultTitle: 'Revenue by Category',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/></svg>',
+    traits: [
+      { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#3498db', changeProp: 1 },
+      { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Revenue by Category', changeProp: 1 },
+    ],
+  },
+  {
+    id: 'pie-chart',
+    label: '🥧 Pie Chart',
+    component: PieChartComponent,
+    defaultColor: '',
+    defaultTitle: 'Traffic Distribution',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M11,2V22C5.9,21.5 2,17.2 2,12C2,6.8 5.9,2.5 11,2M13,2V11H22C21.5,6.2 17.8,2.5 13,2M13,13V22C17.7,21.5 21.5,17.8 22,13H13Z"/></svg>',
+    traits: [
+      { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Traffic Distribution', changeProp: 1 },
+    ],
+  },
+  {
+    id: 'radar-chart',
+    label: '🎯 Radar Chart',
+    component: RadarChartComponent,
+    defaultColor: '#8884d8',
+    defaultTitle: 'Performance Metrics',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M12,5.5L10.6,10.6L5.5,12L10.6,13.4L12,18.5L13.4,13.4L18.5,12L13.4,10.6L12,5.5Z"/></svg>',
+    traits: [
+      { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#8884d8', changeProp: 1 },
+      { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Performance Metrics', changeProp: 1 },
+    ],
+  },
+  {
+    id: 'radial-bar-chart',
+    label: '⭕ Radial Bar Chart',
+    component: RadialBarChartComponent,
+    defaultColor: '',
+    defaultTitle: 'Customer Satisfaction',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/></svg>',
+    traits: [
+      { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Customer Satisfaction', changeProp: 1 },
+    ],
+  },
+];
+
+// Map configuration
+const mapConfig = {
+  id: 'map',
+  label: '🗺️ Map',
+  component: MapComponent,
+  defaultTitle: 'Location Map',
+  defaultLatitude: 40.7128,
+  defaultLongitude: -74.0060,
+  icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M15,19L9,16.89V5L15,7.11M20.5,3C20.44,3 20.39,3 20.34,3L15,5.1L9,3L3.36,4.9C3.15,4.97 3,5.15 3,5.38V20.5A0.5,0.5 0 0,0 3.5,21C3.55,21 3.61,21 3.66,20.97L9,18.9L15,21L20.64,19.1C20.85,19 21,18.85 21,18.62V3.5A0.5,0.5 0 0,0 20.5,3Z"/></svg>',
+  traits: [
+    { type: 'text', label: 'Title', name: 'map-title', value: 'Location Map', changeProp: 1 },
+    { type: 'number', label: 'Latitude', name: 'map-latitude', value: 40.7128, changeProp: 1 },
+    { type: 'number', label: 'Longitude', name: 'map-longitude', value: -74.0060, changeProp: 1 },
+    { type: 'number', label: 'Zoom', name: 'map-zoom', value: 12, changeProp: 1 },
+  ],
+};
 
 export const GrapesJsStudioEditor: React.FC = () => {
   const handleEditorReady = (editor: any) => {
     console.log('Editor is ready:', editor);
 
-    // Add custom Line Chart component type
-    editor.Components.addType('line-chart', {
+    // Register all chart components
+    chartConfigs.forEach((config) => {
+      registerChartComponent(editor, config);
+    });
+
+    // Register map component
+    registerMapComponent(editor, mapConfig);
+
+    console.log('All chart and map components added to Studio Editor');
+  };
+
+  // Helper function to register chart components
+  const registerChartComponent = (editor: any, config: ChartConfig) => {
+    editor.Components.addType(config.id, {
       model: {
         defaults: {
           tagName: 'div',
           draggable: true,
           droppable: false,
-          attributes: { class: 'line-chart-component' },
+          attributes: { class: `${config.id}-component` },
           style: {
             width: '100%',
             'min-height': '400px',
           },
-          'chart-color': '#4CAF50',
-          'chart-title': 'Sales Over Time',
+          'chart-color': config.defaultColor,
+          'chart-title': config.defaultTitle,
         },
         init(this: any) {
           const traits = this.get('traits');
-          traits.reset([
-            {
-              type: 'color',
-              label: 'Chart Color',
-              name: 'chart-color',
-              value: '#4CAF50',
-              changeProp: 1,
-            },
-            {
-              type: 'text',
-              label: 'Chart Title',
-              name: 'chart-title',
-              value: 'Sales Over Time',
-              changeProp: 1,
-            },
-          ]);
-          
+          traits.reset(config.traits);
           this.on('change:chart-color change:chart-title', this.renderReactChart);
         },
         renderReactChart(this: any) {
-          const color = this.get('chart-color') || '#4CAF50';
-          const title = this.get('chart-title') || 'Sales Over Time';
+          const color = this.get('chart-color') || config.defaultColor;
+          const title = this.get('chart-title') || config.defaultTitle;
+          
+          const view = this.getView();
+          if (view && view.el) {
+            const container = view.el;
+            container.innerHTML = '';
+            
+            const root = ReactDOM.createRoot(container);
+            const props: any = { title };
+            if (color) props.color = color;
+            
+            root.render(React.createElement(config.component, props));
+          }
+        },
+      },
+      view: {
+        onRender({ el, model }: any) {
+          const color = model.get('chart-color') || config.defaultColor;
+          const title = model.get('chart-title') || config.defaultTitle;
+          
+          const root = ReactDOM.createRoot(el);
+          const props: any = { title };
+          if (color) props.color = color;
+          
+          root.render(React.createElement(config.component, props));
+        },
+      },
+      isComponent: (el: any) => {
+        if (el.classList && el.classList.contains(`${config.id}-component`)) {
+          return { type: config.id };
+        }
+      },
+    });
+
+    // Add block to Block Manager
+    editor.BlockManager.add(config.id, {
+      label: config.label,
+      category: 'Charts',
+      content: { type: config.id },
+      media: config.icon,
+    });
+  };
+
+  // Helper function to register map component
+  const registerMapComponent = (editor: any, config: typeof mapConfig) => {
+    editor.Components.addType(config.id, {
+      model: {
+        defaults: {
+          tagName: 'div',
+          draggable: true,
+          droppable: false,
+          attributes: { class: `${config.id}-component` },
+          style: {
+            width: '100%',
+            'min-height': '450px',
+          },
+          'map-title': config.defaultTitle,
+          'map-latitude': config.defaultLatitude,
+          'map-longitude': config.defaultLongitude,
+          'map-zoom': 12,
+        },
+        init(this: any) {
+          const traits = this.get('traits');
+          traits.reset(config.traits);
+          this.on('change:map-title change:map-latitude change:map-longitude change:map-zoom', this.renderReactMap);
+        },
+        renderReactMap(this: any) {
+          const title = this.get('map-title') || config.defaultTitle;
+          const latitude = parseFloat(this.get('map-latitude')) || config.defaultLatitude;
+          const longitude = parseFloat(this.get('map-longitude')) || config.defaultLongitude;
+          const zoom = parseInt(this.get('map-zoom')) || 12;
           
           const view = this.getView();
           if (view && view.el) {
@@ -56,9 +217,11 @@ export const GrapesJsStudioEditor: React.FC = () => {
             
             const root = ReactDOM.createRoot(container);
             root.render(
-              React.createElement(LineChartComponent, {
-                color: color,
-                title: title,
+              React.createElement(config.component, {
+                title,
+                latitude,
+                longitude,
+                zoom,
               })
             );
           }
@@ -66,35 +229,36 @@ export const GrapesJsStudioEditor: React.FC = () => {
       },
       view: {
         onRender({ el, model }: any) {
-          const color = model.get('chart-color') || '#4CAF50';
-          const title = model.get('chart-title') || 'Sales Over Time';
+          const title = model.get('map-title') || config.defaultTitle;
+          const latitude = parseFloat(model.get('map-latitude')) || config.defaultLatitude;
+          const longitude = parseFloat(model.get('map-longitude')) || config.defaultLongitude;
+          const zoom = parseInt(model.get('map-zoom')) || 12;
           
           const root = ReactDOM.createRoot(el);
           root.render(
-            React.createElement(LineChartComponent, {
-              color: color,
-              title: title,
+            React.createElement(config.component, {
+              title,
+              latitude,
+              longitude,
+              zoom,
             })
           );
         },
       },
       isComponent: (el: any) => {
-        if (el.classList && el.classList.contains('line-chart-component')) {
-          return { type: 'line-chart' };
+        if (el.classList && el.classList.contains(`${config.id}-component`)) {
+          return { type: config.id };
         }
       },
     });
 
     // Add block to Block Manager
-    const blockManager = editor.BlockManager;
-    blockManager.add('line-chart', {
-      label: '📈 Line Chart',
-      category: 'Charts',
-      content: { type: 'line-chart' },
-      media: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3,13.5L2.25,12H7.5L6.9,10.5H9L11,16L13.5,2L15.5,10.5H22.5L23.25,12H17.5L16,8L14,16L12.5,10.5H10.5L9.5,13.5H3Z"/></svg>',
+    editor.BlockManager.add(config.id, {
+      label: config.label,
+      category: 'Maps',
+      content: { type: config.id },
+      media: config.icon,
     });
-
-    console.log('Line chart component added to Studio Editor');
   };
 
   return (
