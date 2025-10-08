@@ -358,6 +358,16 @@ const StatusBar = styled.div`
     border-radius: 50%;
     background: #4CAF50;
   }
+  
+  .diagram-type-badge {
+    padding: 4px 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
 `;
 
 /**
@@ -371,6 +381,7 @@ export const UMLBotWidget: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  const [currentDiagramType, setCurrentDiagramType] = useState<string>('ClassDiagram');
 
   // Services
   const [wsService] = useState(() => new WebSocketService());
@@ -392,10 +403,15 @@ export const UMLBotWidget: React.FC = () => {
     }
   }, [editor, dispatch, modelingService]);
 
-  // Update modeling service with current model
+  // Update modeling service with current model and detect diagram type
   useEffect(() => {
     if (modelingService && currentDiagram?.diagram?.model) {
       modelingService.updateCurrentModel(currentDiagram.diagram.model);
+      
+      // Detect and update diagram type
+      const detectedType = currentDiagram.diagram.model.type || 'ClassDiagram';
+      setCurrentDiagramType(detectedType);
+      console.log('📊 Current diagram type:', detectedType);
     }
   }, [modelingService, currentDiagram]);
 
@@ -413,9 +429,10 @@ export const UMLBotWidget: React.FC = () => {
             const welcomeMessage: ChatMessage = {
               id: uiService.generateId('msg'),
               action: 'agent_reply_str',
-              message: "🎨 Hello! I'm your Enhanced UML Assistant!\n\nI can help you:\n• ➕ Create classes and systems\n• ✏️ Modify existing elements\n• 🔗 Add relationships\n• 🎯 Apply design patterns\n\nWhat would you like to build today?",
+              message: `🎨 Hello! I'm your Enhanced UML Assistant!\n\nI can help you with:\n• ➕ **Class Diagrams** - Create classes, attributes, methods\n• 🔷 **Object Diagrams** - Define object instances\n• � **State Machine Diagrams** - Model state transitions\n• 🤖 **Agent Diagrams** - Design agent systems\n\n📊 Currently working on: **${currentDiagramType}**\n\nWhat would you like to build today?`,
               isUser: false,
-              timestamp: new Date()
+              timestamp: new Date(),
+              diagramType: currentDiagramType
             };
             setMessages(prev => [...prev, welcomeMessage]);
             setHasShownWelcome(true);
@@ -531,13 +548,14 @@ export const UMLBotWidget: React.FC = () => {
       action: 'user_message',
       message: inputValue,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
+      diagramType: currentDiagramType
     };
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Send message simply without context mode
-    const success = wsService.sendMessage(inputValue);
+    // Send message with diagram type
+    const success = wsService.sendMessage(inputValue, currentDiagramType);
 
     if (!success) {
       uiService.showToast('Failed to send message', 'error');
@@ -640,6 +658,9 @@ export const UMLBotWidget: React.FC = () => {
           <div className="status-left">
             <div className="connection-status"></div>
             <span>Connected • {wsService.connectionState}</span>
+            <div className="diagram-type-badge">
+              📊 {currentDiagramType.replace('Diagram', '')}
+            </div>
           </div>
           <span>{messages.length} messages</span>
         </StatusBar>

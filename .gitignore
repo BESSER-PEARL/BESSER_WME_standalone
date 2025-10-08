@@ -112,3 +112,4 @@ build
 ModelingAgent/venv/
 ModelingAgent/saved/
 ModelingAgent/config.ini
+ModelingAgent/diagram_handlers/__pycache__/

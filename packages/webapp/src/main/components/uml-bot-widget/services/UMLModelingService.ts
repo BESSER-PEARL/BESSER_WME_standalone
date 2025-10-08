@@ -1,6 +1,7 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { updateDiagramThunk } from '../../../services/diagram/diagramSlice';
 import type { AppDispatch } from '../../../store/store';
+import { ConverterFactory, DiagramType } from './converters';
 
 // Enhanced interfaces for better type safety
 export interface ClassSpec {
@@ -56,7 +57,7 @@ export interface ModelUpdate {
 
 export interface ApollonModel {
   version: string;
-  type: string;
+  type: string; // DiagramType: ClassDiagram, ObjectDiagram, StateMachineDiagram, AgentDiagram
   size: { width: number; height: number };
   elements: Record<string, any>;
   relationships: Record<string, any>;
@@ -67,11 +68,13 @@ export interface ApollonModel {
 /**
  * Service class for handling UML modeling operations
  * Centralizes all model manipulation logic
+ * Supports multiple diagram types: ClassDiagram, ObjectDiagram, StateMachineDiagram, AgentDiagram
  */
 export class UMLModelingService {
   private editor: any;
   private dispatch: AppDispatch;
   private currentModel: ApollonModel | null = null;
+  private currentDiagramType: string = 'ClassDiagram';
 
   constructor(editor: any, dispatch: AppDispatch) {
     this.editor = editor;
@@ -83,6 +86,15 @@ export class UMLModelingService {
    */
   updateCurrentModel(model: ApollonModel) {
     this.currentModel = model;
+    this.currentDiagramType = model.type || 'ClassDiagram';
+    console.log('📊 Updated model type:', this.currentDiagramType);
+  }
+
+  /**
+   * Get current diagram type
+   */
+  getCurrentDiagramType(): string {
+    return this.currentDiagramType;
   }
 
   /**
@@ -97,10 +109,10 @@ export class UMLModelingService {
       return this.editor.model;
     }
 
-    // Return default model structure
+    // Return default model structure with current diagram type
     return {
       version: "3.0.0",
-      type: "ClassDiagram",
+      type: this.currentDiagramType,
       size: { width: 1400, height: 740 },
       elements: {},
       relationships: {},
@@ -110,34 +122,38 @@ export class UMLModelingService {
   }
 
   /**
-   * Process a simple class specification
+   * Process a simple class specification - now supports all diagram types
    */
-  processSimpleClassSpec(spec: ClassSpec): ModelUpdate {
+  processSimpleClassSpec(spec: any, diagramType?: string): ModelUpdate {
     try {
-      const completeElement = this.createCompleteClassFromSpec(spec);
+      const type = (diagramType || this.currentDiagramType) as DiagramType;
+      const converter = ConverterFactory.getConverter(type);
+      const completeElement = converter.convertSingleElement(spec);
       
       return {
         type: 'single_element',
         data: completeElement,
-        message: `✨ Created ${spec.className} class with ${spec.attributes.length} attributes and ${spec.methods.length} methods`
+        message: `✨ Created element in ${type}`
       };
     } catch (error) {
-      console.error('Error processing simple class spec:', error);
-      throw new Error(`Failed to process class specification: ${error}`);
+      console.error('Error processing element spec:', error);
+      throw new Error(`Failed to process element specification: ${error}`);
     }
   }
 
   /**
-   * Process a complete system specification
+   * Process a complete system specification - now supports all diagram types
    */
-  processSystemSpec(systemSpec: SystemSpec): ModelUpdate {
+  processSystemSpec(systemSpec: any, diagramType?: string): ModelUpdate {
     try {
-      const completeSystem = this.createCompleteSystemFromSpec(systemSpec);
+      const type = (diagramType || this.currentDiagramType) as DiagramType;
+      const converter = ConverterFactory.getConverter(type);
+      const completeSystem = converter.convertCompleteSystem(systemSpec);
       
       return {
         type: 'complete_system',
         data: completeSystem,
-        message: `✨ Created ${systemSpec.systemName} system with ${systemSpec.classes.length} classes and ${systemSpec.relationships.length} relationships`
+        message: `✨ Created complete ${type} system`
       };
     } catch (error) {
       console.error('Error processing system spec:', error);
@@ -397,16 +413,37 @@ export class UMLModelingService {
    * Merge single element into existing model
    */
   private mergeElementIntoModel(currentModel: ApollonModel, elementData: any): ApollonModel {
-    const updatedElements = {
-      ...currentModel.elements,
-      [elementData.class.id]: elementData.class
-    };
-
-    // Add attributes
-    Object.assign(updatedElements, elementData.attributes);
+    const updatedElements = { ...currentModel.elements };
     
-    // Add methods
-    Object.assign(updatedElements, elementData.methods);
+    // Handle different diagram types - each has different main element
+    // ClassDiagram: class, attributes, methods
+    // ObjectDiagram: object, attributes
+    // StateMachineDiagram: state, bodies
+    // AgentDiagram: state/intent, bodies
+    
+    // Find the main element (the one without an owner)
+    const mainElement = elementData.class || elementData.object || elementData.state || 
+                       elementData.intent || elementData.initialNode;
+    
+    if (!mainElement) {
+      throw new Error('No main element found in elementData');
+    }
+    
+    // Add main element
+    updatedElements[mainElement.id] = mainElement;
+
+    // Add child elements (attributes, methods, bodies, etc.)
+    if (elementData.attributes) {
+      Object.assign(updatedElements, elementData.attributes);
+    }
+    
+    if (elementData.methods) {
+      Object.assign(updatedElements, elementData.methods);
+    }
+    
+    if (elementData.bodies) {
+      Object.assign(updatedElements, elementData.bodies);
+    }
 
     return {
       ...currentModel,
@@ -553,7 +590,7 @@ export class UMLModelingService {
     
     return {
       version: "3.0.0",
-      type: "ClassDiagram",
+      type: this.currentDiagramType, // Use current diagram type instead of hardcoded
       size: { width: 1400, height: 740 },
       elements: allElements,
       relationships: allRelationships,

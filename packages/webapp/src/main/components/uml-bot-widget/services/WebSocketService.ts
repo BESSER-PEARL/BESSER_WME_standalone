@@ -9,11 +9,13 @@ export interface ChatMessage {
   message: string | object;
   isUser: boolean;
   timestamp: Date;
+  diagramType?: string; // Track which diagram type this message relates to
 }
 
 export interface BotResponse {
   action: string;
   message: string | object;
+  diagramType?: string;
 }
 
 export interface InjectionCommand {
@@ -23,6 +25,7 @@ export interface InjectionCommand {
   modification?: any;
   model?: any;
   message: string;
+  diagramType?: string; // Diagram type for context
 }
 
 export type MessageHandler = (message: ChatMessage) => void;
@@ -108,9 +111,9 @@ export class WebSocketService {
   }
 
   /**
-   * Send message to bot
+   * Send message to bot with diagram type
    */
-  sendMessage(message: string): boolean {
+  sendMessage(message: string, diagramType?: string): boolean {
     if (!this.isConnected || !this.ws) {
       console.warn('⚠️ WebSocket not connected, queuing message');
       this.messageQueue.push(message);
@@ -118,11 +121,19 @@ export class WebSocketService {
     }
 
     try {
+      const type = diagramType || 'ClassDiagram';
+      
+      // Embed diagram type as a prefix that the bot can parse
+      // Format: [DIAGRAM_TYPE:AgentDiagram] actual message
+      const prefixedMessage = `[DIAGRAM_TYPE:${type}] ${message}`;
+      
       const payload = {
         action: 'user_message',
-        message: message
+        message: prefixedMessage,
+        diagramType: type // Keep this for backward compatibility
       };
 
+      console.log('📤 Sending message with diagram type:', type);
       this.ws.send(JSON.stringify(payload));
       
       // Show typing indicator
@@ -136,9 +147,9 @@ export class WebSocketService {
   }
 
   /**
-   * Send model context to bot (new feature)
+   * Send model context to bot with diagram type (new feature)
    */
-  sendModelContext(model: any, message: string): boolean {
+  sendModelContext(model: any, message: string, diagramType?: string): boolean {
     if (!this.isConnected || !this.ws) {
       console.warn('⚠️ WebSocket not connected, cannot send model context');
       return false;
@@ -149,12 +160,14 @@ export class WebSocketService {
       // The bot will parse this and extract both message and context
       const contextMessage = JSON.stringify({
         message: message,
-        currentModel: model
+        currentModel: model,
+        diagramType: diagramType || 'ClassDiagram'
       });
 
       const payload = {
         action: 'user_message',
-        message: contextMessage
+        message: contextMessage,
+        diagramType: diagramType || 'ClassDiagram'
       };
 
       this.ws.send(JSON.stringify(payload));

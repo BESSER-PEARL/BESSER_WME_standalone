@@ -26,5 +26,8 @@ export type {
 export { UIService } from './UIService';
 export type { MessageDisplayConfig } from './UIService';
 
+export { ConverterFactory } from './converters';
+export type { DiagramType, DiagramConverter } from './converters';
+
 // Re-export commonly used types for convenience
 export type { AppDispatch } from '../../../store/store';
