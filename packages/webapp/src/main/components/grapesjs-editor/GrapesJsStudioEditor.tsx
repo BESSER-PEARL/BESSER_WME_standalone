@@ -273,7 +273,20 @@ export const GrapesJsStudioEditor: React.FC = () => {
             autosave: true,
             autoload: true,
           },
-          plugins: [canvasAbsoluteMode],
+          plugins: [
+            canvasAbsoluteMode.init({
+          globalAbsolute: false,
+    
+          // This is the default behavior when globalAbsolute is false
+          enableAbsolute: ({ component }) => {
+            const cmpEl = component.getEl();
+            if (cmpEl && getComputedStyle(cmpEl).position === 'absolute') {
+              return true;
+            }
+            return false;
+          }
+        })
+          ],
           devices: {
             default: [
               { id: 'desktop', name: 'Desktop', width: '' },
