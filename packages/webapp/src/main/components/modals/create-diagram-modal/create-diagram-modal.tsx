@@ -25,7 +25,7 @@ const diagramNamesMap: { [key in UMLDiagramType]: string } = {
   SyntaxTree: 'Syntax Tree',
   Flowchart: 'Flowchart',
   BPMN: 'BPMN Diagram',
-  UserDiagram: 'User Diagram',
+  //UserDiagram: 'User Diagram',
 };
 
 // Commenting out behavioral diagrams
