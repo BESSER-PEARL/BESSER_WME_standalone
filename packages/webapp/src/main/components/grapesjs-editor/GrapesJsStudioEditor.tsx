@@ -131,13 +131,93 @@ function setupAbsolutePositioning(editor: Editor) {
       if (component) {
         const currentPosition = component.getStyle().position;
         if (currentPosition === 'absolute') {
-          component.setStyle({ position: 'relative', top: 'auto', left: 'auto' });
+          // Disable absolute positioning
+          component.setStyle({ 
+            position: 'relative', 
+            top: 'auto', 
+            left: 'auto',
+            right: 'auto',
+            bottom: 'auto'
+          });
         } else {
-          component.setStyle({ position: 'absolute', top: '0px', left: '0px' });
+          // Enable absolute positioning - preserve current visual position
+          const el = component.getEl();
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const parent = el.parentElement;
+            if (parent) {
+              const parentRect = parent.getBoundingClientRect();
+              const top = rect.top - parentRect.top;
+              const left = rect.left - parentRect.left;
+              component.setStyle({ 
+                position: 'absolute', 
+                top: `${top}px`, 
+                left: `${left}px` 
+              });
+            } else {
+              component.setStyle({ 
+                position: 'absolute', 
+                top: '0px', 
+                left: '0px' 
+              });
+            }
+          } else {
+            component.setStyle({ 
+              position: 'absolute', 
+              top: '0px', 
+              left: '0px' 
+            });
+          }
         }
+        
+        // Update the view
+        component.view.render();
       }
     },
   });
+  
+  // Make wrapper support absolute positioning
+  editor.on('load', () => {
+    const wrapper = editor.getWrapper();
+    if (wrapper) {
+      wrapper.setStyle({ 
+        position: 'relative',
+        minHeight: '100vh'
+      });
+    }
+  });
+  
+  // Add CSS for better absolute positioning support
+  const absPositionStyle = document.createElement('style');
+  absPositionStyle.textContent = `
+    /* Ensure canvas frame supports absolute positioning */
+    .gjs-cv-canvas__frames > iframe {
+      min-height: 100vh;
+    }
+    
+    /* Better visual feedback for absolute positioned elements */
+    .gjs-cv-canvas [data-gjs-type] {
+      position: relative;
+    }
+    
+    /* Show positioning handles when element is absolute */
+    .gjs-selected[style*="position: absolute"]::before,
+    .gjs-selected[style*="position:absolute"]::before {
+      content: "📐 Absolute Position";
+      position: absolute;
+      top: -25px;
+      left: 0;
+      background: #667eea;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+  `;
+  document.head.appendChild(absPositionStyle);
 }
 
 // Helper: Setup custom commands (export and JSON only)
