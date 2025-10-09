@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ChartConfig } from '../configs/chartConfigs';
-import { getAttributeOptionsByClassId, getEndsByClassId } from '../diagram-helpers';
+import { getAttributeOptionsByClassId, getEndsByClassId, getClassOptions } from '../diagram-helpers';
 
 /**
  * Register a chart component in the GrapesJS editor
@@ -27,6 +27,14 @@ export const registerChartComponent = (editor: any, config: ChartConfig) => {
         const traits = this.get('traits');
         traits.reset(config.traits);
         this.on('change:chart-color change:chart-title', this.renderReactChart);
+
+        // Update data-source trait with fresh class options (called dynamically when component is initialized)
+        const dataSourceTrait = traits.where({ name: 'data-source' })[0];
+        if (dataSourceTrait) {
+          const classOptions = getClassOptions();
+          console.log('📊 Chart Component - Loading class options:', classOptions);
+          dataSourceTrait.set('options', classOptions);
+        }
 
         // Helper to update label_field and data_field options
         const updateFieldOptions = (classId: string) => {

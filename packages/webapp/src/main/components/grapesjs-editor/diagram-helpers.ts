@@ -3,10 +3,22 @@ import { ProjectStorageRepository } from '../../services/storage/ProjectStorageR
 export function getClassOptions(): { value: string; label: string }[] {
   const currentProject = ProjectStorageRepository.getCurrentProject();
   const classDiagram = currentProject?.diagrams?.ClassDiagram?.model || null;
-  if (!classDiagram || !classDiagram.elements) return [];
-  return Object.values(classDiagram.elements)
+  
+  console.log('🔍 diagram-helpers - Getting class options');
+  console.log('  Current project:', currentProject ? '✅ Loaded' : '❌ Not loaded');
+  console.log('  Class diagram:', classDiagram ? '✅ Available' : '❌ Not available');
+  
+  if (!classDiagram || !classDiagram.elements) {
+    console.warn('⚠️ No class diagram elements found');
+    return [];
+  }
+  
+  const classes = Object.values(classDiagram.elements)
     .filter((element: any) => element.type === 'Class')
     .map((element: any) => ({ value: element.id, label: element.name }));
+  
+  console.log('  Classes found:', classes.length, classes);
+  return classes;
 }
 
 export function getAttributeOptionsByClassId(classId: string): { value: string; label: string }[] {

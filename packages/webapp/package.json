@@ -15,8 +15,11 @@
     "node": ">=22.10.0"
   },
   "dependencies": {
-    "@grapesjs/studio-sdk": "^1.0.56",
-    "@grapesjs/studio-sdk-plugins": "^1.0.29",
+    "grapesjs": "^0.21.13",
+    "grapesjs-blocks-basic": "^1.0.2",
+    "grapesjs-preset-webpage": "^1.0.3",
+    "grapesjs-custom-code": "^1.0.1",
+    "grapesjs-style-bg": "^2.0.1",
     "@reduxjs/toolkit": "2.2.7",
     "@sentry/react": "8.38.0",
     "bootstrap": "5.3.3",
