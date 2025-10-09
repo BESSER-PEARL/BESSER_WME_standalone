@@ -1,13 +1,23 @@
 import { UMLDiagramType, UMLModel } from '@besser/wme';
 
 // Supported diagram types in projects
-export type SupportedDiagramType = 'ClassDiagram' | 'ObjectDiagram' | 'StateMachineDiagram' | 'AgentDiagram';
+export type SupportedDiagramType = 'ClassDiagram' | 'ObjectDiagram' | 'StateMachineDiagram' | 'AgentDiagram' | 'GUINoCodeDiagram';
+
+// GrapesJS project data structure
+export interface GrapesJSProjectData {
+  pages: any[];
+  styles: any[];
+  assets: any[];
+  symbols: any[];
+  version: string;
+}
 
 // Diagram structure within a project
 export interface ProjectDiagram {
   id: string;
   title: string;
   model?: UMLModel;
+  grapesJsData?: GrapesJSProjectData; // For GUI/No-Code diagram
   lastUpdate: string;
   description?: string;
 }
@@ -26,6 +36,7 @@ export interface BesserProject {
     ObjectDiagram: ProjectDiagram;
     StateMachineDiagram: ProjectDiagram;
     AgentDiagram: ProjectDiagram;
+    GUINoCodeDiagram: ProjectDiagram;
   };
   settings: {
     defaultDiagramType: SupportedDiagramType;
@@ -51,7 +62,7 @@ export const toSupportedDiagramType = (type: UMLDiagramType): SupportedDiagramTy
 };
 
 // Helper to convert SupportedDiagramType to UMLDiagramType
-export const toUMLDiagramType = (type: SupportedDiagramType): UMLDiagramType => {
+export const toUMLDiagramType = (type: SupportedDiagramType): UMLDiagramType | null => {
   switch (type) {
     case 'ClassDiagram':
       return UMLDiagramType.ClassDiagram;
@@ -61,24 +72,47 @@ export const toUMLDiagramType = (type: SupportedDiagramType): UMLDiagramType => 
       return UMLDiagramType.StateMachineDiagram;
     case 'AgentDiagram':
       return UMLDiagramType.AgentDiagram;
+    case 'GUINoCodeDiagram':
+      return null; // GUINoCodeDiagram doesn't have a UML diagram type
+    default:
+      return null;
   }
 };
 
 // Default diagram factory
-export const createEmptyDiagram = (title: string, type: UMLDiagramType): ProjectDiagram => ({
-  id: crypto.randomUUID(),
-  title,
-  model: {
-    version: '3.0.0' as const,
-    type,
-    size: { width: 1400, height: 740 },
-    elements: {},
-    relationships: {},
-    interactive: { elements: {}, relationships: {} },
-    assessments: {},
-  },
-  lastUpdate: new Date().toISOString(),
-});
+export const createEmptyDiagram = (title: string, type: UMLDiagramType | null): ProjectDiagram => {
+  // For GUI/No-Code diagram
+  if (type === null) {
+    return {
+      id: crypto.randomUUID(),
+      title,
+      grapesJsData: {
+        pages: [],
+        styles: [],
+        assets: [],
+        symbols: [],
+        version: '0.21.13',
+      },
+      lastUpdate: new Date().toISOString(),
+    };
+  }
+  
+  // For UML diagrams
+  return {
+    id: crypto.randomUUID(),
+    title,
+    model: {
+      version: '3.0.0' as const,
+      type,
+      size: { width: 1400, height: 740 },
+      elements: {},
+      relationships: {},
+      interactive: { elements: {}, relationships: {} },
+      assessments: {},
+    },
+    lastUpdate: new Date().toISOString(),
+  };
+};
 
 // Default project factory
 export const createDefaultProject = (
@@ -101,6 +135,7 @@ export const createDefaultProject = (
       ObjectDiagram: createEmptyDiagram('Object Diagram', UMLDiagramType.ObjectDiagram),
       StateMachineDiagram: createEmptyDiagram('State Machine Diagram', UMLDiagramType.StateMachineDiagram),
       AgentDiagram: createEmptyDiagram('Agent Diagram', UMLDiagramType.AgentDiagram),
+      GUINoCodeDiagram: createEmptyDiagram('GUI / No-Code Editor', null),
     },
     settings: {
       defaultDiagramType: 'ClassDiagram',
@@ -121,5 +156,6 @@ export const isProject = (obj: any): obj is BesserProject => {
          obj.diagrams.ClassDiagram &&
          obj.diagrams.ObjectDiagram &&
          obj.diagrams.StateMachineDiagram &&
-         obj.diagrams.AgentDiagram;
+         obj.diagrams.AgentDiagram &&
+         obj.diagrams.GUINoCodeDiagram;
 };

@@ -59,12 +59,16 @@ export const loadProjectThunk = createAsyncThunk(
         lastUpdate: currentDiagram.lastUpdate,
       };
       
-      // Update the diagram slice
-      console.log('Syncing project load to diagram slice...');
-      dispatch(changeDiagramType(diagramType));
-      dispatch(loadDiagram(compatibleDiagram));
-      dispatch(setCreateNewEditor(true));
-      console.log('Successfully synced project load');
+      // Update the diagram slice (only for UML diagrams, skip GUINoCodeDiagram)
+      if (diagramType !== null) {
+        console.log('Syncing project load to diagram slice...');
+        dispatch(changeDiagramType(diagramType));
+        dispatch(loadDiagram(compatibleDiagram));
+        dispatch(setCreateNewEditor(true));
+        console.log('Successfully synced project load');
+      } else {
+        console.log('Skipping diagram sync for non-UML diagram type:', project.currentDiagramType);
+      }
     } catch (error) {
       console.warn('Could not sync to diagram slice:', error);
     }
@@ -93,12 +97,16 @@ export const createProjectThunk = createAsyncThunk(
         lastUpdate: currentDiagram.lastUpdate,
       };
       
-      // Update the diagram slice
-      console.log('Syncing project creation to diagram slice...');
-      dispatch(changeDiagramType(diagramType));
-      dispatch(loadDiagram(compatibleDiagram));
-      dispatch(setCreateNewEditor(true));
-      console.log('Successfully synced project creation');
+      // Update the diagram slice (only for UML diagrams, skip GUINoCodeDiagram)
+      if (diagramType !== null) {
+        console.log('Syncing project creation to diagram slice...');
+        dispatch(changeDiagramType(diagramType));
+        dispatch(loadDiagram(compatibleDiagram));
+        dispatch(setCreateNewEditor(true));
+        console.log('Successfully synced project creation');
+      } else {
+        console.log('Skipping diagram sync for non-UML diagram type:', project.currentDiagramType);
+      }
     } catch (error) {
       console.warn('Could not sync to diagram slice:', error);
     }

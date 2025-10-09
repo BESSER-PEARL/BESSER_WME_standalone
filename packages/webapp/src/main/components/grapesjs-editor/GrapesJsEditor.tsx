@@ -13,32 +13,28 @@ import { registerMapComponent } from './component-registrars/registerMapComponen
 import { registerButtonComponent } from './component-registrars/registerButtonComponent';
 import { setupPageSystem, loadDefaultPages } from './setup/setupPageSystem';
 import { setupLayoutBlocks } from './setup/setupLayoutBlocks';
+import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
 
-export const GrapesJsStudioEditor: React.FC = () => {
+export const GrapesJsEditor: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Initialize GrapesJS editor with default UI
+    // Initialize GrapesJS editor with project storage integration
     const editor = grapesjs.init({
       container: containerRef.current,
       height: '100vh',
       width: 'auto',
       fromElement: false,
       
-      // Storage configuration
+      // Storage configuration - integrate with ProjectStorageRepository
       storageManager: {
-        type: 'local',
+        type: 'remote',
         autosave: true,
         autoload: true,
         stepsBeforeSave: 1,
-        options: {
-          local: {
-            key: 'gjsProject'
-          }
-        }
       },
 
       // Plugins
@@ -69,6 +65,9 @@ export const GrapesJsStudioEditor: React.FC = () => {
     // Store editor reference
     editorRef.current = editor;
     (window as any).editor = editor;
+
+    // Setup custom storage manager to use ProjectStorageRepository
+    setupProjectStorageIntegration(editor);
 
     // Setup absolute positioning support
     setupAbsolutePositioning(editor);
@@ -108,6 +107,57 @@ export const GrapesJsStudioEditor: React.FC = () => {
     <div ref={containerRef} id="gjs"></div>
   );
 };
+
+// Helper: Setup ProjectStorageRepository integration
+function setupProjectStorageIntegration(editor: Editor) {
+  const sm = editor.StorageManager;
+  
+  // Custom storage implementation
+  sm.add('remote', {
+    async load() {
+      try {
+        const project = ProjectStorageRepository.getCurrentProject();
+        if (project && project.diagrams.GUINoCodeDiagram.grapesJsData) {
+          console.log('📦 Loading GrapesJS data from project storage');
+          return project.diagrams.GUINoCodeDiagram.grapesJsData;
+        }
+        console.log('📦 No existing GrapesJS data found, starting fresh');
+        return {};
+      } catch (error) {
+        console.error('Error loading from project storage:', error);
+        return {};
+      }
+    },
+    
+    async store(data: any) {
+      try {
+        const project = ProjectStorageRepository.getCurrentProject();
+        if (project) {
+          // Update the GUINoCodeDiagram with GrapesJS data
+          const updated = ProjectStorageRepository.updateDiagram(
+            project.id,
+            'GUINoCodeDiagram',
+            {
+              ...project.diagrams.GUINoCodeDiagram,
+              grapesJsData: data,
+              lastUpdate: new Date().toISOString(),
+            }
+          );
+          
+          if (updated) {
+            console.log('💾 GrapesJS data saved to project storage');
+          } else {
+            console.error('Failed to save GrapesJS data');
+          }
+        } else {
+          console.warn('No active project found, cannot save GrapesJS data');
+        }
+      } catch (error) {
+        console.error('Error saving to project storage:', error);
+      }
+    },
+  });
+}
 
 // Helper: Setup absolute positioning support
 function setupAbsolutePositioning(editor: Editor) {

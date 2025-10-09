@@ -1,1 +1,1 @@
-export { GrapesJsStudioEditor } from './GrapesJsStudioEditor';
+export { GrapesJsEditor } from './GrapesJsEditor';

@@ -45,7 +45,10 @@ const getInitialEditorOptions = (): EditorOptions => {
     const currentProject = ProjectStorageRepository.getCurrentProject();
     if (currentProject) {
       const diagramType = toUMLDiagramType(currentProject.currentDiagramType);
-      editorOptions.type = diagramType;
+      // Only set type if it's a UML diagram (not GUINoCodeDiagram which returns null)
+      if (diagramType !== null) {
+        editorOptions.type = diagramType;
+      }
       return editorOptions;
     }
   } catch (error) {
