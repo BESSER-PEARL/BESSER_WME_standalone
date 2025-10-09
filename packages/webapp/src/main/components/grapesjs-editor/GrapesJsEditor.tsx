@@ -95,6 +95,14 @@ export const GrapesJsEditor: React.FC = () => {
     // Register button component with link functionality
     registerButtonComponent(editor);
 
+    // ✅ NOW load storage - after everything is initialized
+    editor.on('load', () => {
+      console.log('🚀 Editor loaded, now loading stored data...');
+      editor.StorageManager.load((data: any) => {
+        console.log('📦 Stored data loaded successfully');
+      });
+    });
+
     // Cleanup on unmount
     return () => {
       if (editorRef.current) {

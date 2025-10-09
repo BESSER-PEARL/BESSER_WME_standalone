@@ -22,6 +22,10 @@ export const registerChartComponent = (editor: any, config: ChartConfig) => {
         },
         'chart-color': config.defaultColor,
         'chart-title': config.defaultTitle,
+        // ✅ Initialize trait values as component attributes (for serialization)
+        'data-source': '',
+        'label_field': '',
+        'data_field': '',
       },
       init(this: any) {
         const traits = this.get('traits');
