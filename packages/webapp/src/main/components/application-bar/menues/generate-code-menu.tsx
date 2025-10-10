@@ -241,6 +241,7 @@ export const GenerateCodeMenu: React.FC = () => {
               <Dropdown.Menu>
                 <Dropdown.Item onClick={() => handleGenerateCode('django')}>Django Project</Dropdown.Item>
                 <Dropdown.Item onClick={() => handleGenerateCode('backend')}>Full Backend</Dropdown.Item>
+                <Dropdown.Item onClick={() => handleGenerateCode('react')}>React + TS</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
 
