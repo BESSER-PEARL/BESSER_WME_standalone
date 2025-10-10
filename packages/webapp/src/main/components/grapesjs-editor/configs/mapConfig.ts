@@ -20,7 +20,7 @@ export interface MapConfig {
 // Map configuration
 export const mapConfig: MapConfig = {
   id: 'map',
-  label: '🗺️ Map',
+  label: 'Map',
   component: MapComponent,
   defaultTitle: 'Location Map',
   defaultLatitude: 40.7128,

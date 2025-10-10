@@ -30,12 +30,12 @@ export interface ChartConfig {
 export const chartConfigs: ChartConfig[] = [
   {
     id: 'line-chart',
-    label: '📈 Line Chart',
+    label: 'Line Chart',
     component: LineChartComponent,
     defaultColor: '#4CAF50',
     defaultTitle: 'Sales Over Time',
     dataSource: '',
-    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3,13.5L2.25,12H7.5L6.9,10.5H9L11,16L13.5,2L15.5,10.5H22.5L23.25,12H17.5L16,8L14,16L12.5,10.5H10.5L9.5,13.5H3Z"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3 3v18h18v-2H5V3H3zm2 12l3-4 3 3 5-6 4 5v2l-4-5-5 6-3-3-3 4z"/></svg>',
     traits: [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#4CAF50', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Sales Over Time', changeProp: 1 },
@@ -46,7 +46,7 @@ export const chartConfigs: ChartConfig[] = [
   },
   {
     id: 'bar-chart',
-    label: '📊 Bar Chart',
+    label: 'Bar Chart',
     component: BarChartComponent,
     defaultColor: '#3498db',
     defaultTitle: 'Revenue by Category',
@@ -62,7 +62,7 @@ export const chartConfigs: ChartConfig[] = [
   },
   {
     id: 'pie-chart',
-    label: '🥧 Pie Chart',
+    label: 'Pie Chart',
     component: PieChartComponent,
     defaultColor: '',
     defaultTitle: 'Traffic Distribution',
@@ -77,12 +77,12 @@ export const chartConfigs: ChartConfig[] = [
   },
   {
     id: 'radar-chart',
-    label: '🎯 Radar Chart',
+    label: 'Radar Chart',
     component: RadarChartComponent,
     defaultColor: '#8884d8',
     defaultTitle: 'Performance Metrics',
     dataSource: '',
-    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,2L14.5,9.5L22,12L14.5,14.5L12,22L9.5,14.5L2,12L9.5,9.5L12,2M12,5.5L10.6,10.6L5.5,12L10.6,13.4L12,18.5L13.4,13.4L18.5,12L13.4,10.6L12,5.5Z"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="12" x2="12" y2="3"/><line x1="12" y1="12" x2="20" y2="8"/><line x1="12" y1="12" x2="17" y2="20"/><line x1="12" y1="12" x2="7" y2="20"/><line x1="12" y1="12" x2="4" y2="8"/><polygon points="12,6 17.5,9.5 15,16 9,16 6.5,9.5"/></g></svg>',
     traits: [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#8884d8', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Performance Metrics', changeProp: 1 },
@@ -93,12 +93,12 @@ export const chartConfigs: ChartConfig[] = [
   },
   {
     id: 'radial-bar-chart',
-    label: '⭕ Radial Bar Chart',
+    label: 'Radial Bar Chart',
     component: RadialBarChartComponent,
     defaultColor: '',
     defaultTitle: 'Customer Satisfaction',
     dataSource: '',
-    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3"/></g></svg>',
     traits: [
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Customer Satisfaction', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
