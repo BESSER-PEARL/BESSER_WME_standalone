@@ -6,7 +6,7 @@
 }
 
 .gjs-two-color {
-  color: #ddd;
+  color: #ffffff !important;
 }
 
 .gjs-three-bg {
@@ -16,7 +16,7 @@
 
 .gjs-four-color,
 .gjs-four-color-h:hover {
-  color: #fff;
+  color: #fff !important;
 }
 
 /* Make blocks with SVG media smaller to match Font Awesome icon blocks */
@@ -220,4 +220,21 @@
 
 .gs-utl-grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+
+/* Universal GrapesJS Editor Background - force gray everywhere */
+.gjs-editor-cont,
+.gjs-editor,
+.gjs-cv-canvas,
+.gjs-pn-panel,
+.gjs-mdl-dialog,
+.gjs-blocks-cs,
+.gjs-block,
+.gjs-clm-tags,
+.gjs-sm-sectors,
+.sp-container,
+.gjs-pn-panel.gjs-pn-commands,
+.gjs-one-bg {
+  background-color: #727171 !important;
 }
