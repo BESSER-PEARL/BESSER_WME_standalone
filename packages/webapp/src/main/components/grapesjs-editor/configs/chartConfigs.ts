@@ -40,8 +40,8 @@ export const chartConfigs: ChartConfig[] = [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#4CAF50', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Sales Over Time', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label_field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data_field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
     ],
   },
   {
@@ -56,8 +56,8 @@ export const chartConfigs: ChartConfig[] = [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#3498db', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Revenue by Category', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label_field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data_field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
     ],
   },
   {
@@ -71,8 +71,8 @@ export const chartConfigs: ChartConfig[] = [
     traits: [
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Traffic Distribution', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label_field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data_field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
     ],
   },
   {
@@ -87,8 +87,8 @@ export const chartConfigs: ChartConfig[] = [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#8884d8', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Performance Metrics', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label_field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data_field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
     ],
   },
   {
@@ -102,8 +102,8 @@ export const chartConfigs: ChartConfig[] = [
     traits: [
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Customer Satisfaction', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label_field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data_field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
     ],
   },
 ];
