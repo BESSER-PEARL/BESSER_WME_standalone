@@ -89,7 +89,7 @@ export const createEmptyDiagram = (title: string, type: UMLDiagramType | null): 
       grapesJsData: {
         pages: [
           {
-            name: 'Main page',
+            name: 'Home',
             styles: '',
             component: '',
           },
