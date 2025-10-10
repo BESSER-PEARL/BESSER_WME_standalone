@@ -18,7 +18,7 @@ export function setupPageSystem(editor: Editor) {
         const pagesPanel = document.createElement('div');
         pagesPanel.id = 'pages-panel';
         pagesPanel.className = 'gs-studio-panel gs-panel-pages';
-        pagesPanel.style.cssText = 'display: none; flex-grow: 1; border-bottom-width: 1px; overflow: hidden;';
+        pagesPanel.style.cssText = 'display: block; flex-grow: 1; border-bottom-width: 1px; overflow: hidden;';
         
         pagesPanel.innerHTML = `
           <div class="gs-block-manager gs-utl-overflow-hidden gs-utl-flex-nowrap gs-utl-gap-2 gs-utl-flex gs-utl-flex-col gs-utl-h-full gs-utl-flex-wrap">
@@ -101,13 +101,20 @@ export function setupPageSystem(editor: Editor) {
             title: 'Pages',
           },
           command: 'show-pages',
-          active: false,
+          active: true, // Make it active by default
           label: `<svg style="display: block; max-width:22px" viewBox="0 0 24 24">
             <path fill="currentColor" d="M19,5V7H15V5M9,5V11H5V5M19,13V19H15V13M9,17V19H5V17M21,3H13V9H21M11,3H3V13H11M21,11H13V21H21M11,15H3V21H11Z"></path>
           </svg>`,
         } as any);
         
         console.log('Pages button added:', pagesButton);
+        
+        // Trigger the command to show pages panel by default
+        setTimeout(() => {
+          editor.runCommand('show-pages');
+          // Force update pages list to show all pages
+          updatePagesList(editor);
+        }, 500);
         
         // Initial update
         updatePagesList(editor);
@@ -122,16 +129,19 @@ export function setupPageSystem(editor: Editor) {
     run(editor: Editor) {
       console.log('show-pages command triggered');
       
-      // Hide all other panels
-      const panels = document.querySelectorAll('.gjs-pn-views-container > div');
-      console.log('Found panels:', panels.length);
-      
-      panels.forEach((panel: any) => {
-        if (panel.id !== 'pages-panel') {
-          panel.style.display = 'none';
-          console.log('Hiding panel:', panel.id || panel.className);
-        }
-      });
+      // Hide all other panels in views container
+      const viewsContainer = document.querySelector('.gjs-pn-views-container');
+      if (viewsContainer) {
+        const panels = viewsContainer.querySelectorAll(':scope > div, :scope > .gjs-pn-views');
+        console.log('Found panels:', panels.length);
+        
+        panels.forEach((panel: any) => {
+          if (panel.id !== 'pages-panel') {
+            panel.style.display = 'none';
+            console.log('Hiding panel:', panel.id || panel.className);
+          }
+        });
+      }
       
       // Show pages panel
       const pagesPanel = document.getElementById('pages-panel');
@@ -147,10 +157,7 @@ export function setupPageSystem(editor: Editor) {
     },
     stop(editor: Editor) {
       console.log('show-pages command stopped');
-      const pagesPanel = document.getElementById('pages-panel');
-      if (pagesPanel) {
-        pagesPanel.style.display = 'none';
-      }
+      // Don't hide the panel when stopped, let it stay visible
     },
   });
 
@@ -435,6 +442,7 @@ export function setupPageSystem(editor: Editor) {
     setTimeout(() => {
       updatePagesSelect(editor);
       updatePagesList(editor);
+      console.log('Updated pages list after add/remove, total pages:', editor.Pages.getAll().length);
     }, 100);
   });
 
@@ -452,10 +460,24 @@ export function setupPageSystem(editor: Editor) {
       console.log(`  Page ${idx + 1}: "${pageName}" - Has content: ${hasContent}`);
     });
     
-    // Only load defaults if truly no pages exist
-    if (existingPages.length === 0) {
-      console.log('No pages found, loading default pages...');
+    // Check if we only have the default GrapesJS page (usually just 1 empty page)
+    const hasOnlyDefaultPage = existingPages.length === 1 && !existingPages[0].get('name');
+    
+    // Load default pages if no pages exist OR only the default empty page exists
+    if (existingPages.length === 0 || hasOnlyDefaultPage) {
+      console.log('Loading default pages (Home, About, Contact)...');
+      
+      // Remove the default page if it exists
+      if (hasOnlyDefaultPage) {
+        pagesManager.remove(existingPages[0]);
+      }
+      
       loadDefaultPages(editor);
+      
+      // Force update pages list after a delay to ensure it's visible
+      setTimeout(() => {
+        updatePagesList(editor);
+      }, 300);
     } else {
       console.log('Pages already exist, using existing pages');
       // Make sure first page is selected
@@ -537,6 +559,8 @@ export function setupPageSystem(editor: Editor) {
  * Load default pages (Home, About, Contact)
  */
 export function loadDefaultPages(editor: Editor) {
+  console.log('Creating default pages: Home, About, Contact');
+  
   const defaultPages = [
     {
       name: 'Home',
@@ -596,7 +620,8 @@ export function loadDefaultPages(editor: Editor) {
   ];
 
   defaultPages.forEach(page => {
-    editor.Pages.add(page);
+    const newPage = editor.Pages.add(page);
+    console.log('Added page:', page.name, newPage);
   });
 
   // Select first page
@@ -604,5 +629,6 @@ export function loadDefaultPages(editor: Editor) {
   const firstPage = allPages[0];
   if (firstPage) {
     editor.Pages.select(firstPage);
+    console.log('Selected first page:', firstPage.getName());
   }
 }

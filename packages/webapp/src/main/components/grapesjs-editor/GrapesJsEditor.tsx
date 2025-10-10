@@ -142,7 +142,11 @@ export const GrapesJsEditor: React.FC = () => {
     editor.on('load', () => {
       console.log('🚀 Editor loaded, now loading stored data...');
       editor.StorageManager.load((data: any) => {
-        console.log('📦 Stored data loaded successfully');
+        if (data && Object.keys(data).length > 0) {
+          console.log('📦 Stored data loaded successfully');
+        } else {
+          console.log('📦 No stored data, editor will use default pages');
+        }
       });
     });
 
@@ -170,7 +174,16 @@ function setupProjectStorageIntegration(editor: Editor) {
         const project = ProjectStorageRepository.getCurrentProject();
         if (project && project.diagrams.GUINoCodeDiagram.grapesJsData) {
           console.log('📦 Loading GrapesJS data from project storage');
-          return project.diagrams.GUINoCodeDiagram.grapesJsData;
+          const data = project.diagrams.GUINoCodeDiagram.grapesJsData;
+          
+          // Check if the loaded data has pages, if not, don't load it
+          // This prevents overwriting default pages with empty data
+          if (data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
+            return data;
+          } else {
+            console.log('📦 Stored data has no pages, keeping default pages');
+            return {}; // Return empty to keep default pages
+          }
         }
         console.log('📦 No existing GrapesJS data found, starting fresh');
         return {};
