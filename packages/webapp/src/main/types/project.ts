@@ -87,7 +87,13 @@ export const createEmptyDiagram = (title: string, type: UMLDiagramType | null): 
       id: crypto.randomUUID(),
       title,
       grapesJsData: {
-        pages: [],
+        pages: [
+          {
+            name: 'Main page',
+            styles: '',
+            component: '',
+          },
+        ],
         styles: [],
         assets: [],
         symbols: [],
