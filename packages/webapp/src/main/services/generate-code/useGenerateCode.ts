@@ -4,6 +4,7 @@ import { useFileDownload } from '../file-download/useFileDownload';
 import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
+import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
 
 // Add type definitions
 export interface DjangoConfig {
@@ -60,6 +61,23 @@ export const useGenerateCode = () => {
         return;
       }
 
+      // Prepare body
+      const body: any = {
+        title: diagramTitle,
+        model: editor.model,
+        generator: generatorType,
+        config: config
+      };
+
+      // Add gui_model only for React generator
+      if (generatorType === 'react') {
+        const currentProject = ProjectStorageRepository.getCurrentProject();
+        const guiModel = currentProject?.diagrams?.GUINoCodeDiagram;
+        if (guiModel) {
+          body.referenceDiagramData = guiModel;
+        }
+      }
+
       try {
         const response = await fetch(`${BACKEND_URL}/generate-output`, {
           method: 'POST',
@@ -67,12 +85,7 @@ export const useGenerateCode = () => {
             'Content-Type': 'application/json',
             'Accept': 'application/json, text/plain, */*',
           },
-          body: JSON.stringify({
-            title: diagramTitle,
-            model: editor.model,
-            generator: generatorType,
-            config: config // Add configuration object
-          }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {
