@@ -172,9 +172,9 @@ function setupProjectStorageIntegration(editor: Editor) {
     async load() {
       try {
         const project = ProjectStorageRepository.getCurrentProject();
-        if (project && project.diagrams.GUINoCodeDiagram.grapesJsData) {
+        if (project && project.diagrams.GUINoCodeDiagram.guiModel) {
           console.log('📦 Loading GrapesJS data from project storage');
-          const data = project.diagrams.GUINoCodeDiagram.grapesJsData;
+          const data = project.diagrams.GUINoCodeDiagram.guiModel;
           
           // Check if the loaded data has pages, if not, don't load it
           // This prevents overwriting default pages with empty data
@@ -203,7 +203,7 @@ function setupProjectStorageIntegration(editor: Editor) {
             'GUINoCodeDiagram',
             {
               ...project.diagrams.GUINoCodeDiagram,
-              grapesJsData: data,
+              guiModel: data,
               lastUpdate: new Date().toISOString(),
             }
           );

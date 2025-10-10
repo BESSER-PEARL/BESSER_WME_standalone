@@ -17,7 +17,7 @@ export interface ProjectDiagram {
   id: string;
   title: string;
   model?: UMLModel;
-  grapesJsData?: GrapesJSProjectData; // For GUI/No-Code diagram
+  guiModel?: GrapesJSProjectData; // For GUI/No-Code diagram
   lastUpdate: string;
   description?: string;
 }
@@ -86,7 +86,7 @@ export const createEmptyDiagram = (title: string, type: UMLDiagramType | null): 
     return {
       id: crypto.randomUUID(),
       title,
-      grapesJsData: {
+      guiModel: {
         pages: [
           {
             name: 'Home',
@@ -141,7 +141,7 @@ export const createDefaultProject = (
       ObjectDiagram: createEmptyDiagram('Object Diagram', UMLDiagramType.ObjectDiagram),
       StateMachineDiagram: createEmptyDiagram('State Machine Diagram', UMLDiagramType.StateMachineDiagram),
       AgentDiagram: createEmptyDiagram('Agent Diagram', UMLDiagramType.AgentDiagram),
-      GUINoCodeDiagram: createEmptyDiagram('GUI / No-Code Editor', null),
+      GUINoCodeDiagram: createEmptyDiagram('GUI Diagram', null),
     },
     settings: {
       defaultDiagramType: 'ClassDiagram',
