@@ -2,8 +2,19 @@ import React, { useEffect, useRef } from 'react';
 import grapesjs, { Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import gjsPresetWebpage from 'grapesjs-preset-webpage';
-import gjsCustomCode from 'grapesjs-custom-code';
 import gjsStyleBg from 'grapesjs-style-bg';
+// @ts-ignore
+import gjsBlocksBasic from 'grapesjs-blocks-basic';
+// @ts-ignore
+import gjsNavbar from 'grapesjs-navbar';
+// @ts-ignore
+import gjsTabs from 'grapesjs-tabs';
+// @ts-ignore
+import gjsTooltip from 'grapesjs-tooltip';
+// @ts-ignore
+import gjsPluginForms from 'grapesjs-plugin-forms';
+// @ts-ignore
+import gjsTuiImageEditor from 'grapesjs-tui-image-editor';
 import './grapesjs-styles.css';
 import { getClassOptions } from './diagram-helpers';
 import { chartConfigs } from './configs/chartConfigs';
@@ -38,7 +49,16 @@ export const GrapesJsEditor: React.FC = () => {
       },
 
       // Plugins
-      plugins: [gjsPresetWebpage as any, gjsCustomCode as any, gjsStyleBg as any],
+      plugins: [
+        gjsPresetWebpage as any, 
+        gjsStyleBg as any,
+        gjsBlocksBasic as any,
+        gjsNavbar as any,
+        gjsTabs as any,
+        gjsTooltip as any,
+        gjsPluginForms as any,
+        gjsTuiImageEditor as any,
+      ],
       pluginsOpts: {
         'grapesjs-preset-webpage': {
           modalImportTitle: 'Import Template',
@@ -52,10 +72,36 @@ export const GrapesJsEditor: React.FC = () => {
             blocks: ['column1', 'column2', 'column3', 'column3-7', 'text', 'link', 'image', 'video', 'map'],
             flexGrid: true,
           },
-          customStyleManager: [],
+          customStyleManager: [
+            {
+              name: 'Position',
+              open: true,
+              buildProps: ['position', 'top', 'right', 'bottom', 'left', 'z-index'],
+            },
+            {
+              name: 'Dimension',
+              open: false,
+              buildProps: ['width', 'height', 'max-width', 'min-height'],
+            },
+          ],
         },
-        'grapesjs-custom-code': {},
         'grapesjs-style-bg': {},
+        'grapesjs-blocks-basic': {},
+        'grapesjs-navbar': {},
+        'grapesjs-tabs': {},
+        'grapesjs-tooltip': {
+          // Tooltip options
+        },
+        'grapesjs-plugin-forms': {
+          // Form plugin options
+        },
+        'grapesjs-tui-image-editor': {
+          config: {
+            includeUI: {
+              initMenu: 'filter',
+            },
+          },
+        },
       },
 
       // Show borders by default
@@ -68,9 +114,6 @@ export const GrapesJsEditor: React.FC = () => {
 
     // Setup custom storage manager to use ProjectStorageRepository
     setupProjectStorageIntegration(editor);
-
-    // Setup absolute positioning support
-    setupAbsolutePositioning(editor);
 
     // Setup custom commands (export, JSON)
     setupCommands(editor);
@@ -165,117 +208,6 @@ function setupProjectStorageIntegration(editor: Editor) {
       }
     },
   });
-}
-
-// Helper: Setup absolute positioning support
-function setupAbsolutePositioning(editor: Editor) {
-  // Enable absolute positioning for components
-  editor.on('component:selected', (component: any) => {
-    const toolbar = component.get('toolbar');
-    const commandExists = toolbar.some((item: any) => item.command === 'tlb-move-absolute');
-    
-    if (!commandExists) {
-      toolbar.unshift({
-        attributes: { class: 'fa fa-arrows', title: 'Enable Absolute Position' },
-        command: 'tlb-move-absolute',
-      });
-    }
-  });
-
-  // Add command for absolute positioning
-  editor.Commands.add('tlb-move-absolute', {
-    run(editor: Editor, sender: any, opts: any) {
-      const component = opts.component || editor.getSelected();
-      if (component) {
-        const currentPosition = component.getStyle().position;
-        if (currentPosition === 'absolute') {
-          // Disable absolute positioning
-          component.setStyle({ 
-            position: 'relative', 
-            top: 'auto', 
-            left: 'auto',
-            right: 'auto',
-            bottom: 'auto'
-          });
-        } else {
-          // Enable absolute positioning - preserve current visual position
-          const el = component.getEl();
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            const parent = el.parentElement;
-            if (parent) {
-              const parentRect = parent.getBoundingClientRect();
-              const top = rect.top - parentRect.top;
-              const left = rect.left - parentRect.left;
-              component.setStyle({ 
-                position: 'absolute', 
-                top: `${top}px`, 
-                left: `${left}px` 
-              });
-            } else {
-              component.setStyle({ 
-                position: 'absolute', 
-                top: '0px', 
-                left: '0px' 
-              });
-            }
-          } else {
-            component.setStyle({ 
-              position: 'absolute', 
-              top: '0px', 
-              left: '0px' 
-            });
-          }
-        }
-        
-        // Update the view
-        component.view.render();
-      }
-    },
-  });
-  
-  // Make wrapper support absolute positioning
-  editor.on('load', () => {
-    const wrapper = editor.getWrapper();
-    if (wrapper) {
-      wrapper.setStyle({ 
-        position: 'relative',
-        minHeight: '100vh'
-      });
-    }
-  });
-  
-  // Add CSS for better absolute positioning support
-  const absPositionStyle = document.createElement('style');
-  absPositionStyle.textContent = `
-    /* Ensure canvas frame supports absolute positioning */
-    .gjs-cv-canvas__frames > iframe {
-      min-height: 100vh;
-    }
-    
-    /* Better visual feedback for absolute positioned elements */
-    .gjs-cv-canvas [data-gjs-type] {
-      position: relative;
-    }
-    
-    /* Show positioning handles when element is absolute */
-    .gjs-selected[style*="position: absolute"]::before,
-    .gjs-selected[style*="position:absolute"]::before {
-      content: "📐 Absolute Position";
-      position: absolute;
-      top: -25px;
-      left: 0;
-      background: #667eea;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: bold;
-      z-index: 9999;
-      white-space: nowrap;
-    }
-  `;
-  document.head.appendChild(absPositionStyle);
 }
 
 // Helper: Setup custom commands (export and JSON only)
