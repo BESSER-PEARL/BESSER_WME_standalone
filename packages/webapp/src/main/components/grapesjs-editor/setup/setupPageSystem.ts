@@ -157,7 +157,21 @@ export function setupPageSystem(editor: Editor) {
     },
     stop(editor: Editor) {
       console.log('show-pages command stopped');
-      // Don't hide the panel when stopped, let it stay visible
+      // Hide pages panel when another view is shown
+      const pagesPanel = document.getElementById('pages-panel');
+      if (pagesPanel) {
+        pagesPanel.style.display = 'none';
+        console.log('Pages panel hidden on stop');
+      }
+      
+      // Show all other panels
+      const viewsContainer = document.querySelector('.gjs-pn-views-container');
+      if (viewsContainer) {
+        const panels = viewsContainer.querySelectorAll(':scope > div:not(#pages-panel), :scope > .gjs-pn-views');
+        panels.forEach((panel: any) => {
+          panel.style.display = '';
+        });
+      }
     },
   });
 
