@@ -16,11 +16,12 @@ export interface GrapesJSProjectData {
 export interface ProjectDiagram {
   id: string;
   title: string;
-  model?: UMLModel;
-  guiModel?: GrapesJSProjectData; // For GUI/No-Code diagram
+  model?: UMLModel | GrapesJSProjectData;
   lastUpdate: string;
   description?: string;
 }
+
+export type ProjectDiagramModel = UMLModel | GrapesJSProjectData;
 
 // New centralized project structure
 export interface BesserProject {
@@ -86,7 +87,7 @@ export const createEmptyDiagram = (title: string, type: UMLDiagramType | null): 
     return {
       id: crypto.randomUUID(),
       title,
-      guiModel: {
+      model: {
         pages: [
           {
             name: 'Home',
@@ -164,4 +165,47 @@ export const isProject = (obj: any): obj is BesserProject => {
          obj.diagrams.StateMachineDiagram &&
          obj.diagrams.AgentDiagram &&
          obj.diagrams.GUINoCodeDiagram;
+};
+
+export const isUMLModel = (model: unknown): model is UMLModel => {
+  if (!model || typeof model !== 'object') {
+    return false;
+  }
+
+  const candidate = model as Partial<UMLModel>;
+  return (
+    typeof candidate.type === 'string' &&
+    typeof candidate.version === 'string' &&
+    typeof candidate.elements === 'object' &&
+    typeof candidate.relationships === 'object'
+  );
+};
+
+export const isGrapesJSProjectData = (model: unknown): model is GrapesJSProjectData => {
+  if (!model || typeof model !== 'object') {
+    return false;
+  }
+
+  const candidate = model as any;
+  // More lenient check - only require at least one of the expected properties to exist
+  return (
+    candidate.pages !== undefined ||
+    candidate.styles !== undefined ||
+    candidate.assets !== undefined ||
+    candidate.symbols !== undefined ||
+    candidate.version !== undefined
+  );
+};
+
+// Normalize any data to valid GrapesJS format
+export const normalizeToGrapesJSProjectData = (data: unknown): GrapesJSProjectData => {
+  const candidate = (data && typeof data === 'object') ? data as any : {};
+  
+  return {
+    pages: Array.isArray(candidate.pages) ? candidate.pages : [],
+    styles: Array.isArray(candidate.styles) ? candidate.styles : [],
+    assets: Array.isArray(candidate.assets) ? candidate.assets : [],
+    symbols: Array.isArray(candidate.symbols) ? candidate.symbols : [],
+    version: typeof candidate.version === 'string' ? candidate.version : '0.21.13'
+  };
 };

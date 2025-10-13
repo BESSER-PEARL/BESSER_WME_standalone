@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { validateDiagram } from '../validation/diagramValidation';
 import { BACKEND_URL } from '../../constant';
 import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
+import { isGrapesJSProjectData } from '../../types/project';
 
 // Add type definitions
 export interface DjangoConfig {
@@ -72,8 +73,8 @@ export const useGenerateCode = () => {
       // Add gui_model only for React generator
       if (generatorType === 'react') {
         const currentProject = ProjectStorageRepository.getCurrentProject();
-        const guiModel = currentProject?.diagrams?.GUINoCodeDiagram;
-        if (guiModel) {
+        const guiModel = currentProject?.diagrams?.GUINoCodeDiagram?.model;
+        if (isGrapesJSProjectData(guiModel)) {
           body.referenceDiagramData = guiModel;
         }
       }

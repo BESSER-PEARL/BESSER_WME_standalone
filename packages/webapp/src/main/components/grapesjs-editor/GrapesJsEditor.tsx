@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import grapesjs, { Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import gjsPresetWebpage from 'grapesjs-preset-webpage';
@@ -25,6 +25,7 @@ import { registerButtonComponent } from './component-registrars/registerButtonCo
 import { setupPageSystem, loadDefaultPages } from './setup/setupPageSystem';
 import { setupLayoutBlocks } from './setup/setupLayoutBlocks';
 import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
+import { GrapesJSProjectData, isGrapesJSProjectData, normalizeToGrapesJSProjectData } from '../../types/project';
 
 export const GrapesJsEditor: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
@@ -138,14 +139,14 @@ export const GrapesJsEditor: React.FC = () => {
     // Register button component with link functionality
     registerButtonComponent(editor);
 
-    // ✅ NOW load storage - after everything is initialized
+    // Load storage after everything is initialized
     editor.on('load', () => {
-      console.log('🚀 Editor loaded, now loading stored data...');
-      editor.StorageManager.load((data: any) => {
-        if (data && Object.keys(data).length > 0) {
-          console.log('📦 Stored data loaded successfully');
+      console.log('[GrapesJsEditor] Editor ready, loading stored data');
+      editor.StorageManager.load((data: unknown) => {
+        if (data && Object.keys(data as Record<string, unknown>).length > 0) {
+          console.log('[GrapesJsEditor] Stored data loaded successfully');
         } else {
-          console.log('📦 No stored data, editor will use default pages');
+          console.log('[GrapesJsEditor] No stored data found, using defaults');
         }
       });
     });
@@ -172,20 +173,19 @@ function setupProjectStorageIntegration(editor: Editor) {
     async load() {
       try {
         const project = ProjectStorageRepository.getCurrentProject();
-        if (project && project.diagrams.GUINoCodeDiagram.guiModel) {
-          console.log('📦 Loading GrapesJS data from project storage');
-          const data = project.diagrams.GUINoCodeDiagram.guiModel;
-          
-          // Check if the loaded data has pages, if not, don't load it
-          // This prevents overwriting default pages with empty data
-          if (data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
-            return data;
-          } else {
-            console.log('📦 Stored data has no pages, keeping default pages');
-            return {}; // Return empty to keep default pages
+        const model = project?.diagrams?.GUINoCodeDiagram?.model;
+
+        if (isGrapesJSProjectData(model)) {
+          console.log('[GrapesJsEditor] Loading GrapesJS data from project storage');
+
+          if (Array.isArray(model.pages) && model.pages.length > 0) {
+            return model;
           }
+
+          console.log('[GrapesJsEditor] Stored data has no pages, keeping defaults');
+          return {};
         }
-        console.log('📦 No existing GrapesJS data found, starting fresh');
+        console.log('[GrapesJsEditor] No GrapesJS data found, starting fresh');
         return {};
       } catch (error) {
         console.error('Error loading from project storage:', error);
@@ -193,28 +193,39 @@ function setupProjectStorageIntegration(editor: Editor) {
       }
     },
     
-    async store(data: any) {
+    async store(data: unknown) {
       try {
         const project = ProjectStorageRepository.getCurrentProject();
-        if (project) {
-          // Update the GUINoCodeDiagram with GrapesJS data
-          const updated = ProjectStorageRepository.updateDiagram(
-            project.id,
-            'GUINoCodeDiagram',
-            {
-              ...project.diagrams.GUINoCodeDiagram,
-              guiModel: data,
-              lastUpdate: new Date().toISOString(),
-            }
-          );
-          
-          if (updated) {
-            console.log('💾 GrapesJS data saved to project storage');
-          } else {
-            console.error('Failed to save GrapesJS data');
-          }
-        } else {
+
+        if (!project) {
           console.warn('No active project found, cannot save GrapesJS data');
+          return;
+        }
+
+        // Validate that this could be GrapesJS data
+        if (!isGrapesJSProjectData(data)) {
+          console.warn('[GrapesJsEditor] Received data that doesn\'t look like GrapesJS format, skipping save');
+          return;
+        }
+
+        // Normalize to proper GrapesJS format
+        const grapesData = normalizeToGrapesJSProjectData(data);
+
+        // Update the GUINoCodeDiagram with GrapesJS data
+        const updated = ProjectStorageRepository.updateDiagram(
+          project.id,
+          'GUINoCodeDiagram',
+          {
+            ...project.diagrams.GUINoCodeDiagram,
+            model: grapesData,
+            lastUpdate: new Date().toISOString(),
+          }
+        );
+        
+        if (updated) {
+          console.log('[GrapesJsEditor] GrapesJS data saved to project storage');
+        } else {
+          console.error('Failed to save GrapesJS data');
         }
       } catch (error) {
         console.error('Error saving to project storage:', error);

@@ -3,13 +3,13 @@ import { ApollonMode, Locale, Styles, UMLDiagramType, UMLModel } from '@besser/w
 import { uuid } from '../../utils/uuid';
 import { addDiagramToCurrentProject } from '../../utils/localStorage';
 import { ProjectStorageRepository } from '../storage/ProjectStorageRepository';
-import { toUMLDiagramType } from '../../types/project';
+import { GrapesJSProjectData, isUMLModel, toUMLDiagramType } from '../../types/project';
 import { DeepPartial } from '../../utils/types';
 
 export type Diagram = {
   id: string;
   title: string;
-  model?: UMLModel;
+  model?: UMLModel | GrapesJSProjectData;
   lastUpdate: string;
   versions?: Diagram[];
   description?: string;
@@ -69,7 +69,7 @@ const getInitialDiagram = (): Diagram => {
       return {
         id: currentDiagram.id,
         title: currentDiagram.title,
-        model: currentDiagram.model,
+        model: isUMLModel(currentDiagram.model) ? currentDiagram.model : undefined,
         lastUpdate: currentDiagram.lastUpdate,
       };
     }
@@ -183,13 +183,17 @@ const diagramSlice = createSlice({
     loadDiagram: (state, action: PayloadAction<Diagram>) => {
       state.diagram = action.payload;
       state.createNewEditor = true;
-      state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+      if (isUMLModel(action.payload.model)) {
+        state.editorOptions.type = action.payload.model.type;
+      }
     },
     loadImportedDiagram: (state, action: PayloadAction<Diagram>) => {
       // Like loadDiagram but also adds to project if in project context
       state.diagram = action.payload;
       state.createNewEditor = true;
-      state.editorOptions.type = action.payload.model?.type ?? 'ClassDiagram';
+      if (isUMLModel(action.payload.model)) {
+        state.editorOptions.type = action.payload.model.type;
+      }
       
       // Add imported diagram to current project if in project context
       addDiagramToCurrentProject(action.payload.id);
