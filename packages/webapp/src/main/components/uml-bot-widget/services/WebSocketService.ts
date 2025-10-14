@@ -112,6 +112,7 @@ export class WebSocketService {
 
   /**
    * Send message to bot with diagram type
+   * CRITICAL: Sends text message FIRST for intent detection, then JSON payload after delay
    */
   sendMessage(message: string, diagramType?: string, model?: any): boolean {
     const type = diagramType || 'ClassDiagram';
@@ -128,10 +129,17 @@ export class WebSocketService {
     }
 
     try {
+      // Step 1: Send text message FIRST for intent detection
+      console.log('[ws] Step 1: Sending text message for intent detection');
       this.sendTextMessage(messageWithPrefix, type);
 
+      // Step 2: Send JSON payload with model context AFTER a small delay
+      // This ensures the bot processes intent BEFORE receiving the full context
       if (model) {
-        this.sendModelContext(model, messageWithPrefix, type);
+        setTimeout(() => {
+          console.log('[ws] Step 2: Sending JSON payload with model context');
+          this.sendModelContext(model, messageWithPrefix, type);
+        }, 500); // 500ms delay to ensure intent is detected first
       }
 
       return true;
@@ -275,6 +283,7 @@ export class WebSocketService {
 
   /**
    * Process queued messages
+   * Sends text message first, then model context with delay
    */
   private processMessageQueue(): void {
     if (this.messageQueue.length === 0) {
@@ -286,12 +295,19 @@ export class WebSocketService {
     const messages = [...this.messageQueue];
     this.messageQueue = [];
 
-    messages.forEach(item => {
+    messages.forEach((item, index) => {
       try {
-        this.sendTextMessage(item.message, item.diagramType);
-        if (item.model) {
-          this.sendModelContext(item.model, item.message, item.diagramType);
-        }
+        // Send text message first
+        setTimeout(() => {
+          this.sendTextMessage(item.message, item.diagramType);
+          
+          // Send model context after delay
+          if (item.model) {
+            setTimeout(() => {
+              this.sendModelContext(item.model, item.message, item.diagramType);
+            }, 500);
+          }
+        }, index * 1000); // Stagger multiple queued messages
       } catch (error) {
         console.error('[ws] Failed to process queued message:', error);
       }

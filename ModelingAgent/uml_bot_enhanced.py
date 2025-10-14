@@ -148,28 +148,6 @@ def generate_layout_position(seed: Optional[str] = None) -> Dict[str, int]:
         'y': LAYOUT_BASE_Y + y_offset
     }
 
-def is_duplicate_request(session: Session, context: Optional[Dict[str, Any]], state_name: str) -> bool:
-    """Detect repeated processing triggered by JSON payload replay for the same request."""
-    if not context:
-        return False
-
-    actual_message = (context.get('actual_message') or '').strip()
-    diagram_type = context.get('diagram_type') or 'ClassDiagram'
-
-    if not actual_message:
-        return False
-
-    request_key = f"{state_name}::{diagram_type}::{actual_message}".lower()
-    last_key = session.get('last_processed_request')
-
-    if isinstance(session.event, ReceiveJSONEvent) and last_key == request_key:
-        logger.info(f"[uml-bot] Skipping duplicate payload replay for {state_name}")
-        clear_cached_payload(session)
-        return True
-
-    session.set('last_processed_request', request_key)
-    return False
-
 try:
     gpt = LLMOpenAI(
         agent=agent,
@@ -1100,17 +1078,28 @@ def create_modeling_body(session: Session):
     context = extract_modeling_context(session)
     if not context:
         return
-    if is_duplicate_request(session, context, 'create'):
-        return
 
     handler = context['handler']
     diagram_type = context['diagram_type']
     actual_message = context['actual_message']
+    current_model = context['current_model']
 
     if not handler:
         session.reply(f"Warning: {diagram_type} is not supported yet. Please use ClassDiagram for now.")
         return
 
+    # Check if this is the JSON event with full context (has currentModel)
+    is_json_event = isinstance(session.event, ReceiveJSONEvent) and current_model is not None
+    
+    # For text events, just acknowledge - wait for JSON with full context
+    if not is_json_event:
+        logger.info("[uml-bot] CREATE: Received text message, waiting for JSON context...")
+        # Don't clear payload - we need it for the JSON event
+        return
+
+    # Now we have the JSON event with full context - process it
+    logger.info("[uml-bot] CREATE: Processing with full model context")
+    
     try:
         if is_complete_system_request(actual_message):
             logger.info("[uml-bot] CREATE: Detected complete system request")
@@ -1149,8 +1138,6 @@ def modify_modeling_body(session: Session):
     context = extract_modeling_context(session)
     if not context:
         return
-    if is_duplicate_request(session, context, 'modify'):
-        return
 
     handler = context['handler']
     diagram_type = context['diagram_type']
@@ -1160,6 +1147,17 @@ def modify_modeling_body(session: Session):
     if not handler:
         session.reply(f"Warning: {diagram_type} is not supported yet. Please use ClassDiagram for now.")
         return
+
+    # Check if this is the JSON event with full context (has currentModel)
+    is_json_event = isinstance(session.event, ReceiveJSONEvent) and current_model is not None
+    
+    # For text events, just acknowledge - wait for JSON with full context
+    if not is_json_event:
+        logger.info("[uml-bot] MODIFY: Received text message, waiting for JSON context...")
+        return
+
+    # Now we have the JSON event with full context - process it
+    logger.info("[uml-bot] MODIFY: Processing with full model context")
 
     try:
         modification_spec = generate_model_modification(actual_message, current_model)
@@ -1183,11 +1181,21 @@ def modeling_help_body(session: Session):
     context = extract_modeling_context(session)
     if not context:
         return
-    if is_duplicate_request(session, context, 'help'):
-        return
 
     diagram_info = context['diagram_info']
     actual_message = context['actual_message']
+    current_model = context['current_model']
+
+    # Check if this is the JSON event with full context
+    is_json_event = isinstance(session.event, ReceiveJSONEvent) and current_model is not None
+    
+    # For text events, just acknowledge - wait for JSON with full context
+    if not is_json_event:
+        logger.info("[uml-bot] HELP: Received text message, waiting for JSON context...")
+        return
+
+    # Now we have the JSON event with full context - process it
+    logger.info("[uml-bot] HELP: Processing help request with context")
 
     help_prompt = f"""You are a UML modeling expert assistant working with {diagram_info['name']}. The user asked: "{actual_message}"
 
