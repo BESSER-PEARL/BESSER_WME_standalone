@@ -74,7 +74,7 @@ export class UMLModelingService {
   updateCurrentModel(model: ApollonModel) {
     this.currentModel = model;
     this.currentDiagramType = model.type || 'ClassDiagram';
-    console.log('📊 Updated model type:', this.currentDiagramType);
+    // console.log('📊 Updated model type:', this.currentDiagramType);
   }
 
   /**
@@ -123,7 +123,7 @@ export class UMLModelingService {
         message: `✨ Created element in ${type}`
       };
     } catch (error) {
-      console.error('Error processing element spec:', error);
+      // console.error('Error processing element spec:', error);
       throw new Error(`Failed to process element specification: ${error}`);
     }
   }
@@ -143,7 +143,7 @@ export class UMLModelingService {
         message: `✨ Created complete ${type} system`
       };
     } catch (error) {
-      console.error('Error processing system spec:', error);
+      // console.error('Error processing system spec:', error);
       throw new Error(`Failed to process system specification: ${error}`);
     }
   }
@@ -182,7 +182,7 @@ export class UMLModelingService {
         message: `✅ Applied ${modification.action} to ${targetName} in ${diagramType}`
       };
     } catch (error) {
-      console.error('❌ Error processing model modification:', error);
+      // console.error('❌ Error processing model modification:', error);
       throw new Error(`Failed to apply modification: ${error instanceof Error ? error.message : error}`);
     }
   }

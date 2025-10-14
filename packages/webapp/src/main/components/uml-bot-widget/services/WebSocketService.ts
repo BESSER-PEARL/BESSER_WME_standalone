@@ -61,7 +61,7 @@ export class WebSocketService {
         this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
-          console.log('✅ Connected to UML Bot WebSocket');
+          // console.log('✅ Connected to UML Bot WebSocket');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           this.onConnectionHandler?.(true);
@@ -73,7 +73,6 @@ export class WebSocketService {
         };
 
         this.ws.onclose = () => {
-          console.log('❌ Disconnected from UML Bot WebSocket');
           this.isConnected = false;
           this.onConnectionHandler?.(false);
           
@@ -130,14 +129,14 @@ export class WebSocketService {
 
     try {
       // Step 1: Send text message FIRST for intent detection
-      console.log('[ws] Step 1: Sending text message for intent detection');
+      // console.log('[ws] Step 1: Sending text message for intent detection');
       this.sendTextMessage(messageWithPrefix, type);
 
       // Step 2: Send JSON payload with model context AFTER a small delay
       // This ensures the bot processes intent BEFORE receiving the full context
       if (model) {
         setTimeout(() => {
-          console.log('[ws] Step 2: Sending JSON payload with model context');
+          // console.log('[ws] Step 2: Sending JSON payload with model context');
           this.sendModelContext(model, messageWithPrefix, type);
         }, 500); // 500ms delay to ensure intent is detected first
       }
@@ -155,7 +154,7 @@ export class WebSocketService {
     const type = diagramType || 'ClassDiagram';
 
     if (!this.isConnected || !this.ws) {
-      console.warn('[ws] WebSocket not connected, queuing context payload');
+      // console.warn('[ws] WebSocket not connected, queuing context payload');
       this.messageQueue.push({
         message,
         diagramType: type,
@@ -198,7 +197,7 @@ export class WebSocketService {
       diagramType
     };
 
-    console.log('[ws] Sending message with diagram type:', diagramType);
+    // console.log('[ws] Sending message with diagram type:', diagramType);
     this.ws.send(JSON.stringify(payload));
     this.onTypingHandler?.(true);
   }
@@ -215,7 +214,7 @@ export class WebSocketService {
       // Hide typing indicator
       this.onTypingHandler?.(false);
       
-      console.log('📨 Received message:', payload);
+      // console.log('📨 Received message:', payload);
 
       // Check if this is an injection command
       if (payload.action === 'agent_reply_str' && typeof payload.message === 'string') {
@@ -227,7 +226,7 @@ export class WebSocketService {
             const injectionData = JSON.parse(messageStr) as InjectionCommand;
             
             if (this.isInjectionCommand(injectionData)) {
-              console.log('🎯 Injection command detected:', injectionData);
+              // console.log('🎯 Injection command detected:', injectionData);
               this.onInjectionHandler?.(injectionData);
               return;
             }
@@ -290,7 +289,7 @@ export class WebSocketService {
       return;
     }
 
-    console.log(`[ws] Processing ${this.messageQueue.length} queued messages`);
+    // console.log(`[ws] Processing ${this.messageQueue.length} queued messages`);
 
     const messages = [...this.messageQueue];
     this.messageQueue = [];
@@ -309,7 +308,7 @@ export class WebSocketService {
           }
         }, index * 1000); // Stagger multiple queued messages
       } catch (error) {
-        console.error('[ws] Failed to process queued message:', error);
+        // console.error('[ws] Failed to process queued message:', error);
       }
     });
   }

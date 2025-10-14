@@ -399,7 +399,7 @@ export const UMLBotWidget: React.FC = () => {
     if (editor && dispatch && !modelingService) {
       const service = new UMLModelingService(editor, dispatch);
       setModelingService(service);
-      console.log('✅ UML Modeling Service initialized');
+      // console.log('✅ UML Modeling Service initialized');
     }
   }, [editor, dispatch, modelingService]);
 
@@ -411,7 +411,7 @@ export const UMLBotWidget: React.FC = () => {
       // Detect and update diagram type
       const detectedType = currentDiagram.diagram.model.type || 'ClassDiagram';
       setCurrentDiagramType(detectedType);
-      console.log('📊 Current diagram type:', detectedType);
+      // console.log('📊 Current diagram type:', detectedType);
     }
   }, [modelingService, currentDiagram]);
 
@@ -457,7 +457,6 @@ export const UMLBotWidget: React.FC = () => {
 
         wsService.onInjection(async (command: InjectionCommand) => {
           if (!modelingService) {
-            console.error('❌ Modeling service not available');
             uiService.showToast('Modeling service not ready', 'error');
             return;
           }
@@ -510,7 +509,7 @@ export const UMLBotWidget: React.FC = () => {
               }
             }
           } catch (error) {
-            console.error('❌ Injection failed:', error);
+            // console.error('❌ Injection failed:', error);
             const errorMessage: ChatMessage = {
               id: uiService.generateId('msg'),
               action: 'agent_reply_str',
@@ -525,7 +524,6 @@ export const UMLBotWidget: React.FC = () => {
 
         // Connect to WebSocket
         await wsService.connect();
-        console.log('✅ WebSocket service initialized');
 
       } catch (error) {
         console.error('❌ Failed to initialize WebSocket:', error);
@@ -611,7 +609,7 @@ export const UMLBotWidget: React.FC = () => {
                 if (jsonBlocks.length > 0) {
                   // Import the first valid JSON block
                   // This could be enhanced to show a selection dialog
-                  console.log('Importing model:', jsonBlocks[0].json);
+                  // console.log('Importing model:', jsonBlocks[0].json);
                   uiService.showToast('Model import functionality coming soon!', 'info');
                 }
               }}
