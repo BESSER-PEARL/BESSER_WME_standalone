@@ -209,7 +209,7 @@ const Message = styled.div<{ isUser: boolean }>`
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: ${props => props.isUser ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#4CAF50'};
+    background: ${props => props.isUser ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#677ae4'};
     display: flex;
     align-items: center;
     justify-content: center;
@@ -245,7 +245,7 @@ const Message = styled.div<{ isUser: boolean }>`
       border: 8px solid transparent;
       border-top-color: ${props => props.isUser ? '#764ba2' : '#ffffff'};
       border-bottom: 0;
-      transform: rotate(${props => props.isUser ? '45deg' : '-45deg'});
+      transform: rotate(${props => props.isUser ? '-45deg' : '45deg'});
     }
     
     .model-import-button {
@@ -279,7 +279,7 @@ const TypingIndicator = styled.div`
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #4CAF50;
+    background: #677ae4;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -418,6 +418,17 @@ export const UMLBotWidget: React.FC = () => {
   // Initialize WebSocket connection
   useEffect(() => {
     const initializeWebSocket = async () => {
+      if (!modelingService) {
+        return;
+      }
+
+      if (!isVisible) {
+        wsService.disconnect();
+        setIsTyping(false);
+        setHasShownWelcome(false);
+        return;
+      }
+
       try {
         // Set up event handlers
         wsService.onMessage((message: ChatMessage) => {
@@ -426,15 +437,16 @@ export const UMLBotWidget: React.FC = () => {
 
         wsService.onConnection((connected: boolean) => {
           if (connected && !hasShownWelcome) {
-            const welcomeMessage: ChatMessage = {
-              id: uiService.generateId('msg'),
-              action: 'agent_reply_str',
-              message: `🎨 Hello! I'm your Enhanced UML Assistant!\n\nI can help you with:\n• ➕ **Class Diagrams** - Create classes, attributes, methods\n• 🔷 **Object Diagrams** - Define object instances\n• � **State Machine Diagrams** - Model state transitions\n• 🤖 **Agent Diagrams** - Design agent systems\n\n📊 Currently working on: **${currentDiagramType}**\n\nWhat would you like to build today?`,
-              isUser: false,
-              timestamp: new Date(),
-              diagramType: currentDiagramType
-            };
-            setMessages(prev => [...prev, welcomeMessage]);
+            // const welcomeMessage: ChatMessage = {
+            //   id: uiService.generateId('msg'),
+            //   action: 'agent_reply_str',
+            //   message: `🎨 Hello! I'm your Enhanced UML Assistant!\n\nI can help you with:\n• ➕ **Class Diagrams** - Create classes, attributes, methods\n• 🔷 **Object Diagrams** - Define object instances\n• � **State Machine Diagrams** - Model state transitions\n•  **Agent Diagrams** - Design agent systems\n\n📊 Currently working on: **${currentDiagramType}**\n\nWhat would you like to build today?`,
+            //   isUser: false,
+            //   timestamp: new Date(),
+            //   diagramType: currentDiagramType
+            // };
+            // setMessages(prev => [...prev, welcomeMessage]);
+            setMessages(prev => [...prev]);
             setHasShownWelcome(true);
           }
         });
@@ -457,14 +469,14 @@ export const UMLBotWidget: React.FC = () => {
             switch (command.action) {
               case 'inject_element':
                 if (command.element) {
-                  update = modelingService.processSimpleClassSpec(command.element as ClassSpec);
+                  update = modelingService.processSimpleClassSpec(command.element as ClassSpec, command.diagramType);
                   successMessage = `✅ Added ${command.element.className} class successfully!`;
                 }
                 break;
 
               case 'inject_complete_system':
                 if (command.systemSpec) {
-                  update = modelingService.processSystemSpec(command.systemSpec as SystemSpec);
+                  update = modelingService.processSystemSpec(command.systemSpec as SystemSpec, command.diagramType);
                   successMessage = `✅ Created ${command.systemSpec.systemName} system successfully!`;
                 }
                 break;
@@ -524,9 +536,11 @@ export const UMLBotWidget: React.FC = () => {
     initializeWebSocket();
 
     return () => {
-      wsService.disconnect();
+      if (!isVisible) {
+        wsService.disconnect();
+      }
     };
-  }, [wsService, uiService, hasShownWelcome, modelingService]);
+  }, [wsService, uiService, hasShownWelcome, modelingService, isVisible, currentDiagramType]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -554,8 +568,9 @@ export const UMLBotWidget: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Send message with diagram type
-    const success = wsService.sendMessage(inputValue, currentDiagramType);
+    // Send message with diagram type and current model context
+    const modelSnapshot = modelingService?.getCurrentModel();
+    const success = wsService.sendMessage(inputValue, currentDiagramType, modelSnapshot);
 
     if (!success) {
       uiService.showToast('Failed to send message', 'error');
@@ -581,7 +596,7 @@ export const UMLBotWidget: React.FC = () => {
       <Message key={message.id} isUser={message.isUser}>
         {!message.isUser && (
           <div className="avatar">
-            🤖
+            <img src="/img/agent_back.png" alt="Agent" style={{ width: 32, height: 32, borderRadius: '50%' }} />
           </div>
         )}
         
@@ -620,7 +635,7 @@ export const UMLBotWidget: React.FC = () => {
       <ChatWindow isVisible={isVisible}>
         <ChatHeader>
           <div className="header-content">
-            <div className="agent-logo">🧠</div>
+            <div className="agent-logo"><img src="/img/agent_back.png" alt="Agent" style={{ width: 25, height: 25, borderRadius: '50%' }}></img></div>
             <div className="header-info">
               <div className="title">UML Assistant</div>
               <div className="subtitle">Enhanced with AI</div>
@@ -639,9 +654,11 @@ export const UMLBotWidget: React.FC = () => {
           
           {isTyping && (
             <TypingIndicator>
-              <div className="avatar">🤖</div>
+              <div className="avatar">
+                <img src="/img/agent_back.png" alt="Agent" style={{ width: 32, height: 32, borderRadius: '50%' }} />
+              </div>
               <div className="typing-content">
-                <div className="typing-text">AI is thinking...</div>
+                <div className="typing-text">Agent is thinking...</div>
                 <div className="typing-animation">
                   <div className="dot"></div>
                   <div className="dot"></div>
@@ -688,7 +705,7 @@ export const UMLBotWidget: React.FC = () => {
       </ChatWindow>
       
       <CircleButton isOpen={isVisible} onClick={() => setIsVisible(!isVisible)}>
-        {isVisible ? '✕' : '🤖'}
+  {isVisible ? '✕' : <img src="/img/agent_back.png" alt="Agent" style={{ width: 45, height: 45, borderRadius: '50%', filter: 'invert(0)' }} />} 
       </CircleButton>
     </ChatWidgetContainer>
   );

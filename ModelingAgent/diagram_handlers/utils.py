@@ -34,7 +34,20 @@ def detect_diagram_type_from_keywords(message: str) -> Optional[str]:
         return 'StateMachineDiagram'
     
     # Agent diagram keywords
-    if any(keyword in message_lower for keyword in ['agent', 'multi-agent', 'message', 'belief', 'goal']):
+    if any(keyword in message_lower for keyword in [
+        'agent',
+        'multi-agent',
+        'message',
+        'belief',
+        'goal',
+        'intent',
+        'conversation',
+        'dialog',
+        'dialogue',
+        'bot',
+        'assistant',
+        'flow'
+    ]):
         return 'AgentDiagram'
     
     # Object diagram keywords
@@ -74,3 +87,18 @@ def is_complete_system_request(message: str) -> bool:
         'management system', 'platform'
     ]
     return any(keyword in message_lower for keyword in system_keywords)
+
+
+def is_modification_request(message: str) -> bool:
+    """Detect whether the user wants to modify the existing model"""
+    message_lower = message.lower()
+
+    modification_keywords = [
+        'modify', 'update', 'change', 'rename', 'refactor',
+        'remove', 'delete', 'drop', 'make', 'set', 'adjust',
+        'add attribute', 'add method', 'add property', 'add field',
+        'add relationship', 'link', 'connect', 'associate',
+        'make public', 'make private', 'toggle', 'replace'
+    ]
+
+    return any(keyword in message_lower for keyword in modification_keywords)

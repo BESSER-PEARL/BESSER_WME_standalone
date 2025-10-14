@@ -19,14 +19,17 @@ export interface DiagramConverter {
  */
 export class PositionGenerator {
   private usedPositions: Set<string> = new Set();
-  private readonly gridSize = 300;
-  private readonly startX = 100;
-  private readonly startY = 100;
+  private readonly gridStepX = 360;
+  private readonly gridStepY = 280;
+  private readonly startX = -940;
+  private readonly startY = -600;
 
   getNextPosition(index: number = 0): { x: number; y: number } {
-    const x = this.startX + (index % 3) * this.gridSize;
-    const y = this.startY + Math.floor(index / 3) * this.gridSize;
-    
+    const column = index % 3;
+    const row = Math.floor(index / 3);
+    const x = this.startX + column * this.gridStepX;
+    const y = this.startY + row * this.gridStepY;
+
     const key = `${x},${y}`;
     if (this.usedPositions.has(key)) {
       return this.getNextPosition(index + 1);

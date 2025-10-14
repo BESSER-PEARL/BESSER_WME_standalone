@@ -41,6 +41,23 @@ class BaseDiagramHandler(ABC):
         """Generate a fallback element when AI generation fails"""
         pass
     
+    def generate_modification(self, user_request: str, current_model: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Generate modifications for existing diagram elements.
+        Override this method in subclasses to provide diagram-specific modification logic.
+        Default implementation returns a basic modification structure.
+        """
+        return {
+            "action": "modify_model",
+            "modification": {
+                "action": "modify_element",
+                "target": {"elementName": "unknown"},
+                "changes": {"name": "modified"}
+            },
+            "diagramType": self.get_diagram_type(),
+            "message": "Modification not implemented for this diagram type."
+        }
+    
     def clean_json_response(self, response: str) -> str:
         """Clean JSON response from LLM (remove markdown formatting)"""
         json_text = response.strip()

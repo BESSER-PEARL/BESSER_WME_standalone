@@ -42,7 +42,7 @@ export class WebSocketService {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 3000;
-  private messageQueue: string[] = [];
+  private messageQueue: Array<{ message: string; diagramType: string; model?: any }> = [];
 
   // Event handlers
   private onMessageHandler: MessageHandler | null = null;
@@ -113,72 +113,89 @@ export class WebSocketService {
   /**
    * Send message to bot with diagram type
    */
-  sendMessage(message: string, diagramType?: string): boolean {
+  sendMessage(message: string, diagramType?: string, model?: any): boolean {
+    const type = diagramType || 'ClassDiagram';
+    const messageWithPrefix = `[DIAGRAM_TYPE:${type}] ${message}`;
+
     if (!this.isConnected || !this.ws) {
-      console.warn('⚠️ WebSocket not connected, queuing message');
-      this.messageQueue.push(message);
+      console.warn('[ws] WebSocket not connected, queuing message');
+      this.messageQueue.push({
+        message: messageWithPrefix,
+        diagramType: type,
+        model
+      });
       return false;
     }
 
     try {
-      const type = diagramType || 'ClassDiagram';
-      
-      // Embed diagram type as a prefix that the bot can parse
-      // Format: [DIAGRAM_TYPE:AgentDiagram] actual message
-      const prefixedMessage = `[DIAGRAM_TYPE:${type}] ${message}`;
-      
-      const payload = {
-        action: 'user_message',
-        message: prefixedMessage,
-        diagramType: type // Keep this for backward compatibility
-      };
+      this.sendTextMessage(messageWithPrefix, type);
 
-      console.log('📤 Sending message with diagram type:', type);
-      this.ws.send(JSON.stringify(payload));
-      
-      // Show typing indicator
-      this.onTypingHandler?.(true);
-      
+      if (model) {
+        this.sendModelContext(model, messageWithPrefix, type);
+      }
+
       return true;
     } catch (error) {
       console.error('Failed to send message:', error);
       return false;
     }
   }
-
   /**
    * Send model context to bot with diagram type (new feature)
    */
   sendModelContext(model: any, message: string, diagramType?: string): boolean {
+    const type = diagramType || 'ClassDiagram';
+
     if (!this.isConnected || !this.ws) {
-      console.warn('⚠️ WebSocket not connected, cannot send model context');
+      console.warn('[ws] WebSocket not connected, queuing context payload');
+      this.messageQueue.push({
+        message,
+        diagramType: type,
+        model
+      });
       return false;
     }
 
     try {
-      // Send the context as a JSON string in the message field
-      // The bot will parse this and extract both message and context
-      const contextMessage = JSON.stringify({
-        message: message,
-        currentModel: model,
-        diagramType: diagramType || 'ClassDiagram'
-      });
+      const sanitizedModel = JSON.parse(JSON.stringify(model));
+      const envelope = {
+        message,
+        diagramType: type,
+        currentModel: sanitizedModel
+      };
 
       const payload = {
         action: 'user_message',
-        message: contextMessage,
-        diagramType: diagramType || 'ClassDiagram'
+        message: JSON.stringify(envelope),
+        diagramType: type
       };
 
       this.ws.send(JSON.stringify(payload));
       this.onTypingHandler?.(true);
-      
       return true;
     } catch (error) {
-      console.error('Failed to send message with context:', error);
+      console.error('[ws] Failed to send model context:', error);
       return false;
     }
   }
+
+  private sendTextMessage(message: string, diagramType: string): void {
+    if (!this.isConnected || !this.ws) {
+      throw new Error('WebSocket is not connected');
+    }
+
+    const payload = {
+      action: 'user_message',
+      message,
+      diagramType
+    };
+
+    console.log('[ws] Sending message with diagram type:', diagramType);
+    this.ws.send(JSON.stringify(payload));
+    this.onTypingHandler?.(true);
+  }
+
+
 
   /**
    * Handle incoming WebSocket messages
@@ -260,17 +277,28 @@ export class WebSocketService {
    * Process queued messages
    */
   private processMessageQueue(): void {
-    if (this.messageQueue.length === 0) return;
+    if (this.messageQueue.length === 0) {
+      return;
+    }
 
-    console.log(`📤 Processing ${this.messageQueue.length} queued messages`);
-    
+    console.log(`[ws] Processing ${this.messageQueue.length} queued messages`);
+
     const messages = [...this.messageQueue];
     this.messageQueue = [];
-    
-    messages.forEach(message => {
-      this.sendMessage(message);
+
+    messages.forEach(item => {
+      try {
+        this.sendTextMessage(item.message, item.diagramType);
+        if (item.model) {
+          this.sendModelContext(item.model, item.message, item.diagramType);
+        }
+      } catch (error) {
+        console.error('[ws] Failed to process queued message:', error);
+      }
     });
   }
+
+
 
   /**
    * Generate unique message ID

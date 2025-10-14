@@ -7,7 +7,6 @@ export { UMLModelingService } from './UMLModelingService';
 export type { 
   ClassSpec, 
   SystemSpec, 
-  ModelModification, 
   ModelUpdate, 
   ApollonModel 
 } from './UMLModelingService';
@@ -28,6 +27,9 @@ export type { MessageDisplayConfig } from './UIService';
 
 export { ConverterFactory } from './converters';
 export type { DiagramType, DiagramConverter } from './converters';
+
+export { ModifierFactory } from './modifiers';
+export type { DiagramModifier, ModelModification } from './modifiers';
 
 // Re-export commonly used types for convenience
 export type { AppDispatch } from '../../../store/store';

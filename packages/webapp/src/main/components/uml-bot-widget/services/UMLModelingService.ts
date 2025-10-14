@@ -2,6 +2,10 @@ import { Dispatch } from '@reduxjs/toolkit';
 import { updateDiagramThunk } from '../../../services/diagram/diagramSlice';
 import type { AppDispatch } from '../../../store/store';
 import { ConverterFactory, DiagramType } from './converters';
+import { ModifierFactory, ModelModification } from './modifiers';
+
+// Re-export ModelModification for backward compatibility
+export type { ModelModification };
 
 // Enhanced interfaces for better type safety
 export interface ClassSpec {
@@ -30,23 +34,6 @@ export interface SystemSpec {
     targetMultiplicity?: string;
     name?: string;
   }>;
-}
-
-export interface ModelModification {
-  action: 'modify_class' | 'modify_attribute' | 'modify_method' | 'add_relationship' | 'remove_element';
-  target: {
-    classId?: string;
-    className?: string;
-    attributeId?: string;
-    methodId?: string;
-  };
-  changes: {
-    name?: string;
-    type?: string;
-    visibility?: 'public' | 'private' | 'protected';
-    parameters?: Array<{ name: string; type: string; }>;
-    returnType?: string;
-  };
 }
 
 export interface ModelUpdate {
@@ -162,208 +149,42 @@ export class UMLModelingService {
   }
 
   /**
-   * Process model modifications (new feature)
+   * Process model modifications (edit existing elements)
+   * Uses ModifierFactory to delegate to diagram-specific modifiers
    */
   processModelModification(modification: ModelModification): ModelUpdate {
     try {
       const currentModel = this.getCurrentModel();
-      const updatedModel = this.applyModificationToModel(currentModel, modification);
+      const diagramType = this.currentDiagramType as DiagramType;
+      
+      // Get diagram-specific modifier
+      const modifier = ModifierFactory.getModifier(diagramType);
+      
+      // Validate action is supported for this diagram type
+      if (!modifier.canHandle(modification.action)) {
+        throw new Error(
+          `Action '${modification.action}' is not supported for ${diagramType} diagrams.`
+        );
+      }
+      
+      // Apply modification using diagram-specific logic
+      const updatedModel = modifier.applyModification(currentModel, modification);
+      
+      // Generate success message
+      const targetName = modification.target.className || 
+                        modification.target.stateName || 
+                        modification.target.objectName || 
+                        'element';
       
       return {
         type: 'modification',
         data: updatedModel,
-        message: `✅ Applied ${modification.action} to ${modification.target.className || 'element'}`
+        message: `✅ Applied ${modification.action} to ${targetName} in ${diagramType}`
       };
     } catch (error) {
-      console.error('Error processing model modification:', error);
-      throw new Error(`Failed to apply modification: ${error}`);
+      console.error('❌ Error processing model modification:', error);
+      throw new Error(`Failed to apply modification: ${error instanceof Error ? error.message : error}`);
     }
-  }
-
-  /**
-   * Apply modifications to existing model
-   */
-  private applyModificationToModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    const updatedModel = JSON.parse(JSON.stringify(model)); // Deep copy
-    
-    switch (modification.action) {
-      case 'modify_class':
-        return this.modifyClassInModel(updatedModel, modification);
-      case 'modify_attribute':
-        return this.modifyAttributeInModel(updatedModel, modification);
-      case 'modify_method':
-        return this.modifyMethodInModel(updatedModel, modification);
-      case 'add_relationship':
-        return this.addRelationshipToModel(updatedModel, modification);
-      case 'remove_element':
-        return this.removeElementFromModel(updatedModel, modification);
-      default:
-        throw new Error(`Unknown modification action: ${modification.action}`);
-    }
-  }
-
-  /**
-   * Modify class properties
-   */
-  private modifyClassInModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    const { classId, className } = modification.target;
-    const targetId = classId || this.findClassIdByName(model, className!);
-    
-    if (targetId && model.elements[targetId]) {
-      if (modification.changes.name) {
-        model.elements[targetId].name = modification.changes.name;
-      }
-    }
-    
-    return model;
-  }
-
-  /**
-   * Modify attribute properties
-   */
-  private modifyAttributeInModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    const { attributeId, className } = modification.target;
-    let targetId = attributeId;
-    
-    if (!targetId && className) {
-      // Find attribute by class name and attribute name
-      const foundId = this.findAttributeIdByClassAndName(model, className, modification.changes.name!);
-      if (foundId) {
-        targetId = foundId;
-      }
-    }
-    
-    if (targetId && model.elements[targetId]) {
-      const element = model.elements[targetId];
-      if (modification.changes.name || modification.changes.type || modification.changes.visibility) {
-        const visibility = modification.changes.visibility === 'public' ? '+' : 
-                          modification.changes.visibility === 'private' ? '-' : '#';
-        const name = modification.changes.name || element.name.split(':')[0].slice(2);
-        const type = modification.changes.type || element.name.split(':')[1]?.trim() || 'String';
-        
-        element.name = `${visibility} ${name}: ${type}`;
-      }
-    }
-    
-    return model;
-  }
-
-  /**
-   * Modify method properties
-   */
-  private modifyMethodInModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    const { methodId, className } = modification.target;
-    let targetId = methodId;
-    
-    if (!targetId && className) {
-      const foundId = this.findMethodIdByClassAndName(model, className, modification.changes.name!);
-      if (foundId) {
-        targetId = foundId;
-      }
-    }
-    
-    if (targetId && model.elements[targetId]) {
-      const element = model.elements[targetId];
-      if (modification.changes.name || modification.changes.returnType || modification.changes.visibility || modification.changes.parameters) {
-        const visibility = modification.changes.visibility === 'public' ? '+' : 
-                          modification.changes.visibility === 'private' ? '-' : '#';
-        const name = modification.changes.name || element.name.split('(')[0].slice(2);
-        const returnType = modification.changes.returnType || element.name.split(':')[1]?.trim() || 'void';
-        const params = modification.changes.parameters || [];
-        const paramStr = params.map(p => `${p.name}: ${p.type}`).join(', ');
-        
-        element.name = `${visibility} ${name}(${paramStr}): ${returnType}`;
-      }
-    }
-    
-    return model;
-  }
-
-  /**
-   * Add relationship to model
-   */
-  private addRelationshipToModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    // Implementation for adding relationships
-    return model;
-  }
-
-  /**
-   * Remove element from model
-   */
-  private removeElementFromModel(model: ApollonModel, modification: ModelModification): ApollonModel {
-    const { classId, className } = modification.target;
-    const targetId = classId || this.findClassIdByName(model, className!);
-    
-    if (targetId) {
-      // Remove class and its attributes/methods
-      const classElement = model.elements[targetId];
-      if (classElement) {
-        // Remove attributes
-        classElement.attributes?.forEach((attrId: string) => {
-          delete model.elements[attrId];
-        });
-        
-        // Remove methods
-        classElement.methods?.forEach((methodId: string) => {
-          delete model.elements[methodId];
-        });
-        
-        // Remove class itself
-        delete model.elements[targetId];
-      }
-    }
-    
-    return model;
-  }
-
-  /**
-   * Helper method to find class ID by name
-   */
-  private findClassIdByName(model: ApollonModel, className: string): string | null {
-    for (const [id, element] of Object.entries(model.elements)) {
-      if (element.type === 'Class' && element.name === className) {
-        return id;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Helper method to find attribute ID by class and name
-   */
-  private findAttributeIdByClassAndName(model: ApollonModel, className: string, attributeName: string): string | null {
-    const classId = this.findClassIdByName(model, className);
-    if (!classId) return null;
-    
-    const classElement = model.elements[classId];
-    if (!classElement?.attributes) return null;
-    
-    for (const attrId of classElement.attributes) {
-      const attr = model.elements[attrId];
-      if (attr && attr.name.includes(attributeName)) {
-        return attrId;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Helper method to find method ID by class and name
-   */
-  private findMethodIdByClassAndName(model: ApollonModel, className: string, methodName: string): string | null {
-    const classId = this.findClassIdByName(model, className);
-    if (!classId) return null;
-    
-    const classElement = model.elements[classId];
-    if (!classElement?.methods) return null;
-    
-    for (const methodId of classElement.methods) {
-      const method = model.elements[methodId];
-      if (method && method.name.includes(methodName)) {
-        return methodId;
-      }
-    }
-    return null;
   }
 
   /**
