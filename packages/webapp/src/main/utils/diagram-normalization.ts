@@ -41,6 +41,59 @@ const asBounds = (
   return { x, y, width, height };
 };
 
+const updateBoundsWithRect = (bounds: BoundingBox | null, rect: { x: number; y: number; width: number; height: number }) => {
+  const nextBounds: BoundingBox = bounds
+    ? { ...bounds }
+    : { minX: rect.x, minY: rect.y, maxX: rect.x + rect.width, maxY: rect.y + rect.height };
+
+  nextBounds.minX = Math.min(nextBounds.minX, rect.x);
+  nextBounds.minY = Math.min(nextBounds.minY, rect.y);
+  nextBounds.maxX = Math.max(nextBounds.maxX, rect.x + rect.width);
+  nextBounds.maxY = Math.max(nextBounds.maxY, rect.y + rect.height);
+
+  return nextBounds;
+};
+
+const collectBounds = (value: unknown, bounds: BoundingBox | null, context?: string): BoundingBox | null => {
+  if (!value) {
+    return bounds;
+  }
+
+  if (Array.isArray(value)) {
+    if (context === 'path') {
+      return bounds;
+    }
+    return value.reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc, context), bounds);
+  }
+
+  if (value instanceof Map) {
+    return Array.from(value.entries()).reduce<BoundingBox | null>(
+      (acc, [key, item]) => collectBounds(item, acc, String(key)),
+      bounds
+    );
+  }
+
+  if (value instanceof Set) {
+    return Array.from(value.values()).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc, context), bounds);
+  }
+
+  if (typeof value === 'object') {
+    const rect = asBounds(value);
+    if (rect && context !== 'path') {
+      return updateBoundsWithRect(bounds, rect);
+    }
+
+    const point = asPoint(value);
+    if (point && context !== 'path') {
+      return updateBoundsWithPoint(bounds, point);
+    }
+
+    return Object.entries(value).reduce<BoundingBox | null>((acc, [key, item]) => collectBounds(item, acc, key), bounds);
+  }
+
+  return bounds;
+};
+
 const asPoint = (value: any): { x: number; y: number } | undefined => {
   if (!value || typeof value !== 'object') {
     return undefined;
@@ -61,19 +114,6 @@ const asPoint = (value: any): { x: number; y: number } | undefined => {
   return { x, y };
 };
 
-const updateBoundsWithRect = (bounds: BoundingBox | null, rect: { x: number; y: number; width: number; height: number }) => {
-  const nextBounds: BoundingBox = bounds
-    ? { ...bounds }
-    : { minX: rect.x, minY: rect.y, maxX: rect.x + rect.width, maxY: rect.y + rect.height };
-
-  nextBounds.minX = Math.min(nextBounds.minX, rect.x);
-  nextBounds.minY = Math.min(nextBounds.minY, rect.y);
-  nextBounds.maxX = Math.max(nextBounds.maxX, rect.x + rect.width);
-  nextBounds.maxY = Math.max(nextBounds.maxY, rect.y + rect.height);
-
-  return nextBounds;
-};
-
 const updateBoundsWithPoint = (bounds: BoundingBox | null, point: { x: number; y: number }) => {
   const nextBounds: BoundingBox = bounds
     ? { ...bounds }
@@ -85,40 +125,6 @@ const updateBoundsWithPoint = (bounds: BoundingBox | null, point: { x: number; y
   nextBounds.maxY = Math.max(nextBounds.maxY, point.y);
 
   return nextBounds;
-};
-
-const collectBounds = (value: unknown, bounds: BoundingBox | null): BoundingBox | null => {
-  if (!value) {
-    return bounds;
-  }
-
-  if (Array.isArray(value)) {
-    return value.reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
-  }
-
-  if (value instanceof Map) {
-    return Array.from(value.values()).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
-  }
-
-  if (value instanceof Set) {
-    return Array.from(value.values()).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
-  }
-
-  if (typeof value === 'object') {
-    const rect = asBounds(value);
-    if (rect) {
-      return updateBoundsWithRect(bounds, rect);
-    }
-
-    const point = asPoint(value);
-    if (point) {
-      return updateBoundsWithPoint(bounds, point);
-    }
-
-    return Object.values(value).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
-  }
-
-  return bounds;
 };
 
 const shiftPoint = <T extends { x: any; y: any }>(point: T, offset: Offset): T => {
@@ -151,19 +157,22 @@ const shiftRect = <T extends { x: any; y: any }>(rect: T, offset: Offset): T => 
   };
 };
 
-const applyOffset = <T>(value: T, offset: Offset): T => {
+const applyOffset = <T>(value: T, offset: Offset, context?: string): T => {
   if (!value) {
     return value;
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => applyOffset(item, offset)) as T;
+    if (context === 'path') {
+      return value;
+    }
+    return value.map((item) => applyOffset(item, offset, context)) as T;
   }
 
   if (value instanceof Map) {
     const shifted = new Map<unknown, unknown>();
     value.forEach((item, key) => {
-      shifted.set(key, applyOffset(item, offset));
+      shifted.set(key, applyOffset(item, offset, String(key)));
     });
     return shifted as T;
   }
@@ -171,26 +180,30 @@ const applyOffset = <T>(value: T, offset: Offset): T => {
   if (value instanceof Set) {
     const shifted = new Set<unknown>();
     value.forEach((item) => {
-      shifted.add(applyOffset(item, offset));
+      shifted.add(applyOffset(item, offset, context));
     });
     return shifted as T;
   }
 
   if (typeof value === 'object') {
     const rect = asBounds(value);
-    if (rect) {
+    if (rect && context !== 'path') {
       return shiftRect({ ...(value as Record<string, unknown>), ...rect }, offset) as T;
     }
 
     const point = asPoint(value);
-    if (point) {
+    if (point && context !== 'path') {
       return shiftPoint({ ...(value as Record<string, unknown>), ...point }, offset) as T;
+    }
+
+    if (context === 'path') {
+      return value;
     }
 
     const clone: Record<string, unknown> = { ...(value as Record<string, unknown>) };
 
     Object.entries(clone).forEach(([key, item]) => {
-      clone[key] = applyOffset(item, offset);
+      clone[key] = applyOffset(item, offset, key);
     });
 
     return clone as T;
