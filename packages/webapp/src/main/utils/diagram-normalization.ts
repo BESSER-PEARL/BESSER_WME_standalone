@@ -236,8 +236,8 @@ export const normalizeDiagramModel = (model: UMLModel, padding = 100): { model: 
   const height = bounds.maxY - bounds.minY;
 
   const offset: Offset = {
-    x: padding - bounds.minX,
-    y: padding - bounds.minY,
+    x: -padding - bounds.minX,
+    y: -padding - bounds.minY,
   };
 
   const normalizedSize = {
