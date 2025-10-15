@@ -108,34 +108,6 @@ export class UIService {
   }
 
   /**
-   * Generate message timestamp
-   */
-  formatTimestamp(date: Date): string {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    
-    // Less than 1 minute
-    if (diff < 60000) {
-      return 'just now';
-    }
-    
-    // Less than 1 hour
-    if (diff < 3600000) {
-      const minutes = Math.floor(diff / 60000);
-      return `${minutes}m ago`;
-    }
-    
-    // Less than 24 hours
-    if (diff < 86400000) {
-      const hours = Math.floor(diff / 3600000);
-      return `${hours}h ago`;
-    }
-    
-    // Format as time
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  /**
    * Validate user input
    */
   validateUserInput(input: string): { valid: boolean; error?: string } {
@@ -180,35 +152,6 @@ export class UIService {
       top: element.scrollHeight,
       behavior: smooth ? 'smooth' : 'auto'
     });
-  }
-
-  /**
-   * Copy text to clipboard
-   */
-  async copyToClipboard(text: string): Promise<boolean> {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } else {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        return success;
-      }
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-      return false;
-    }
   }
 
   /**
@@ -265,67 +208,6 @@ export class UIService {
   }
 
   /**
-   * Debounce function calls
-   */
-  debounce<T extends (...args: any[]) => any>(
-    func: T, 
-    delay: number
-  ): (...args: Parameters<T>) => void {
-    let timeoutId: NodeJS.Timeout;
-    
-    return (...args: Parameters<T>) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    };
-  }
-
-  /**
-   * Throttle function calls
-   */
-  throttle<T extends (...args: any[]) => any>(
-    func: T, 
-    delay: number
-  ): (...args: Parameters<T>) => void {
-    let lastCall = 0;
-    
-    return (...args: Parameters<T>) => {
-      const now = Date.now();
-      if (now - lastCall >= delay) {
-        lastCall = now;
-        func.apply(this, args);
-      }
-    };
-  }
-
-  /**
-   * Format code for display
-   */
-  formatCode(code: string, language: string = 'json'): string {
-    if (language === 'json') {
-      try {
-        const parsed = JSON.parse(code);
-        return JSON.stringify(parsed, null, 2);
-      } catch (e) {
-        return code;
-      }
-    }
-    
-    return code;
-  }
-
-  /**
-   * Check if string is valid JSON
-   */
-  isValidJson(str: string): boolean {
-    try {
-      JSON.parse(str);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /**
    * Get friendly error message
    */
   getFriendlyErrorMessage(error: any): string {
@@ -342,47 +224,5 @@ export class UIService {
     }
     
     return 'An unexpected error occurred';
-  }
-
-  /**
-   * Create loading animation element
-   */
-  createLoadingElement(): HTMLElement {
-    const loader = document.createElement('div');
-    loader.innerHTML = `
-      <div style="
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px;
-        color: #666;
-        font-style: italic;
-      ">
-        <div style="
-          width: 16px;
-          height: 16px;
-          border: 2px solid #e3e3e3;
-          border-top: 2px solid #666;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        "></div>
-        Processing...
-      </div>
-    `;
-    
-    // Add spin animation if not exists
-    if (!document.querySelector('#spinner-styles')) {
-      const styles = document.createElement('style');
-      styles.id = 'spinner-styles';
-      styles.textContent = `
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `;
-      document.head.appendChild(styles);
-    }
-    
-    return loader;
   }
 }

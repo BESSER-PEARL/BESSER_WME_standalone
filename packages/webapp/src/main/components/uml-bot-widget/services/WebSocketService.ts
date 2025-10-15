@@ -238,7 +238,7 @@ export class WebSocketService {
 
       // Handle as normal chat message
       const chatMessage: ChatMessage = {
-        id: this.generateMessageId(),
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         action: payload.action,
         message: payload.message,
         isUser: false,
@@ -311,15 +311,6 @@ export class WebSocketService {
         // console.error('[ws] Failed to process queued message:', error);
       }
     });
-  }
-
-
-
-  /**
-   * Generate unique message ID
-   */
-  private generateMessageId(): string {
-    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   // Event handler setters
