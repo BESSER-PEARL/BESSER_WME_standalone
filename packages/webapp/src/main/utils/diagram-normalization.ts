@@ -9,24 +9,57 @@ type BoundingBox = {
 
 type Offset = { x: number; y: number };
 
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
+const toFiniteNumber = (value: unknown): number | null => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
 
-const isBounds = (value: any): value is { x: number; y: number; width: number; height: number } =>
-  value &&
-  typeof value === 'object' &&
-  isFiniteNumber(value.x) &&
-  isFiniteNumber(value.y) &&
-  isFiniteNumber(value.width) &&
-  isFiniteNumber(value.height);
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
 
-const isPoint = (value: any): value is { x: number; y: number } =>
-  value &&
-  typeof value === 'object' &&
-  isFiniteNumber(value.x) &&
-  isFiniteNumber(value.y) &&
-  !isFiniteNumber((value as any).width) &&
-  !isFiniteNumber((value as any).height);
+  return null;
+};
+
+const asBounds = (
+  value: any
+): { x: number; y: number; width: number; height: number } | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const x = toFiniteNumber(value.x);
+  const y = toFiniteNumber(value.y);
+  const width = toFiniteNumber(value.width);
+  const height = toFiniteNumber(value.height);
+
+  if (x === null || y === null || width === null || height === null) {
+    return undefined;
+  }
+
+  return { x, y, width, height };
+};
+
+const asPoint = (value: any): { x: number; y: number } | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const x = toFiniteNumber(value.x);
+  const y = toFiniteNumber(value.y);
+
+  if (x === null || y === null) {
+    return undefined;
+  }
+
+  // Ignore points that already qualified as bounds
+  if (toFiniteNumber((value as any).width) !== null || toFiniteNumber((value as any).height) !== null) {
+    return undefined;
+  }
+
+  return { x, y };
+};
 
 const updateBoundsWithRect = (bounds: BoundingBox | null, rect: { x: number; y: number; width: number; height: number }) => {
   const nextBounds: BoundingBox = bounds
@@ -63,13 +96,23 @@ const collectBounds = (value: unknown, bounds: BoundingBox | null): BoundingBox 
     return value.reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
   }
 
+  if (value instanceof Map) {
+    return Array.from(value.values()).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
+  }
+
+  if (value instanceof Set) {
+    return Array.from(value.values()).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
+  }
+
   if (typeof value === 'object') {
-    if (isBounds(value)) {
-      return updateBoundsWithRect(bounds, value);
+    const rect = asBounds(value);
+    if (rect) {
+      return updateBoundsWithRect(bounds, rect);
     }
 
-    if (isPoint(value)) {
-      return updateBoundsWithPoint(bounds, value);
+    const point = asPoint(value);
+    if (point) {
+      return updateBoundsWithPoint(bounds, point);
     }
 
     return Object.values(value).reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc), bounds);
@@ -78,17 +121,35 @@ const collectBounds = (value: unknown, bounds: BoundingBox | null): BoundingBox 
   return bounds;
 };
 
-const shiftPoint = <T extends { x: number; y: number }>(point: T, offset: Offset): T => ({
-  ...point,
-  x: point.x + offset.x,
-  y: point.y + offset.y,
-});
+const shiftPoint = <T extends { x: any; y: any }>(point: T, offset: Offset): T => {
+  const x = toFiniteNumber(point.x);
+  const y = toFiniteNumber(point.y);
 
-const shiftRect = <T extends { x: number; y: number }>(rect: T, offset: Offset): T => ({
-  ...rect,
-  x: rect.x + offset.x,
-  y: rect.y + offset.y,
-});
+  if (x === null || y === null) {
+    return point;
+  }
+
+  return {
+    ...point,
+    x: x + offset.x,
+    y: y + offset.y,
+  };
+};
+
+const shiftRect = <T extends { x: any; y: any }>(rect: T, offset: Offset): T => {
+  const x = toFiniteNumber(rect.x);
+  const y = toFiniteNumber(rect.y);
+
+  if (x === null || y === null) {
+    return rect;
+  }
+
+  return {
+    ...rect,
+    x: x + offset.x,
+    y: y + offset.y,
+  };
+};
 
 const applyOffset = <T>(value: T, offset: Offset): T => {
   if (!value) {
@@ -99,13 +160,25 @@ const applyOffset = <T>(value: T, offset: Offset): T => {
     return value.map((item) => applyOffset(item, offset)) as T;
   }
 
+  if (value instanceof Map) {
+    const entries = Array.from(value.entries()).map(([key, item]) => [key, applyOffset(item, offset)]);
+    return new Map(entries) as T;
+  }
+
+  if (value instanceof Set) {
+    const shifted = Array.from(value.values()).map((item) => applyOffset(item, offset));
+    return new Set(shifted) as T;
+  }
+
   if (typeof value === 'object') {
-    if (isBounds(value)) {
-      return shiftRect(value, offset) as T;
+    const rect = asBounds(value);
+    if (rect) {
+      return shiftRect({ ...(value as Record<string, unknown>), ...rect }, offset) as T;
     }
 
-    if (isPoint(value)) {
-      return shiftPoint(value, offset) as T;
+    const point = asPoint(value);
+    if (point) {
+      return shiftPoint({ ...(value as Record<string, unknown>), ...point }, offset) as T;
     }
 
     const clone: Record<string, unknown> = { ...(value as Record<string, unknown>) };
