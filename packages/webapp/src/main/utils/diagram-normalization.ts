@@ -161,13 +161,19 @@ const applyOffset = <T>(value: T, offset: Offset): T => {
   }
 
   if (value instanceof Map) {
-    const entries = Array.from(value.entries()).map(([key, item]) => [key, applyOffset(item, offset)]);
-    return new Map(entries) as T;
+    const shifted = new Map<unknown, unknown>();
+    value.forEach((item, key) => {
+      shifted.set(key, applyOffset(item, offset));
+    });
+    return shifted as T;
   }
 
   if (value instanceof Set) {
-    const shifted = Array.from(value.values()).map((item) => applyOffset(item, offset));
-    return new Set(shifted) as T;
+    const shifted = new Set<unknown>();
+    value.forEach((item) => {
+      shifted.add(applyOffset(item, offset));
+    });
+    return shifted as T;
   }
 
   if (typeof value === 'object') {
