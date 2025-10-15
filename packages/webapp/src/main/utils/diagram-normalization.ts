@@ -54,13 +54,15 @@ const updateBoundsWithRect = (bounds: BoundingBox | null, rect: { x: number; y: 
   return nextBounds;
 };
 
+const contextsToIgnoreForBounds = new Set(['path', 'source', 'target']);
+
 const collectBounds = (value: unknown, bounds: BoundingBox | null, context?: string): BoundingBox | null => {
   if (!value) {
     return bounds;
   }
 
   if (Array.isArray(value)) {
-    if (context === 'path') {
+    if (context && contextsToIgnoreForBounds.has(context)) {
       return bounds;
     }
     return value.reduce<BoundingBox | null>((acc, item) => collectBounds(item, acc, context), bounds);
@@ -78,13 +80,16 @@ const collectBounds = (value: unknown, bounds: BoundingBox | null, context?: str
   }
 
   if (typeof value === 'object') {
+    if (context && contextsToIgnoreForBounds.has(context)) {
+      return bounds;
+    }
     const rect = asBounds(value);
-    if (rect && context !== 'path') {
+    if (rect) {
       return updateBoundsWithRect(bounds, rect);
     }
 
     const point = asPoint(value);
-    if (point && context !== 'path') {
+    if (point) {
       return updateBoundsWithPoint(bounds, point);
     }
 
@@ -163,7 +168,7 @@ const applyOffset = <T>(value: T, offset: Offset, context?: string): T => {
   }
 
   if (Array.isArray(value)) {
-    if (context === 'path') {
+    if (context && contextsToIgnoreForBounds.has(context)) {
       return value;
     }
     return value.map((item) => applyOffset(item, offset, context)) as T;
@@ -186,18 +191,22 @@ const applyOffset = <T>(value: T, offset: Offset, context?: string): T => {
   }
 
   if (typeof value === 'object') {
+    if (context && context === 'path') {
+      return value;
+    }
+
+    if (context && (context === 'source' || context === 'target')) {
+      return value;
+    }
+
     const rect = asBounds(value);
-    if (rect && context !== 'path') {
+    if (rect) {
       return shiftRect({ ...(value as Record<string, unknown>), ...rect }, offset) as T;
     }
 
     const point = asPoint(value);
-    if (point && context !== 'path') {
+    if (point) {
       return shiftPoint({ ...(value as Record<string, unknown>), ...point }, offset) as T;
-    }
-
-    if (context === 'path') {
-      return value;
     }
 
     const clone: Record<string, unknown> = { ...(value as Record<string, unknown>) };
@@ -223,25 +232,37 @@ export const normalizeDiagramModel = (model: UMLModel, padding = 100): { model: 
     return { model, offset: { x: 0, y: 0 } };
   }
 
-  const offsetFor = (minValue: number): number => {
-    if (minValue < 0 || minValue > padding) {
-      return padding - minValue;
-    }
-    return 0;
-  };
+  const width = bounds.maxX - bounds.minX;
+  const height = bounds.maxY - bounds.minY;
 
   const offset: Offset = {
-    x: offsetFor(bounds.minX),
-    y: offsetFor(bounds.minY),
+    x: padding - bounds.minX,
+    y: padding - bounds.minY,
+  };
+
+  const normalizedSize = {
+    width: Math.max(width + padding * 2, 2 * padding),
+    height: Math.max(height + padding * 2, 2 * padding),
   };
 
   if (offset.x === 0 && offset.y === 0) {
-    return { model, offset };
+    if (model.size && model.size.width === normalizedSize.width && model.size.height === normalizedSize.height) {
+      return { model, offset };
+    }
+
+    return {
+      model: {
+        ...model,
+        size: normalizedSize,
+      },
+      offset,
+    };
   }
 
   return {
     model: {
       ...model,
+      size: normalizedSize,
       elements: applyOffset(model.elements, offset),
       relationships: applyOffset(model.relationships, offset),
       interactive: applyOffset(model.interactive, offset),
