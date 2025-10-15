@@ -10,6 +10,7 @@ import { uuid } from '../../utils/uuid';
 import { ModalContentType } from '../modals/application-modal-types';
 import { selectionDiff } from '../../utils/selection-diff';
 import { CollaborationMessage } from '../../utils/collaboration-message-type';
+import { normalizeDiagramModel } from '../../utils/diagram-normalization';
 
 import { selectCreatenewEditor, setCreateNewEditor, updateDiagramThunk } from '../../services/diagram/diagramSlice';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -201,7 +202,8 @@ export const ApollonEditorComponentWithConnection: React.FC = () => {
           await editorRef.current.nextRender;
           editorRef.current.type = diagram.model.type;
           await editorRef.current.nextRender;
-          editorRef.current.model = diagram.model;
+          const { model: normalizedModel } = normalizeDiagramModel(diagram.model);
+          editorRef.current.model = normalizedModel;
 
           editorRef.current.subscribeToModelChange((model: UMLModel) => {
             const diagram = { ...reduxDiagram, model };

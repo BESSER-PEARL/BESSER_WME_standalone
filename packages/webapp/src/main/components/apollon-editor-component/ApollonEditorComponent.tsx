@@ -2,6 +2,7 @@ import { ApollonEditor, UMLModel } from '@besser/wme';
 import React, { useEffect, useRef, useContext } from 'react';
 import styled from 'styled-components';
 import { uuid } from '../../utils/uuid';
+import { normalizeDiagramModel } from '../../utils/diagram-normalization';
 
 import { setCreateNewEditor, updateDiagramThunk, selectCreatenewEditor } from '../../services/diagram/diagramSlice';
 import { ApollonEditorContext } from './apollon-editor-context';
@@ -51,7 +52,8 @@ export const ApollonEditorComponent: React.FC = () => {
 
         // Only load the model if we're not changing diagram type
         if (reduxDiagram && reduxDiagram.model && reduxDiagram.model.type === options.type) {
-          editorRef.current.model = reduxDiagram.model;
+          const { model: normalizedModel } = normalizeDiagramModel(reduxDiagram.model);
+          editorRef.current.model = normalizedModel;
         }
 
         // Debounced model change handler
@@ -93,7 +95,8 @@ export const ApollonEditorComponent: React.FC = () => {
 
         const modelToPreview = reduxDiagram?.versions && reduxDiagram.versions[previewedDiagramIndex]?.model;
         if (modelToPreview) {
-          editorRef.current.model = modelToPreview;
+          const { model: normalizedModel } = normalizeDiagramModel(modelToPreview);
+          editorRef.current.model = normalizedModel;
         }
       }
     };
