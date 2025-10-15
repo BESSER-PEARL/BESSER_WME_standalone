@@ -98,6 +98,7 @@ export const AgentConfigScreen: React.FC = () => {
     const [llmProvider, setLlmProvider] = useState(getInitialConfig().llmProvider);
     const [llmModel, setLlmModel] = useState(getInitialConfig().llmModel);
     const [customModel, setCustomModel] = useState('');
+    const [languageComplexity, setLanguageComplexity] = useState<'original' | 'simple' | 'medium' | 'complex'>('original');
 
     // Sync state with localStorage on mount
     useEffect(() => {
@@ -147,6 +148,7 @@ export const AgentConfigScreen: React.FC = () => {
         responseTiming,
         agentStyle,
         llm: llmProvider && (llmModel || customModel) ? { provider: llmProvider, model: llmModel === 'other' ? customModel : llmModel } : {},
+        languageComplexity,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -304,6 +306,51 @@ export const AgentConfigScreen: React.FC = () => {
                                             value="informal"
                                             checked={agentStyle === 'informal'}
                                             onChange={e => setAgentStyle(e.target.value)}
+                                        />
+                                    </div>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Language Complexity</Form.Label>
+                                    <div className="d-flex flex-column gap-2">
+                                        <Form.Check
+                                            type="radio"
+                                            label="Original"
+                                            name="languageComplexity"
+                                            id="languageComplexityOriginal"
+                                            value="original"
+                                            checked={languageComplexity === 'original'}
+                                            onChange={e => setLanguageComplexity(e.target.value as 'original' | 'simple' | 'medium' | 'complex')}
+                                        />
+                                        <Form.Check
+                                            type="radio"
+                                            label="Simple"
+                                            name="languageComplexity"
+                                            id="languageComplexitySimple"
+                                            value="simple"
+                                            checked={languageComplexity === 'simple'}
+                                            onChange={e => setLanguageComplexity(e.target.value as 'original' | 'simple' | 'medium' | 'complex')}
+                                        />
+                                        <Form.Check
+                                            type="radio"
+                                            label="Medium"
+                                            name="languageComplexity"
+                                            id="languageComplexityMedium"
+                                            value="medium"
+                                            checked={languageComplexity === 'medium'}
+                                            onChange={e => setLanguageComplexity(e.target.value as 'original' | 'simple' | 'medium' | 'complex')}
+                                        />
+                                        <Form.Check
+                                            type="radio"
+                                            label="Complex"
+                                            name="languageComplexity"
+                                            id="languageComplexityComplex"
+                                            value="complex"
+                                            checked={languageComplexity === 'complex'}
+                                            onChange={e => setLanguageComplexity(e.target.value as 'original' | 'simple' | 'medium' | 'complex')}
                                         />
                                     </div>
                                 </Form.Group>
