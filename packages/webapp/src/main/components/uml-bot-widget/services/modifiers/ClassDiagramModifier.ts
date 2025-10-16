@@ -4,7 +4,7 @@
  */
 
 import { DiagramModifier, ModelModification, ModifierHelpers } from './base';
-import { ApollonModel } from '../UMLModelingService';
+import { BESSERModel } from '../UMLModelingService';
 
 export class ClassDiagramModifier implements DiagramModifier {
   getDiagramType() {
@@ -21,7 +21,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     ].includes(action);
   }
 
-  applyModification(model: ApollonModel, modification: ModelModification): ApollonModel {
+  applyModification(model: BESSERModel, modification: ModelModification): BESSERModel {
     const updatedModel = ModifierHelpers.cloneModel(model);
 
     switch (modification.action) {
@@ -40,7 +40,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     }
   }
 
-  private modifyClass(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyClass(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { classId, className } = modification.target;
     const targetId = classId || this.findClassIdByName(model, className!);
 
@@ -53,7 +53,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private modifyAttribute(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyAttribute(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { attributeId, attributeName, className } = modification.target;
     let targetId = attributeId;
 
@@ -104,7 +104,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private modifyMethod(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyMethod(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { methodId, methodName, className } = modification.target;
     let targetId = methodId;
 
@@ -158,7 +158,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private addRelationship(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private addRelationship(model: BESSERModel, modification: ModelModification): BESSERModel {
     if (!model.relationships) {
       model.relationships = {};
     }
@@ -215,7 +215,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private removeElement(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeElement(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { classId, className, attributeId, attributeName, methodId, methodName, relationshipId, relationshipName } =
       modification.target;
 
@@ -280,11 +280,11 @@ export class ClassDiagramModifier implements DiagramModifier {
   }
 
   // Helper methods
-  private findClassIdByName(model: ApollonModel, className: string): string | null {
+  private findClassIdByName(model: BESSERModel, className: string): string | null {
     return ModifierHelpers.findElementByName(model, className, 'Class');
   }
 
-  private findAttributeIdByClassAndName(model: ApollonModel, className: string, attributeName?: string): string | null {
+  private findAttributeIdByClassAndName(model: BESSERModel, className: string, attributeName?: string): string | null {
     if (!attributeName) return null;
     const classId = this.findClassIdByName(model, className);
     if (!classId) return null;
@@ -308,7 +308,7 @@ export class ClassDiagramModifier implements DiagramModifier {
     return null;
   }
 
-  private findMethodIdByClassAndName(model: ApollonModel, className: string, methodName?: string): string | null {
+  private findMethodIdByClassAndName(model: BESSERModel, className: string, methodName?: string): string | null {
     if (!methodName) return null;
     const classId = this.findClassIdByName(model, className);
     if (!classId) return null;
@@ -387,7 +387,8 @@ export class ClassDiagramModifier implements DiagramModifier {
 
   private mapRelationshipType(type: string): string {
     switch ((type || '').toLowerCase()) {
-      case 'inheritance': return 'ClassInheritance';
+      case 'inheritance': 
+      case 'generalization': return 'ClassInheritance';
       case 'composition': return 'ClassComposition';
       case 'aggregation': return 'ClassAggregation';
       case 'dependency': return 'ClassDependency';

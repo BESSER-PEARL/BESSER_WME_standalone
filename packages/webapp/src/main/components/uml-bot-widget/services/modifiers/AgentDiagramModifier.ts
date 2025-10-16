@@ -4,7 +4,7 @@
  */
 
 import { DiagramModifier, ModelModification, ModifierHelpers } from './base';
-import { ApollonModel } from '../UMLModelingService';
+import { BESSERModel } from '../UMLModelingService';
 
 export class AgentDiagramModifier implements DiagramModifier {
   getDiagramType() {
@@ -22,7 +22,7 @@ export class AgentDiagramModifier implements DiagramModifier {
     ].includes(action);
   }
 
-  applyModification(model: ApollonModel, modification: ModelModification): ApollonModel {
+  applyModification(model: BESSERModel, modification: ModelModification): BESSERModel {
     const updatedModel = ModifierHelpers.cloneModel(model);
 
     switch (modification.action) {
@@ -46,7 +46,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Modify state properties (rename, etc.)
    */
-  private modifyState(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyState(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { stateId, stateName } = modification.target;
     const targetId = stateId || this.findStateIdByName(model, stateName!);
 
@@ -62,7 +62,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Modify intent properties (rename, add training phrases)
    */
-  private modifyIntent(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyIntent(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { intentId, intentName } = modification.target;
     const targetId = intentId || this.findIntentIdByName(model, intentName!);
 
@@ -83,7 +83,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Add a training phrase to an intent
    */
-  private addIntentTrainingPhrase(model: ApollonModel, intentId: string, phrase: string): void {
+  private addIntentTrainingPhrase(model: BESSERModel, intentId: string, phrase: string): void {
     const intent = model.elements[intentId];
     if (!intent || intent.type !== 'AgentIntent') return;
 
@@ -124,7 +124,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Add state body (reply)
    */
-  private addStateBody(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private addStateBody(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { stateId, stateName } = modification.target;
     const targetId = stateId || this.findStateIdByName(model, stateName!);
 
@@ -177,7 +177,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Add transition between states or from intent to state
    */
-  private addTransition(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private addTransition(model: BESSERModel, modification: ModelModification): BESSERModel {
     if (!model.relationships) {
       model.relationships = {};
     }
@@ -244,7 +244,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Remove transition
    */
-  private removeTransition(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeTransition(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { transitionId } = modification.target;
 
     if (transitionId && model.relationships?.[transitionId]) {
@@ -274,7 +274,7 @@ export class AgentDiagramModifier implements DiagramModifier {
   /**
    * Remove element (state, intent, or their bodies)
    */
-  private removeElement(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeElement(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { stateId, stateName, intentId, intentName } = modification.target;
 
     // Remove state
@@ -297,15 +297,15 @@ export class AgentDiagramModifier implements DiagramModifier {
   }
 
   // Helper methods
-  private findStateIdByName(model: ApollonModel, stateName: string): string | null {
+  private findStateIdByName(model: BESSERModel, stateName: string): string | null {
     return ModifierHelpers.findElementByName(model, stateName, 'AgentState');
   }
 
-  private findIntentIdByName(model: ApollonModel, intentName: string): string | null {
+  private findIntentIdByName(model: BESSERModel, intentName: string): string | null {
     return ModifierHelpers.findElementByName(model, intentName, 'AgentIntent');
   }
 
-  private findInitialNodeId(model: ApollonModel): string | null {
+  private findInitialNodeId(model: BESSERModel): string | null {
     const results = ModifierHelpers.findElementsByType(model, 'StateInitialNode');
     return results.length > 0 ? results[0].id : null;
   }

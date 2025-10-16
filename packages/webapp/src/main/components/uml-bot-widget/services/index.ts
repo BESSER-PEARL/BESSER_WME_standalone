@@ -8,7 +8,7 @@ export type {
   ClassSpec, 
   SystemSpec, 
   ModelUpdate, 
-  ApollonModel 
+  BESSERModel 
 } from './UMLModelingService';
 
 export { WebSocketService } from './WebSocketService';

@@ -4,9 +4,10 @@ import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 // Import our new services
-import { UMLModelingService, ClassSpec, SystemSpec, ModelModification, ApollonModel, ModelUpdate } from './services/UMLModelingService';
+import { UMLModelingService, ClassSpec, SystemSpec, ModelModification, BESSERModel, ModelUpdate } from './services/UMLModelingService';
 import { WebSocketService, ChatMessage, InjectionCommand, SendStatus } from './services/WebSocketService';
 import { UIService } from './services/UIService';
+import { JsonViewerModal } from './JsonViewerModal';
 import { UML_BOT_WS_URL } from '../../constant';
 
 // Styled Components
@@ -366,6 +367,30 @@ const StatusBar = styled.div`
     font-weight: 600;
     margin-left: 8px;
   }
+
+  .json-button {
+    padding: 4px 8px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
 `;
 
 const ConnectionStatusDot = styled.span<{ status: ConnectionStatus }>`
@@ -399,6 +424,7 @@ export const UMLBotWidget: React.FC = () => {
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const [currentDiagramType, setCurrentDiagramType] = useState<string>('ClassDiagram');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [showJsonModal, setShowJsonModal] = useState(false);
 
   // Services
   const [wsService] = useState(() => new WebSocketService(UML_BOT_WS_URL));
@@ -528,7 +554,7 @@ export const UMLBotWidget: React.FC = () => {
             throw new Error('Failed to inject to editor');
           }
         } else if (command.model) {
-          await modelingService.replaceModel(command.model as Partial<ApollonModel>);
+          await modelingService.replaceModel(command.model as Partial<BESSERModel>);
           successMessage = successMessage || '✅ Imported model update from assistant.';
         } else {
           throw new Error('Assistant did not provide a valid update payload');
@@ -664,7 +690,7 @@ export const UMLBotWidget: React.FC = () => {
                 const jsonBlocks = uiService.extractJsonBlocks(content);
                 for (const block of jsonBlocks) {
                   try {
-                    const parsed = JSON.parse(block.json) as Partial<ApollonModel>;
+                    const parsed = JSON.parse(block.json) as Partial<BESSERModel>;
                     await modelingService.replaceModel(parsed);
                     uiService.showToast('Imported model into editor', 'success');
                     const confirmationMessage: ChatMessage = {
@@ -718,7 +744,46 @@ export const UMLBotWidget: React.FC = () => {
   const isInputDisabled = connectionStatus === 'closing';
   const isSendDisabled = inputValue.trim().length === 0 || connectionStatus === 'closing';
 
+  const handleShowJson = () => {
+    setShowJsonModal(true);
+  };
+
+  const handleCopyJson = () => {
+    const currentModel = modelingService?.getCurrentModel();
+    if (currentModel) {
+      const jsonString = JSON.stringify(currentModel, null, 2);
+      navigator.clipboard.writeText(jsonString).then(() => {
+        uiService.showToast('JSON copied to clipboard!', 'success');
+      }).catch(() => {
+        uiService.showToast('Failed to copy JSON', 'error');
+      });
+    }
+  };
+
+  const handleDownloadJson = () => {
+    const currentModel = modelingService?.getCurrentModel();
+    if (currentModel) {
+      const jsonString = JSON.stringify(currentModel, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentDiagramType}_${new Date().getTime()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      uiService.showToast('JSON downloaded!', 'success');
+    }
+  };
+
+  const getCurrentModelJson = () => {
+    const currentModel = modelingService?.getCurrentModel();
+    return currentModel ? JSON.stringify(currentModel, null, 2) : '{\n  "error": "No diagram model available"\n}';
+  };
+
   return (
+    <>
     <ChatWidgetContainer>
       <ChatWindow isVisible={isVisible}>
         <ChatHeader>
@@ -766,6 +831,9 @@ export const UMLBotWidget: React.FC = () => {
               <div className="diagram-type-badge">
                 📊 {currentDiagramType.replace('Diagram', '')}
               </div>
+              <button className="json-button" onClick={handleShowJson} title="View diagram JSON">
+                📋 JSON
+              </button>
             </div>
             <span>{messageCountLabel}</span>
           </StatusBar>
@@ -795,6 +863,16 @@ export const UMLBotWidget: React.FC = () => {
         <CircleButton isOpen={isVisible} onClick={() => setIsVisible(!isVisible)}>
           {isVisible ? '✕' : <img src="/img/agent_back.png" alt="Agent" style={{ width: 45, height: 45, borderRadius: '50%', filter: 'invert(0)' }} />}
         </CircleButton>
-    </ChatWidgetContainer>
+      </ChatWidgetContainer>
+
+      <JsonViewerModal
+        isVisible={showJsonModal}
+        jsonData={getCurrentModelJson()}
+        diagramType={currentDiagramType}
+        onClose={() => setShowJsonModal(false)}
+        onCopy={handleCopyJson}
+        onDownload={handleDownloadJson}
+      />
+    </>
   );
 };

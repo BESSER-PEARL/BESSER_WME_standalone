@@ -4,7 +4,7 @@
  */
 
 import { DiagramModifier, ModelModification, ModifierHelpers } from './base';
-import { ApollonModel } from '../UMLModelingService';
+import { BESSERModel } from '../UMLModelingService';
 
 export class StateMachineModifier implements DiagramModifier {
   getDiagramType() {
@@ -20,7 +20,7 @@ export class StateMachineModifier implements DiagramModifier {
     ].includes(action);
   }
 
-  applyModification(model: ApollonModel, modification: ModelModification): ApollonModel {
+  applyModification(model: BESSERModel, modification: ModelModification): BESSERModel {
     const updatedModel = ModifierHelpers.cloneModel(model);
 
     switch (modification.action) {
@@ -37,7 +37,7 @@ export class StateMachineModifier implements DiagramModifier {
     }
   }
 
-  private modifyState(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyState(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { stateId, stateName } = modification.target;
     const targetId = stateId || ModifierHelpers.findElementByName(model, stateName!, 'State');
 
@@ -50,7 +50,7 @@ export class StateMachineModifier implements DiagramModifier {
     return model;
   }
 
-  private addTransition(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private addTransition(model: BESSERModel, modification: ModelModification): BESSERModel {
     if (!model.relationships) {
       model.relationships = {};
     }
@@ -84,7 +84,7 @@ export class StateMachineModifier implements DiagramModifier {
     return model;
   }
 
-  private removeTransition(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeTransition(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { transitionId } = modification.target;
 
     if (transitionId && model.relationships?.[transitionId]) {
@@ -94,7 +94,7 @@ export class StateMachineModifier implements DiagramModifier {
     return model;
   }
 
-  private removeElement(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeElement(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { stateId, stateName } = modification.target;
     const targetId = stateId || ModifierHelpers.findElementByName(model, stateName!, 'State');
 

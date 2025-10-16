@@ -15,7 +15,7 @@ class ClassDiagramHandler(BaseDiagramHandler):
         return "ClassDiagram"
 
     def get_system_prompt(self) -> str:
-        return """You are a UML modeling expert. Create a MINIMAL, focused class specification based on the user's request.
+        return """You are a UML modeling expert. Create a focused class specification based on the user's request.
 
 Return ONLY a JSON object with this structure:
 {
@@ -25,22 +25,27 @@ Return ONLY a JSON object with this structure:
     {"name": "anotherAttr", "type": "int", "visibility": "private"}
   ],
   "methods": [
-    {"name": "methodName", "returnType": "void", "visibility": "public", "parameters": []}
+    {"name": "methodName", "returnType": "void", "visibility": "public", "parameters": [
+      {"name": "paramName", "type": "String"}
+    ]}
   ]
 }
 
 IMPORTANT RULES:
-1. Generate 2-4 ESSENTIAL attributes only
-2. Generate 0-2 methods ONLY if they make sense for the class
-3. If the user just says "create X class", generate minimal attributes and NO methods
-4. Use proper programming conventions
-5. Keep it SIMPLE and focused
-6. Return ONLY the JSON, no explanations
+1. Create AS MANY attributes as needed (no fixed limits - can be 1, 3, 8, or more) based on what makes sense for the class
+2. Generate methods ONLY when explicitly requested or when they're essential to the class purpose
+3. If the user just says "create X class", generate relevant attributes and minimal/no methods
+4. Use proper programming conventions (camelCase for attributes/methods, PascalCase for classes)
+5. visibility options: "public", "private", "protected", or "package" (default to "private" for attributes, "public" for methods)
+6. Common types: String, int, boolean, double, Date, List, Map, or custom class names
+7. Method parameters are optional - empty array [] if no parameters needed
+8. Keep it focused but complete - don't artificially limit essential properties
+9. Return ONLY the JSON, no explanations or markdown
 
 Examples:
-- "create User class" -> 2-3 attributes (id, name, email), 0-1 method
-- "create Product class" -> 2-3 attributes (id, name, price), 0 methods
-- "create Order with payment" -> 3-4 attributes including paymentMethod, 1 method (processOrder)
+- "create User class" -> attributes: id, username, email, password (4 attributes, 0-1 method)
+- "create Product with inventory" -> attributes: id, name, price, stockQuantity, supplier (5+ attributes)
+- "create BankAccount with deposit method" -> attributes: accountNumber, balance, owner + methods: deposit, withdraw
 
 Return ONLY the JSON, no explanations."""
 
@@ -90,31 +95,51 @@ Return ONLY a JSON object with this structure:
     {
       "className": "ClassName",
       "attributes": [
-        {"name": "attr", "type": "String", "visibility": "public"}
+        {"name": "attr", "type": "String", "visibility": "private"}
       ],
       "methods": [
-        {"name": "method", "returnType": "void", "visibility": "private", "parameters": []}
+        {"name": "method", "returnType": "void", "visibility": "public", "parameters": [
+          {"name": "param", "type": "String"}
+        ]}
       ]
     }
   ],
   "relationships": [
     {
-      "type": "association",
+      "type": "Association",
       "source": "ClassName1",
       "target": "ClassName2",
       "sourceMultiplicity": "1",
-      "targetMultiplicity": "*"
+      "targetMultiplicity": "*",
+      "name": "relationshipName"
     }
   ]
 }
 
 IMPORTANT RULES:
-1. Create 3-6 related classes
-2. Each class should have 2-4 essential attributes
-3. Minimize methods (0-2 per class)
-4. Include meaningful relationships (association, inheritance, composition)
-5. Use proper UML relationship types
-6. Keep it focused and coherent
+1. Create AS MANY classes as needed for a complete system (no fixed limits - can be 2, 5, 10, or more depending on complexity)
+2. Each class should have AS MANY attributes as needed (can be 1-10+ attributes) - don't artificially limit essential properties
+3. Methods: Include essential methods (getters/setters, business logic) when they add value - can be 0-10+ per class
+4. Relationships are CRITICAL - always include meaningful connections between classes:
+   - "Association" - general relationship between classes (most common)
+   - "Inheritance" (also called "Generalization") - parent-child "is-a" relationship (use sparingly, only when true inheritance)
+   - "Composition" - strong "has-a" relationship (part cannot exist without whole)
+   - "Aggregation" - weak "has-a" relationship (part can exist independently)
+   - "Realization" - interface implementation
+5. Relationship properties:
+   - "name": Optional descriptive name for the relationship
+   - "sourceMultiplicity": "1", "0..1", "*", "1..*" etc. (how many source instances)
+   - "targetMultiplicity": "1", "0..1", "*", "1..*" etc. (how many target instances)
+6. Use proper naming: PascalCase for classes, camelCase for attributes/methods/parameters
+7. visibility: "public", "private", "protected", or "package" (default: private for attributes, public for methods)
+8. Common types: String, int, boolean, double, Date, List, Map, or custom class names
+9. For complex systems, create a coherent architecture with proper separation of concerns
+10. Return ONLY the JSON, no explanations or markdown
+
+Examples:
+- E-commerce system: User, Product, Order, Payment, ShoppingCart with appropriate associations
+- Library system: Book, Author, Member, Loan with inheritance (DigitalBook extends Book) and compositions
+- Banking system: Account, Customer, Transaction, Branch with aggregations and multiplicities
 
 Return ONLY the JSON, no explanations."""
 
@@ -196,9 +221,9 @@ Return ONLY the JSON, no explanations."""
         
         system_prompt = """You are a UML modeling expert. The user wants to modify an existing class diagram.
 
-Return ONLY a JSON object with this structure:
+Return ONLY a JSON object with one of these structures:
 
-MODIFY CLASS
+MODIFY CLASS (rename or change properties)
 {
   "action": "modify_model",
   "modification": {
@@ -212,7 +237,23 @@ MODIFY CLASS
   }
 }
 
-MODIFY ATTRIBUTE
+ADD ATTRIBUTE (to existing class)
+{
+  "action": "modify_model",
+  "modification": {
+    "action": "add_attribute",
+    "target": {
+      "className": "ClassName"
+    },
+    "changes": {
+      "name": "newAttribute",
+      "type": "String",
+      "visibility": "private"
+    }
+  }
+}
+
+MODIFY ATTRIBUTE (change existing attribute)
 {
   "action": "modify_model",
   "modification": {
@@ -223,13 +264,30 @@ MODIFY ATTRIBUTE
     },
     "changes": {
       "name": "newAttributeName",
-      "type": "String",
-      "visibility": "public"
+      "type": "int",
+      "visibility": "private"
     }
   }
 }
 
-MODIFY METHOD
+ADD METHOD (to existing class)
+{
+  "action": "modify_model",
+  "modification": {
+    "action": "add_method",
+    "target": {
+      "className": "ClassName"
+    },
+    "changes": {
+      "name": "newMethod",
+      "returnType": "void",
+      "visibility": "public",
+      "parameters": [{"name": "param", "type": "String"}]
+    }
+  }
+}
+
+MODIFY METHOD (change existing method)
 {
   "action": "modify_model",
   "modification": {
@@ -240,14 +298,14 @@ MODIFY METHOD
     },
     "changes": {
       "name": "newMethodName",
-      "returnType": "void",
+      "returnType": "boolean",
       "visibility": "public",
-      "parameters": [{"name": "param", "type": "String"}]
+      "parameters": [{"name": "id", "type": "int"}]
     }
   }
 }
 
-ADD RELATIONSHIP
+ADD RELATIONSHIP (connect two classes)
 {
   "action": "modify_model",
   "modification": {
@@ -265,7 +323,7 @@ ADD RELATIONSHIP
   }
 }
 
-REMOVE ELEMENT
+REMOVE ELEMENT (delete class, attribute, method, or relationship)
 {
   "action": "modify_model",
   "modification": {
@@ -276,14 +334,40 @@ REMOVE ELEMENT
   }
 }
 
+OR for removing attribute:
+{
+  "action": "modify_model",
+  "modification": {
+    "action": "remove_element",
+    "target": {
+      "className": "ClassName",
+      "attributeName": "attributeToRemove"
+    }
+  }
+}
+
 IMPORTANT RULES:
-1. Use "modify_class", "modify_attribute", or "modify_method" to rename/change properties
-2. Use "add_relationship" to connect classes (Association, Inheritance, Composition, Aggregation)
-3. Use "remove_element" to delete classes, attributes, methods, or relationships
-4. visibility can be "public", "private", or "protected"
-5. Relationship types: Association, Inheritance, Composition, Aggregation
-6. Only reference elements that exist in the current model
-7. Return ONLY the JSON object – no explanations"""
+1. Actions available: "modify_class", "add_attribute", "modify_attribute", "add_method", "modify_method", "add_relationship", "remove_element"
+2. Always specify exact target names that exist in the current model
+3. visibility options: "public", "private", "protected", "package"
+4. Relationship types (case-sensitive): "Association", "Inheritance" (also called Generalization), "Composition", "Aggregation", "Realization"
+5. Multiplicities: "1", "0..1", "*", "1..*", "0..*", or specific numbers like "5"
+6. When adding methods, include empty parameters array [] if no parameters needed
+7. When modifying, only include the fields that should change in "changes" object
+8. For remove_element, only specify the target - no "changes" needed
+9. Return ONLY the JSON object – no explanations or markdown
+
+Examples:
+- "rename User class to Customer" -> modify_class with name change
+- "add email attribute to User" -> add_attribute with type String, visibility private
+- "make password private" -> modify_attribute changing visibility
+- "add login method to User" -> add_method with appropriate returnType and parameters
+- "connect Order to Customer" -> add_relationship with Association type
+- "add generalization between Member and Author" -> add_relationship with Inheritance type (Member inherits from Author)
+- "create inheritance from Student to Person" -> add_relationship with Inheritance type (Student is child, Person is parent)
+- "delete the temp attribute" -> remove_element with attributeName
+
+Return ONLY the JSON object – no explanations"""
 
         # Build context from current model
         context_info = []

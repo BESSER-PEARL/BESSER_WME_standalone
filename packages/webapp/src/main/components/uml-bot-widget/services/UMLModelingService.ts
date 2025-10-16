@@ -42,7 +42,7 @@ export interface ModelUpdate {
   message: string;
 }
 
-export interface ApollonModel {
+export interface BESSERModel {
   version: string;
   type: string; // DiagramType: ClassDiagram, ObjectDiagram, StateMachineDiagram, AgentDiagram
   size: { width: number; height: number };
@@ -60,7 +60,7 @@ export interface ApollonModel {
 export class UMLModelingService {
   private editor: any;
   private dispatch: AppDispatch;
-  private currentModel: ApollonModel | null = null;
+  private currentModel: BESSERModel | null = null;
   private currentDiagramType: string = 'ClassDiagram';
 
   constructor(editor: any, dispatch: AppDispatch) {
@@ -78,7 +78,7 @@ export class UMLModelingService {
   /**
    * Update the current model reference
    */
-  updateCurrentModel(model: ApollonModel) {
+  updateCurrentModel(model: BESSERModel) {
     this.currentModel = model;
     this.currentDiagramType = model.type || 'ClassDiagram';
     // console.log('📊 Updated model type:', this.currentDiagramType);
@@ -94,7 +94,7 @@ export class UMLModelingService {
   /**
    * Get the current model from editor, Redux, or create default
    */
-  getCurrentModel(): ApollonModel {
+  getCurrentModel(): BESSERModel {
     if (this.currentModel) {
       return this.currentModel;
     }
@@ -200,7 +200,7 @@ export class UMLModelingService {
   async injectToEditor(update: ModelUpdate): Promise<boolean> {
     try {
       const currentModel = this.getCurrentModel();
-      let updatedModel: ApollonModel;
+      let updatedModel: BESSERModel;
 
       switch (update.type) {
         case 'single_element':
@@ -250,13 +250,13 @@ export class UMLModelingService {
     }
   }
 
-  async replaceModel(model: Partial<ApollonModel>): Promise<boolean> {
+  async replaceModel(model: Partial<BESSERModel>): Promise<boolean> {
     if (!model || typeof model !== 'object') {
       throw new Error('Invalid model payload');
     }
 
     const currentModel = this.getCurrentModel();
-    const mergedModel: ApollonModel = {
+    const mergedModel: BESSERModel = {
       ...currentModel,
       ...model,
       version: typeof model.version === 'string' ? model.version : currentModel.version || '3.0.0',
@@ -306,7 +306,7 @@ export class UMLModelingService {
   /**
    * Merge single element into existing model
    */
-  private mergeElementIntoModel(currentModel: ApollonModel, elementData: any): ApollonModel {
+  private mergeElementIntoModel(currentModel: BESSERModel, elementData: any): BESSERModel {
     const updatedElements = { ...(currentModel.elements || {}) };
     const updatedRelationships = { ...(currentModel.relationships || {}) };
 
@@ -354,7 +354,7 @@ export class UMLModelingService {
   /**
    * Merge complete system into existing model
    */
-  private mergeSystemIntoModel(currentModel: ApollonModel, systemData: any): ApollonModel {
+  private mergeSystemIntoModel(currentModel: BESSERModel, systemData: any): BESSERModel {
     return {
       ...currentModel,
       elements: {

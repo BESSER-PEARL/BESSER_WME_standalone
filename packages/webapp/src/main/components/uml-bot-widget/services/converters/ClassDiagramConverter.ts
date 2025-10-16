@@ -156,6 +156,7 @@ export class ClassDiagramConverter implements DiagramConverter {
   private getRelationshipType(type: string): string {
     switch (type?.toLowerCase()) {
       case 'inheritance':
+      case 'generalization':
         return 'ClassInheritance';
       case 'composition':
         return 'ClassComposition';

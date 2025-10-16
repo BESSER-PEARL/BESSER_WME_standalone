@@ -3,7 +3,7 @@
  * Defines the contract for all diagram-specific modification handlers
  */
 
-import { ApollonModel } from '../UMLModelingService';
+import { BESSERModel } from '../UMLModelingService';
 
 export type DiagramType = 'ClassDiagram' | 'ObjectDiagram' | 'StateMachineDiagram' | 'AgentDiagram';
 
@@ -84,7 +84,7 @@ export interface DiagramModifier {
   /**
    * Apply modification to the model
    */
-  applyModification(model: ApollonModel, modification: ModelModification): ApollonModel;
+  applyModification(model: BESSERModel, modification: ModelModification): BESSERModel;
 }
 
 /**
@@ -101,14 +101,14 @@ export class ModifierHelpers {
   /**
    * Deep clone model
    */
-  static cloneModel(model: ApollonModel): ApollonModel {
+  static cloneModel(model: BESSERModel): BESSERModel {
     return JSON.parse(JSON.stringify(model));
   }
 
   /**
    * Find element by name and type
    */
-  static findElementByName(model: ApollonModel, name: string, type: string): string | null {
+  static findElementByName(model: BESSERModel, name: string, type: string): string | null {
     for (const [id, element] of Object.entries(model.elements)) {
       if (element.type === type && element.name === name) {
         return id;
@@ -120,7 +120,7 @@ export class ModifierHelpers {
   /**
    * Find elements by type
    */
-  static findElementsByType(model: ApollonModel, type: string): Array<{ id: string; element: any }> {
+  static findElementsByType(model: BESSERModel, type: string): Array<{ id: string; element: any }> {
     const results: Array<{ id: string; element: any }> = [];
     for (const [id, element] of Object.entries(model.elements)) {
       if (element.type === type) {
@@ -133,7 +133,7 @@ export class ModifierHelpers {
   /**
    * Remove element and its children
    */
-  static removeElementWithChildren(model: ApollonModel, elementId: string): ApollonModel {
+  static removeElementWithChildren(model: BESSERModel, elementId: string): BESSERModel {
     const element = model.elements[elementId];
     if (!element) return model;
 

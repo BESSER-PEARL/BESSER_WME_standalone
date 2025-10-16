@@ -4,7 +4,7 @@
  */
 
 import { DiagramModifier, ModelModification, ModifierHelpers } from './base';
-import { ApollonModel } from '../UMLModelingService';
+import { BESSERModel } from '../UMLModelingService';
 
 export class ObjectDiagramModifier implements DiagramModifier {
   getDiagramType() {
@@ -19,7 +19,7 @@ export class ObjectDiagramModifier implements DiagramModifier {
     ].includes(action);
   }
 
-  applyModification(model: ApollonModel, modification: ModelModification): ApollonModel {
+  applyModification(model: BESSERModel, modification: ModelModification): BESSERModel {
     const updatedModel = ModifierHelpers.cloneModel(model);
 
     switch (modification.action) {
@@ -34,7 +34,7 @@ export class ObjectDiagramModifier implements DiagramModifier {
     }
   }
 
-  private modifyObject(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private modifyObject(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { objectId, objectName } = modification.target;
     const targetId = objectId || ModifierHelpers.findElementByName(model, objectName!, 'ObjectName');
 
@@ -47,7 +47,7 @@ export class ObjectDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private addLink(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private addLink(model: BESSERModel, modification: ModelModification): BESSERModel {
     if (!model.relationships) {
       model.relationships = {};
     }
@@ -82,7 +82,7 @@ export class ObjectDiagramModifier implements DiagramModifier {
     return model;
   }
 
-  private removeElement(model: ApollonModel, modification: ModelModification): ApollonModel {
+  private removeElement(model: BESSERModel, modification: ModelModification): BESSERModel {
     const { objectId, objectName } = modification.target;
     const targetId = objectId || ModifierHelpers.findElementByName(model, objectName!, 'ObjectName');
 
