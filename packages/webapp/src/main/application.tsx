@@ -18,6 +18,7 @@ import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
+import { UMLBotWidget } from './components/uml-bot-widget/UMLBotWidgetRefactored';
 
 const postHogOptions = {
   api_host: POSTHOG_HOST,
@@ -31,7 +32,9 @@ function AppContentInner() {
   const location = useLocation();
   
   // Check if current path contains a token (collaboration route)
-  const hasTokenInUrl = location.pathname !== '/' && location.pathname !== '/project-settings' && location.pathname !== '/teampage';
+  const hasTokenInUrl = location.pathname !== '/' && 
+                       location.pathname !== '/project-settings' && 
+                       location.pathname !== '/teampage';
   
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
@@ -104,14 +107,14 @@ function AppContentInner() {
       {/* {isFirefox && <FirefoxIncompatibilityHint />} */}
       <Routes>
         {/* Collaboration route with token */}
-        <Route 
+        {/* <Route 
           path="/:token" 
           element={
             // <SidebarLayout>  No collaboration support yet
               <ApollonEditorComponentWithConnection />
             // </SidebarLayout>
           } 
-        />
+        /> */}
         
         {/* Main editor route */}
         <Route 
@@ -122,7 +125,8 @@ function AppContentInner() {
             </SidebarLayout>
           } 
         />
-        
+                
+
         {/* Project settings route */}
         <Route 
           path="/project-settings" 
@@ -137,6 +141,7 @@ function AppContentInner() {
         <Route path="/teampage" element={<TeamPage />} />
       </Routes>
       <ErrorPanel />
+      <UMLBotWidget />
       <ToastContainer />
     </ApollonEditorProvider>
   );
