@@ -55,7 +55,7 @@ def prepare_payload_from_session(session: Session, default_diagram_type: Optiona
             try:
                 payload = json.loads(event_message)
             except Exception:
-                payload = {}
+                pass
         else:
             raw_message = event_message or raw_message
 
@@ -361,13 +361,7 @@ Rules:
 
 def global_fallback_body(session: Session):
     user_message = session.event.message or ""
-    
-    # Simple processing - no JSON context mode
-    logger.info(f"🔍 SIMPLE: Processing message: '{user_message[:100]}...'")
-    
-    # Use OpenAI to provide helpful responses
     answer = gpt.predict(f"You are a UML modeling assistant. The user said: '{user_message}'. If this is related to UML modeling, suggest how you can help them create models, classes, or diagrams. Otherwise, politely explain that you specialize in UML modeling assistance.")
-    
     session.reply(answer)
 
 agent.set_global_fallback_body(global_fallback_body)
@@ -409,7 +403,7 @@ greetings_state.when_event(ReceiveJSONEvent())\
 greetings_state.when_no_intent_matched().go_to(modeling_help_state)
 
 def diagram_router_body(session: Session):
-    logger.info("[uml-bot] Routing payload based on diagram type and request intent")
+    pass
 
 diagram_router_state.set_body(diagram_router_body)
 
@@ -427,7 +421,6 @@ diagram_router_state.when_condition(route_to_single_element, {'default_diagram_t
 def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
     """Normalize request data for the specialized modeling states."""
     if not session.event or not hasattr(session.event, 'message'):
-        logger.info("[uml-bot] Using cached payload for automatic transition")
         user_message = ""
     else:
         user_message = session.event.message or ""
@@ -435,9 +428,6 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
     cached_payload = session.get('pending_payload')
     cached_message = session.get('pending_message')
     cached_diagram_type = session.get('pending_diagram_type')
-
-    log_snippet = user_message or (cached_message or "")
-    logger.info(f"[uml-bot] RAW MESSAGE: {log_snippet[:200]}")
 
     diagram_type: Optional[str] = None
     actual_message = user_message
@@ -447,13 +437,10 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
     if prefix_match:
         diagram_type = prefix_match.group(1)
         actual_message = prefix_match.group(2)
-        logger.info(f"[uml-bot] Diagram type from prefix: {diagram_type}, message: {actual_message}")
 
     if hasattr(session.event, 'data') and isinstance(session.event.data, dict):
         if not diagram_type:
             diagram_type = session.event.data.get('diagramType')
-            if diagram_type:
-                logger.info(f"[uml-bot] Diagram type from event.data: {diagram_type}")
         if not payload_data:
             payload_candidate = session.event.data.get('message')
             if isinstance(payload_candidate, (dict, list)):
@@ -462,26 +449,23 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
                 try:
                     payload_data = json.loads(payload_candidate)
                 except Exception:
-                    payload_data = None
+                    pass
 
     if user_message.strip().startswith('{'):
         try:
             payload_data = json.loads(user_message)
         except Exception:
-            payload_data = None
+            pass
 
     if payload_data and isinstance(payload_data, dict):
         actual_message = payload_data.get('message', actual_message)
         if not diagram_type:
             diagram_type = payload_data.get('diagramType')
-            if diagram_type:
-                logger.info(f"[uml-bot] Diagram type from payload: {diagram_type}")
         if isinstance(actual_message, str):
             payload_prefix_match = re.match(r'^\[DIAGRAM_TYPE:(\w+)\]\s*(.+)', actual_message)
             if payload_prefix_match:
                 if not diagram_type:
                     diagram_type = payload_prefix_match.group(1)
-                    logger.info(f"[uml-bot] Diagram type from payload prefix: {diagram_type}")
                 actual_message = payload_prefix_match.group(2)
 
     if not payload_data and isinstance(cached_payload, dict):
@@ -495,21 +479,15 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
 
     if not diagram_type:
         diagram_type = extract_diagram_type_from_message(user_message)
-        if diagram_type:
-            logger.info(f"[uml-bot] Diagram type from extract: {diagram_type}")
 
     if not diagram_type and actual_message:
         diagram_type = extract_diagram_type_from_message(actual_message)
-        if diagram_type:
-            logger.info(f"[uml-bot] Diagram type from actual message: {diagram_type}")
 
     if not diagram_type and cached_diagram_type:
         diagram_type = cached_diagram_type
 
     if not diagram_type:
         diagram_type = detect_diagram_type_from_keywords(actual_message)
-        if diagram_type:
-            logger.info(f"[uml-bot] Diagram type from keywords: {diagram_type}")
 
     if not diagram_type:
         diagram_type = 'ClassDiagram'
@@ -523,7 +501,9 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
 
     diagram_info = get_diagram_type_info(diagram_type)
     handler = diagram_factory.get_handler(diagram_type)
-    logger.info(f"[uml-bot] CONTEXT: Using {diagram_type} via {handler.__class__.__name__ if handler else 'None'}")
+    
+    # Log the diagram type and handler being used for this request
+    logger.info(f"📊 {diagram_type} | Handler: {handler.__class__.__name__ if handler else 'None'}")
 
     return {
         'user_message': user_message,
@@ -558,11 +538,9 @@ def create_single_element_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] CREATE ELEMENT: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context - process it
-    logger.info("[uml-bot] CREATE ELEMENT: Processing single element request with full model context")
     
     try:
         result = handler.generate_single_element(actual_message)
@@ -605,11 +583,9 @@ def create_complete_system_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] CREATE SYSTEM: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context - process it
-    logger.info("[uml-bot] CREATE SYSTEM: Processing complete system request with full model context")
     
     try:
         result = handler.generate_complete_system(actual_message)
@@ -651,11 +627,9 @@ def modify_modeling_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] MODIFY: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context - process it
-    logger.info("[uml-bot] MODIFY: Processing with full model context")
 
     try:
         # Use the handler's specialized generate_modification method
@@ -701,11 +675,9 @@ def modeling_help_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] HELP: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context - process it
-    logger.info("[uml-bot] HELP: Processing help request with context")
 
     help_prompt = f"""You are a UML modeling expert assistant working with {diagram_info['name']}. The user asked: "{actual_message}"
 
@@ -740,11 +712,9 @@ def clarify_diagram_type_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] CLARIFY: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context
-    logger.info("[uml-bot] CLARIFY: Asking user to specify diagram type")
 
     clarification_prompt = f"""I'd like to help you with: "{actual_message}"
 
