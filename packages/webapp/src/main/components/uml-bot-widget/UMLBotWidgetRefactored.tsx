@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { UMLModelingService, ClassSpec, SystemSpec, ModelModification, BESSERModel, ModelUpdate } from './services/UMLModelingService';
 import { WebSocketService, ChatMessage, InjectionCommand, SendStatus } from './services/WebSocketService';
 import { UIService } from './services/UIService';
-import { JsonViewerModal } from './JsonViewerModal';
+import { JsonViewerModal } from '../modals/json-viewer-modal/json-viewer-modal';
 import { UML_BOT_WS_URL } from '../../constant';
 
 // Styled Components
