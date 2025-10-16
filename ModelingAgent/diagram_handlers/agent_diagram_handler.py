@@ -51,7 +51,7 @@ INITIAL NODE
 
 IMPORTANT RULES:
 1. Provide the "type" field (state, intent, or initial) based on the user request.
-2. For states include 1-3 "replies" with both "text" and "replyType" (text, llm, or code).
+2. For states include 1-3 "replies" with both "text" and "replyType" (text, llm).
 3. Add "fallbackBodies" only when the request mentions fallbacks or error handling.
 4. For intents include 3-4 "trainingPhrases" that reflect how a user would trigger the intent.
 5. Keep names concise (camelCase for states, TitleCase for intents).
@@ -101,6 +101,10 @@ Return ONLY a JSON object with this structure:
     {
       "intentName": "Greeting",
       "trainingPhrases": ["hi", "hello there", "hey assistant"]
+    },
+    {
+      "intentName": "Support",
+      "trainingPhrases": ["I need help", "support please", "can you assist"]
     }
   ],
   "states": [
@@ -143,7 +147,7 @@ Return ONLY a JSON object with this structure:
     },
     {
       "source": "supportResponse",
-      "target": "initial",
+      "target": "greeting",
       "condition": "auto",
       "conditionValue": ""
     }
@@ -155,9 +159,10 @@ IMPORTANT RULES:
 2. Define 2-4 intents with realistic training phrases (use natural user expressions).
 3. Always include an initial transition from "initial" to the first conversational state when hasInitialNode is true.
 4. Use "when_intent_matched" with "conditionValue" equal to an intent name for intent-based transitions.
-5. Use "auto" transitions for default flows or state resets.
+5. Use "auto" transitions for default flows or state resets (typically back to a previous state, not "initial").
 6. Keep names consistent and concise (state names camelCase, intent names TitleCase).
-7. Return ONLY the JSON object – no explanations."""
+7. Include "sourceDirection" and "targetDirection" for transitions (values: "Left", "Right", "Up", "Down", "Upleft", "Upright", "Downleft", "Downright").
+8. Return ONLY the JSON object – no explanations."""
 
         try:
             response = self.llm.predict(f"{system_prompt}\n\nUser Request: {user_request}")

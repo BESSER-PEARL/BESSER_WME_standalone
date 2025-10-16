@@ -19,9 +19,6 @@ from besser.agent.nlp.llm.llm_openai_api import LLMOpenAI
 from diagram_handlers.factory import DiagramHandlerFactory, get_diagram_type_info
 from diagram_handlers.utils import (
     extract_diagram_type_from_message,
-    is_single_element_request,
-    is_complete_system_request,
-    is_modification_request,
     detect_diagram_type_from_keywords
 )
 
@@ -101,33 +98,43 @@ def store_payload_for_default(session: Session, params: Dict[str, Any]) -> bool:
 
 
 def route_to_modify(session: Session, params: Dict[str, Any]) -> bool:
-    """Detect if the JSON payload describes a modification request."""
-    info = prepare_payload_from_session(session, default_diagram_type=params.get('default_diagram_type'))
-    message = info.get('message') or ''
-    return bool(message) and is_modification_request(message)
+    """Detect if we should route to modification state based on stored intent."""
+    prepare_payload_from_session(session, default_diagram_type=params.get('default_diagram_type'))
+    last_intent = session.get('last_matched_intent')
+    return last_intent == 'modify_model_intent'
 
 
 def route_to_help(session: Session, params: Dict[str, Any]) -> bool:
-    """Route to modeling help when the payload lacks clear creation or modification instructions."""
+    """Route to modeling help based on stored intent or empty message."""
     info = prepare_payload_from_session(session, default_diagram_type=params.get('default_diagram_type'))
     message = (info.get('message') or '').strip()
+    
+    # Check if we came from help intent
+    last_intent = session.get('last_matched_intent')
+    if last_intent == 'modeling_help_intent':
+        return True
 
+    # Empty message -> help
     if not message:
         return True
 
-    if is_modification_request(message):
-        return False
-
-    if is_single_element_request(message) or is_complete_system_request(message):
-        return False
-
-    return True
+    return False
 
 
-def route_to_create(session: Session, params: Dict[str, Any]) -> bool:
-    """Fallback route that treats the payload as a creation request."""
+def route_to_single_element(session: Session, params: Dict[str, Any]) -> bool:
+    """Route to single element creation state."""
     prepare_payload_from_session(session, default_diagram_type=params.get('default_diagram_type'))
-    return True
+    # Check if we came from complete system intent
+    last_intent = session.get('last_matched_intent')
+    return last_intent != 'create_complete_system_intent'
+
+
+def route_to_complete_system(session: Session, params: Dict[str, Any]) -> bool:
+    """Route to complete system creation state."""
+    prepare_payload_from_session(session, default_diagram_type=params.get('default_diagram_type'))
+    # Check if we came from complete system intent
+    last_intent = session.get('last_matched_intent')
+    return last_intent == 'create_complete_system_intent'
 
 
 def clear_cached_payload(session: Session) -> None:
@@ -199,9 +206,11 @@ agent.set_default_ic_config(ic_config)
 # STATES
 greetings_state = agent.new_state('greetings_state', initial=True)
 diagram_router_state = agent.new_state('diagram_router_state')
-create_model_state = agent.new_state('create_model_state')
+create_single_element_state = agent.new_state('create_single_element_state')
+create_complete_system_state = agent.new_state('create_complete_system_state')
 modify_model_state = agent.new_state('modify_model_state')
 modeling_help_state = agent.new_state('modeling_help_state')
+clarify_diagram_type_state = agent.new_state('clarify_diagram_type_state')
 
 # INTENTS
 hello_intent = agent.new_intent(
@@ -209,9 +218,14 @@ hello_intent = agent.new_intent(
     description='The user greets you or wants to start a conversation'
 )
 
-create_model_intent = agent.new_intent(
-    name='create_model_intent',
-    description='The user wants to create any kind of UML model, system, class, diagram, object, state, or agent'
+create_single_element_intent = agent.new_intent(
+    name='create_single_element_intent',
+    description='The user wants to create a single UML element like one class, one object, one state, or one agent. Keywords: "create a class", "add a User class", "make a new state", "create an object"'
+)
+
+create_complete_system_intent = agent.new_intent(
+    name='create_complete_system_intent',
+    description='The user wants to create a complete system with multiple elements and relationships. Keywords: "system", "architecture", "design", "e-commerce system", "library management", "complete application", "full design", "multiple classes with relationships"'
 )
 
 modify_model_intent = agent.new_intent(
@@ -380,7 +394,8 @@ greetings_state.set_body(greetings_body)
 
 # Transitions from greetings state
 greetings_state.when_intent_matched(hello_intent).go_to(greetings_state)
-greetings_state.when_intent_matched(create_model_intent).go_to(create_model_state)
+greetings_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+greetings_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
 greetings_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
 greetings_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
 greetings_state.when_event(ReceiveJSONEvent())\
@@ -393,12 +408,16 @@ def diagram_router_body(session: Session):
 
 diagram_router_state.set_body(diagram_router_body)
 
+# JSON event routing (fallback only - prefer text messages for NLP intent detection)
 diagram_router_state.when_condition(route_to_modify, {'default_diagram_type': 'ClassDiagram'})\
     .go_to(modify_model_state)
 diagram_router_state.when_condition(route_to_help, {'default_diagram_type': 'ClassDiagram'})\
     .go_to(modeling_help_state)
-diagram_router_state.when_condition(route_to_create, {'default_diagram_type': 'ClassDiagram'})\
-    .go_to(create_model_state)
+# Route based on previously matched intent (stored in session)
+diagram_router_state.when_condition(route_to_complete_system, {'default_diagram_type': 'ClassDiagram'})\
+    .go_to(create_complete_system_state)
+diagram_router_state.when_condition(route_to_single_element, {'default_diagram_type': 'ClassDiagram'})\
+    .go_to(create_single_element_state)
 
 def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
     """Normalize request data for the specialized modeling states."""
@@ -511,8 +530,11 @@ def extract_modeling_context(session: Session) -> Optional[Dict[str, Any]]:
         'handler': handler
     }
 
-def create_modeling_body(session: Session):
-    """Generate new UML content based on the user's request."""
+def create_single_element_body(session: Session):
+    """Generate a single UML element based on the user's request."""
+    # Store which intent brought us here
+    session.set('last_matched_intent', 'create_single_element_intent')
+    
     context = extract_modeling_context(session)
     if not context:
         return
@@ -531,48 +553,81 @@ def create_modeling_body(session: Session):
     
     # For text events, just acknowledge - wait for JSON with full context
     if not is_json_event:
-        logger.info("[uml-bot] CREATE: Received text message, waiting for JSON context...")
-        # Don't clear payload - we need it for the JSON event
+        logger.info("[uml-bot] CREATE ELEMENT: Received text message, waiting for JSON context...")
         return
 
     # Now we have the JSON event with full context - process it
-    logger.info("[uml-bot] CREATE: Processing with full model context")
+    logger.info("[uml-bot] CREATE ELEMENT: Processing single element request with full model context")
     
     try:
-        if is_complete_system_request(actual_message):
-            logger.info("[uml-bot] CREATE: Detected complete system request")
-            result = handler.generate_complete_system(actual_message)
+        result = handler.generate_single_element(actual_message)
 
-            if result and result.get('systemSpec'):
-                result['diagramType'] = diagram_type
-                session.reply(json.dumps(result))
-            else:
-                session.reply("I had trouble generating that system. Could you provide more details?")
-
-        elif is_single_element_request(actual_message):
-            logger.info("[uml-bot] CREATE: Detected single element request")
-            result = handler.generate_single_element(actual_message)
-
-            if result and result.get('element'):
-                result['diagramType'] = diagram_type
-                session.reply(json.dumps(result))
-            else:
-                session.reply("I had trouble creating that element. Could you provide more details?")
-
+        if result and result.get('element'):
+            result['diagramType'] = diagram_type
+            session.reply(json.dumps(result))
         else:
-            logger.info("[uml-bot] CREATE: Request needs clarification")
-            session.reply("I can generate a UML model for you. Describe the system or elements you need and I'll send back the JSON.")
+            session.reply("I had trouble creating that element. Could you provide more details?")
 
     except Exception as e:
-        logger.error(f"Error in create_modeling_body: {e}")
-        session.reply("I encountered an issue while creating the model. Could you try rephrasing your request?")
+        logger.error(f"Error in create_single_element_body: {e}")
+        session.reply("I encountered an issue while creating the element. Could you try rephrasing your request?")
     finally:
         clear_cached_payload(session)
 
-create_model_state.set_body(create_modeling_body)
+create_single_element_state.set_body(create_single_element_body)
+
+
+def create_complete_system_body(session: Session):
+    """Generate a complete system with multiple elements and relationships."""
+    # Store which intent brought us here
+    session.set('last_matched_intent', 'create_complete_system_intent')
+    
+    context = extract_modeling_context(session)
+    if not context:
+        return
+
+    handler = context['handler']
+    diagram_type = context['diagram_type']
+    actual_message = context['actual_message']
+    current_model = context['current_model']
+
+    if not handler:
+        session.reply(f"Warning: {diagram_type} is not supported yet. Please use ClassDiagram for now.")
+        return
+
+    # Check if this is the JSON event with full context (has currentModel)
+    is_json_event = isinstance(session.event, ReceiveJSONEvent) and current_model is not None
+    
+    # For text events, just acknowledge - wait for JSON with full context
+    if not is_json_event:
+        logger.info("[uml-bot] CREATE SYSTEM: Received text message, waiting for JSON context...")
+        return
+
+    # Now we have the JSON event with full context - process it
+    logger.info("[uml-bot] CREATE SYSTEM: Processing complete system request with full model context")
+    
+    try:
+        result = handler.generate_complete_system(actual_message)
+
+        if result and result.get('systemSpec'):
+            result['diagramType'] = diagram_type
+            session.reply(json.dumps(result))
+        else:
+            session.reply("I had trouble generating that system. Could you provide more details?")
+
+    except Exception as e:
+        logger.error(f"Error in create_complete_system_body: {e}")
+        session.reply("I encountered an issue while creating the system. Could you try rephrasing your request?")
+    finally:
+        clear_cached_payload(session)
+
+create_complete_system_state.set_body(create_complete_system_body)
 
 def modify_modeling_body(session: Session):
     """Apply modifications to an existing UML model."""
+    # Store which intent brought us here
+    session.set('last_matched_intent', 'modify_model_intent')
+    
     context = extract_modeling_context(session)
     if not context:
         return
@@ -616,6 +671,9 @@ modify_model_state.set_body(modify_modeling_body)
 
 def modeling_help_body(session: Session):
     """Offer guidance or clarifying questions when the user needs modeling help."""
+    # Store which intent brought us here
+    session.set('last_matched_intent', 'modeling_help_intent')
+    
     context = extract_modeling_context(session)
     if not context:
         return
@@ -654,18 +712,77 @@ Keep your response conversational and encouraging. Suggest specific things they 
 
 modeling_help_state.set_body(modeling_help_body)
 
-# Transitions from create state
-create_model_state.when_intent_matched(create_model_intent).go_to(create_model_state)
-create_model_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
-create_model_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
-create_model_state.when_intent_matched(hello_intent).go_to(greetings_state)
-create_model_state.when_event(ReceiveJSONEvent())\
+def clarify_diagram_type_body(session: Session):
+    """Ask user to clarify the diagram type when it cannot be determined."""
+    context = extract_modeling_context(session)
+    if not context:
+        return
+
+    actual_message = context['actual_message']
+    current_model = context['current_model']
+    
+    # Check if this is the JSON event with full context
+    is_json_event = isinstance(session.event, ReceiveJSONEvent) and current_model is not None
+    
+    # For text events, just acknowledge - wait for JSON with full context
+    if not is_json_event:
+        logger.info("[uml-bot] CLARIFY: Received text message, waiting for JSON context...")
+        return
+
+    # Now we have the JSON event with full context
+    logger.info("[uml-bot] CLARIFY: Asking user to specify diagram type")
+
+    clarification_prompt = f"""I'd like to help you with: "{actual_message}"
+
+However, I need to know which type of UML diagram you'd like to create:
+
+📊 **ClassDiagram** - For classes, attributes, methods, and relationships
+📦 **ObjectDiagram** - For object instances and their links
+🔄 **StateMachineDiagram** - For states, transitions, and events
+🤖 **AgentDiagram** - For agents, beliefs, goals, and messages
+
+Please specify the diagram type, or rephrase your request with more context.
+
+For example:
+- "Create a User class" → ClassDiagram
+- "Create a state machine for login" → StateMachineDiagram
+- "Create an agent for customer service" → AgentDiagram"""
+
+    try:
+        session.reply(clarification_prompt)
+    except Exception as e:
+        logger.error(f"Error in clarify_diagram_type_body: {e}")
+        session.reply("I need to know which diagram type you'd like. Please specify: Class, Object, StateMachine, or Agent diagram.")
+    finally:
+        clear_cached_payload(session)
+
+clarify_diagram_type_state.set_body(clarify_diagram_type_body)
+
+# Transitions from create_single_element state
+create_single_element_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+create_single_element_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
+create_single_element_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
+create_single_element_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
+create_single_element_state.when_intent_matched(hello_intent).go_to(greetings_state)
+create_single_element_state.when_event(ReceiveJSONEvent())\
     .with_condition(store_payload_for_default, {'default_diagram_type': 'ClassDiagram'})\
     .go_to(diagram_router_state)
-create_model_state.when_no_intent_matched().go_to(create_model_state)
+create_single_element_state.when_no_intent_matched().go_to(create_single_element_state)
+
+# Transitions from create_complete_system state
+create_complete_system_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+create_complete_system_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
+create_complete_system_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
+create_complete_system_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
+create_complete_system_state.when_intent_matched(hello_intent).go_to(greetings_state)
+create_complete_system_state.when_event(ReceiveJSONEvent())\
+    .with_condition(store_payload_for_default, {'default_diagram_type': 'ClassDiagram'})\
+    .go_to(diagram_router_state)
+create_complete_system_state.when_no_intent_matched().go_to(create_complete_system_state)
 
 # Transitions from modify state
-modify_model_state.when_intent_matched(create_model_intent).go_to(create_model_state)
+modify_model_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+modify_model_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
 modify_model_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
 modify_model_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
 modify_model_state.when_intent_matched(hello_intent).go_to(greetings_state)
@@ -675,7 +792,8 @@ modify_model_state.when_event(ReceiveJSONEvent())\
 modify_model_state.when_no_intent_matched().go_to(modify_model_state)
 
 # Transitions from modeling help state
-modeling_help_state.when_intent_matched(create_model_intent).go_to(create_model_state)
+modeling_help_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+modeling_help_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
 modeling_help_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
 modeling_help_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
 modeling_help_state.when_intent_matched(hello_intent).go_to(greetings_state)
@@ -683,6 +801,17 @@ modeling_help_state.when_event(ReceiveJSONEvent())\
     .with_condition(store_payload_for_default, {'default_diagram_type': 'ClassDiagram'})\
     .go_to(diagram_router_state)
 modeling_help_state.when_no_intent_matched().go_to(modeling_help_state)
+
+# Transitions from clarify_diagram_type state
+clarify_diagram_type_state.when_intent_matched(create_single_element_intent).go_to(create_single_element_state)
+clarify_diagram_type_state.when_intent_matched(create_complete_system_intent).go_to(create_complete_system_state)
+clarify_diagram_type_state.when_intent_matched(modify_model_intent).go_to(modify_model_state)
+clarify_diagram_type_state.when_intent_matched(modeling_help_intent).go_to(modeling_help_state)
+clarify_diagram_type_state.when_intent_matched(hello_intent).go_to(greetings_state)
+clarify_diagram_type_state.when_event(ReceiveJSONEvent())\
+    .with_condition(store_payload_for_default, {'default_diagram_type': 'ClassDiagram'})\
+    .go_to(diagram_router_state)
+clarify_diagram_type_state.when_no_intent_matched().go_to(clarify_diagram_type_state)
 
 
 # No automatic return to greetings - specialized states maintain context
