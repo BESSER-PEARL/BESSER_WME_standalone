@@ -181,7 +181,9 @@ export class ClassDiagramModifier implements DiagramModifier {
     }
 
     const relationshipId = ModifierHelpers.generateUniqueId('rel');
-    const relationshipType = this.mapRelationshipType(changes.relationshipType || 'Association');
+    // Accept both 'relationshipType' and 'type' for compatibility with backend
+    const relType = changes.relationshipType || (changes as any).type || 'Association';
+    const relationshipType = this.mapRelationshipType(relType);
     const sourceMultiplicity = changes.sourceMultiplicity || '1';
     const targetMultiplicity = changes.targetMultiplicity || '*';
     const relationshipName = changes.name || changes.roleName || target.relationshipName || '';

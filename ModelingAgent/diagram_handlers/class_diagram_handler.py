@@ -315,7 +315,7 @@ ADD RELATIONSHIP (connect two classes)
       "targetClass": "TargetClass"
     },
     "changes": {
-      "type": "Association",
+      "relationshipType": "Association",
       "sourceMultiplicity": "1",
       "targetMultiplicity": "*",
       "name": "relationshipName"

@@ -225,12 +225,12 @@ create_single_element_intent = agent.new_intent(
 
 create_complete_system_intent = agent.new_intent(
     name='create_complete_system_intent',
-    description='The user wants to create a complete system with multiple elements and relationships. Keywords: "system", "architecture", "design", "e-commerce system", "library management", "complete application", "full design", "multiple classes with relationships"'
+    description='The user wants to create a complete system from scratch with multiple NEW elements. Keywords: "create a library system", "design an e-commerce architecture", "generate a complete banking application", "build a new system with multiple classes". This is ONLY for creating new systems, NOT for modifying existing ones.'
 )
 
 modify_model_intent = agent.new_intent(
     name='modify_model_intent',
-    description='The user wants to modify, change, update, or edit an existing UML model or element'
+    description='The user wants to modify, change, update, edit, add to, or connect elements in an EXISTING UML model. Keywords: "add relationship", "connect", "add inheritance", "add generalization", "relate", "modify class", "change attribute", "update method", "delete", "remove", "rename", "add association", "add composition", "add aggregation", "link classes"'
 )
 
 modeling_help_intent = agent.new_intent(
@@ -336,6 +336,11 @@ Rules:
             'message',
             f"Applied {modification_spec['modification'].get('action', 'modification')} to {modification_spec['modification'].get('target', {}).get('className', 'model')}"
         )
+        
+        # logger.info(f"[LLM] Final modification spec being sent:")
+        # logger.info(f"  - Action: {modification_spec['modification'].get('action')}")
+        # logger.info(f"  - Target: {modification_spec['modification'].get('target')}")
+        # logger.info(f"  - Changes: {modification_spec['modification'].get('changes')}")
 
         return modification_spec
 
@@ -653,10 +658,19 @@ def modify_modeling_body(session: Session):
     logger.info("[uml-bot] MODIFY: Processing with full model context")
 
     try:
-        modification_spec = generate_model_modification(actual_message, current_model)
+        # Use the handler's specialized generate_modification method
+        modification_spec = handler.generate_modification(actual_message, current_model)
 
         if modification_spec and modification_spec.get('modification'):
             modification_spec['diagramType'] = diagram_type
+            
+            # # Log what we're sending
+            # logger.info(f"[MODIFY] Sending modification to frontend:")
+            # logger.info(f"  - Action: {modification_spec.get('action')}")
+            # logger.info(f"  - Modification action: {modification_spec['modification'].get('action')}")
+            # logger.info(f"  - Target: {modification_spec['modification'].get('target')}")
+            # logger.info(f"  - Changes: {modification_spec['modification'].get('changes')}")
+            
             session.reply(json.dumps(modification_spec))
         else:
             session.reply("I couldn't determine the modification to apply. Could you provide more detail?")
