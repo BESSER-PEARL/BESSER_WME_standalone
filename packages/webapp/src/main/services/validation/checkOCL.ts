@@ -5,6 +5,8 @@ import { ApollonEditor, diagramBridge, UMLDiagramType } from '@besser/wme';
 import { LocalStorageRepository } from '../local-storage/local-storage-repository';
 
 export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: string) {
+
+  toast.dismiss();
   try {
       // Step 1: Always run diagram validation first
       const validationResult = validateDiagram(editor);
@@ -41,8 +43,19 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         console.log(`Diagram type ${editor.model.type} does not support OCL checks`);
         return { isValid: true, message: "Diagram validation completed successfully" };
       }
-
+      const loadingToastId = toast.loading("Checking OCL constraints...", {
+        position: "top-right",
+        theme: "dark",
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false
+      });
       // Step 4: For OCL-supported diagrams, proceed with OCL checks
+      toast.update(loadingToastId, { 
+        render: "Processing OCL constraints...",
+        type: "info"
+      });
       let modelData = editor.model;
 
     const response = await fetch(`${BACKEND_URL}/check-ocl`, {
@@ -60,6 +73,8 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
       const errorData = await response.json().catch(e => ({ detail: 'Could not parse error response' }));
       console.error('Response not OK:', response.status, errorData); // Debug log
       
+      toast.dismiss();
+      
       if (response.status === 400 && errorData.detail) {
         toast.error(`${errorData.detail}`);
         return;
@@ -72,7 +87,12 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
       }
 
       throw new Error(`HTTP error! status: ${response.status}`);
-    }    const result = await response.json();
+    }
+    
+    const result = await response.json();
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    toast.dismiss(loadingToastId);
     
     // Handle the separated valid and invalid constraints from backend
     if (result.valid_constraints && result.valid_constraints.length > 0) {
@@ -89,8 +109,10 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px",
-          whiteSpace: "pre-line"
+          width: "320px",
+          whiteSpace: "pre-line",
+          maxHeight: "600px",
+          overflow: "auto"
         }
       });
     }
@@ -109,8 +131,10 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px",
-          whiteSpace: "pre-line"
+          width: "320px",
+          whiteSpace: "pre-line",
+          maxHeight: "600px",
+          overflow: "auto"
         }
       });
     }
@@ -131,8 +155,10 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
         style: {
           fontSize: "16px",
           padding: "20px",
-          width: "350px",
-          whiteSpace: "pre-line"
+          width: "320px",
+          whiteSpace: "pre-line",
+          maxHeight: "600px",
+          overflow: "auto"
         }
       });
     }
@@ -143,6 +169,7 @@ export async function checkOclConstraints(editor: ApollonEditor, diagramTitle: s
     return result;
   } catch (error: unknown) {
     console.error('Error during OCL check:', error);
+    toast.dismiss(); // Ensure loading toast is dismissed on error
     toast.error(`${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }

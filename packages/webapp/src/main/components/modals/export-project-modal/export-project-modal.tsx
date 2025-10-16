@@ -30,7 +30,7 @@ export const ExportProjectModal: React.FC<ModalContentProps> = ({ close }) => {
   const exportAsPNG = useExportPNG();
 
   const handleExport = async (format: string) => {
-    if (!editor || !diagram?.title) {
+    if (!editor) {
       toast.error('No diagram available to export');
       return;
     }

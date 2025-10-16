@@ -1,5 +1,5 @@
 {
-  "name": "BESSER-WME-Standalone",
+  "name": "besser_wme_standalone",
   "version": "1.0.0",
   "private": true,
   "repository": "git@github.com:BESSER/BESSER_WME_standalone.git",
@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@besser/wme": "2.4.0",
+    "@sentry/node": "8.55.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1"
   },
@@ -54,7 +55,7 @@
     "concurrently": "9.1.0",
     "css-loader": "^7.1.2",
     "dotenv-webpack": "^8.1.0",
-    "eslint": "9.15.0",
+    "eslint": "^9.34.0",
     "prettier": "3.3.3",
     "style-loader": "^4.0.0",
     "stylelint": "16.3.1",
@@ -63,7 +64,7 @@
     "typescript": "5.6.3",
     "webpack": "5.96.1",
     "webpack-cli": "5.1.4",
-    "webpack-dev-server": "5.1.0",
+    "webpack-dev-server": "^5.2.2",
     "webpack-merge": "6.0.1"
   }
 }
