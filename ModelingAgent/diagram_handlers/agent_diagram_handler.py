@@ -95,74 +95,175 @@ IMPORTANT RULES:
 
 Return ONLY a JSON object with this structure:
 {
-  "systemName": "FriendlyAgent",
+  "systemName": "CustomerSupportAgent",
   "hasInitialNode": true,
   "intents": [
     {
       "intentName": "Greeting",
-      "trainingPhrases": ["hi", "hello there", "hey assistant"]
+      "trainingPhrases": ["hi", "hello there", "hey assistant", "good morning"]
     },
     {
-      "intentName": "Support",
-      "trainingPhrases": ["I need help", "support please", "can you assist"]
+      "intentName": "RequestHelp",
+      "trainingPhrases": ["I need help", "support please", "can you assist", "help me"]
+    },
+    {
+      "intentName": "Goodbye",
+      "trainingPhrases": ["bye", "goodbye", "see you later", "thanks bye"]
     }
   ],
   "states": [
     {
       "type": "state",
-      "stateName": "greeting",
+      "stateName": "welcome",
       "replies": [
-        {"text": "Hi!", "replyType": "text"},
-        {"text": "How are you?", "replyType": "text"}
+        {"text": "Hello! Welcome to our support system.", "replyType": "text"},
+        {"text": "I'm here to help you today.", "replyType": "text"},
+        {"text": "What can I do for you?", "replyType": "text"}
+      ],
+      "fallbackBodies": []
+    },
+    {
+      "type": "state",
+      "stateName": "askingDetails",
+      "replies": [
+        {"text": "I understand you need assistance. Let me help with that.", "replyType": "text"},
+        {"text": "Could you provide more details about your issue?", "replyType": "text"}
       ],
       "fallbackBodies": [
-        {"text": "I can say hello in another way if needed.", "replyType": "text"}
+        {"text": "Sorry, I didn't catch that. Can you rephrase?", "replyType": "text"}
       ]
     },
     {
       "type": "state",
-      "stateName": "supportResponse",
+      "stateName": "providingHelp",
       "replies": [
-        {"text": "Sure, let me help you with that.", "replyType": "text"},
-        {"text": "Could you share a bit more detail?", "replyType": "text"}
+        {"text": "", "replyType": "llm"}
       ],
-      "fallbackBodies": [
-        {"text": "If this is urgent, I can connect you to a human agent.", "replyType": "text"}
-      ]
+      "fallbackBodies": []
+    },
+    {
+      "type": "state",
+      "stateName": "farewell",
+      "replies": [
+        {"text": "Thank you for contacting us!", "replyType": "text"},
+        {"text": "Have a great day!", "replyType": "text"}
+      ],
+      "fallbackBodies": []
     }
   ],
   "transitions": [
     {
       "source": "initial",
-      "target": "greeting",
+      "target": "welcome",
       "condition": "when_intent_matched",
       "conditionValue": "Greeting",
-      "label": ""
+      "label": "",
+      "sourceDirection": "Right",
+      "targetDirection": "Left"
     },
     {
-      "source": "greeting",
-      "target": "supportResponse",
+      "source": "welcome",
+      "target": "askingDetails",
       "condition": "when_intent_matched",
-      "conditionValue": "Support"
+      "conditionValue": "RequestHelp",
+      "label": "",
+      "sourceDirection": "Right",
+      "targetDirection": "Left"
     },
     {
-      "source": "supportResponse",
-      "target": "greeting",
+      "source": "welcome",
+      "target": "farewell",
+      "condition": "when_intent_matched",
+      "conditionValue": "Goodbye",
+      "label": "",
+      "sourceDirection": "Down",
+      "targetDirection": "Up"
+    },
+    {
+      "source": "askingDetails",
+      "target": "providingHelp",
+      "condition": "when_intent_matched",
+      "conditionValue": "RequestHelp",
+      "label": "",
+      "sourceDirection": "Right",
+      "targetDirection": "Left"
+    },
+    {
+      "source": "askingDetails",
+      "target": "providingHelp",
+      "condition": "when_no_intent_matched",
+      "conditionValue": "",
+      "label": "",
+      "sourceDirection": "Down",
+      "targetDirection": "Up"
+    },
+    {
+      "source": "providingHelp",
+      "target": "welcome",
       "condition": "auto",
-      "conditionValue": ""
+      "conditionValue": "",
+      "label": "",
+      "sourceDirection": "Left",
+      "targetDirection": "Right"
+    },
+    {
+      "source": "providingHelp",
+      "target": "farewell",
+      "condition": "when_intent_matched",
+      "conditionValue": "Goodbye",
+      "label": "",
+      "sourceDirection": "Down",
+      "targetDirection": "Up"
+    },
+    {
+      "source": "farewell",
+      "target": "welcome",
+      "condition": "auto",
+      "conditionValue": "",
+      "label": "",
+      "sourceDirection": "Up",
+      "targetDirection": "Down"
     }
   ]
 }
 
 IMPORTANT RULES:
-1. Include 3-5 states – each with meaningful replies and optional fallback bodies.
-2. Define 2-4 intents with realistic training phrases (use natural user expressions).
-3. Always include an initial transition from "initial" to the first conversational state when hasInitialNode is true.
-4. Use "when_intent_matched" with "conditionValue" equal to an intent name for intent-based transitions.
-5. Use "auto" transitions for default flows or state resets (typically back to a previous state, not "initial").
-6. Keep names consistent and concise (state names camelCase, intent names TitleCase).
-7. Include "sourceDirection" and "targetDirection" for transitions (values: "Left", "Right", "Up", "Down", "Upleft", "Upright", "Downleft", "Downright").
-8. Return ONLY the JSON object – no explanations."""
+1. Create AS MANY states and intents as needed for the conversation (no fixed limits - can be 2, 5, 10, or more).
+2. Each state can have MULTIPLE replies (text lines) - these are ALL displayed sequentially to the user:
+   - Use replyType="text" for scripted, predefined responses (most common)
+   - Use replyType="llm" when you want AI to generate dynamic, personalized responses
+   - When using replyType="llm", the "text" field can be empty ("") - the LLM generates the response automatically
+   - A state can have 1-10+ reply lines depending on what makes sense
+3. AVOID DEAD-ENDS: Every state MUST have at least one way out - no state should trap the user with no exit path.
+   - Even "farewell" or "goodbye" states should loop back to the initial state or main menu
+   - Never create a state that ends the conversation permanently
+4. States can have MULTIPLE incoming and outgoing transitions - create complex flows as needed.
+5. Transition types - CRITICAL:
+   - Use "when_intent_matched" when a specific user intent triggers the transition (e.g., user says "goodbye")
+     * Requires "conditionValue" with the intent name
+   - Use "when_no_intent_matched" as a FALLBACK when user input doesn't match any defined intent
+     * Typically leads to an LLM response state that can handle unexpected user input
+     * "conditionValue" should be empty ("") for this transition type
+   - Use "auto" ONLY when the bot continues immediately without waiting for user input (e.g., after displaying info, automatically loop back)
+     * "conditionValue" should be empty ("") for auto transitions
+   - When the bot asks a question and needs to WAIT for user response, use "when_intent_matched" with the expected intent, NOT "auto"
+6. Always include an initial transition from "initial" to the first conversational state when hasInitialNode is true.
+7. Keep names consistent and concise (state names camelCase, intent names TitleCase).
+8. Include "sourceDirection" and "targetDirection" for transitions for better visual flow:
+   - For left-to-right flow: sourceDirection="Right", targetDirection="Left"
+   - For upward flow: sourceDirection="Up", targetDirection="Down"
+   - For downward flow: sourceDirection="Down", targetDirection="Up"
+   - For return/loop flows: sourceDirection="Left" or "Up", targetDirection="Right" or "Down"
+9. Order states logically in the array to represent the conversation flow sequence (first state receives initial transition).
+10. FallbackBodies are optional - only add them when the state needs error handling or alternative responses.
+11. Return ONLY the JSON object – no explanations.
+
+LAYOUT GUIDANCE:
+- States are positioned in a grid (left-to-right, top-to-bottom) based on array order
+- Intents appear at the top of the diagram
+- Initial node connects to the first state
+- Design transitions to flow naturally with multiple paths and loops where appropriate
+- Think about realistic conversation flows: greetings → information gathering → processing → resolution → farewell"""
 
         try:
             response = self.llm.predict(f"{system_prompt}\n\nUser Request: {user_request}")
