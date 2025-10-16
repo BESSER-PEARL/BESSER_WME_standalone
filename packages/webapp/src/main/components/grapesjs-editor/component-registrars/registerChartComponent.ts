@@ -32,15 +32,43 @@ export const registerChartComponent = (editor: any, config: ChartConfig) => {
       init(this: any) {
         const traits = this.get('traits');
         traits.reset(config.traits);
-        // Ensure all trait values are set as attributes if not already present
+        // Ensure all trait values are set in attributes if not already present
         if (Array.isArray(config.traits)) {
+          const attrs = this.get('attributes') || {};
+          let changed = false;
           config.traits.forEach(trait => {
-            if (this.get(trait.name) === undefined) {
-              this.set(trait.name, trait.value !== undefined && trait.value !== null ? trait.value : '');
+            if (attrs[trait.name] === undefined) {
+              attrs[trait.name] = trait.value !== undefined && trait.value !== null ? trait.value : '';
+              changed = true;
+            }
+          });
+          if (changed) this.set('attributes', attrs);
+        }
+
+        // On init, copy all values from attributes to top-level for traits (so sidebar shows correct values)
+        if (Array.isArray(config.traits)) {
+          const attrs = this.get('attributes') || {};
+          config.traits.forEach(trait => {
+            if (attrs[trait.name] !== undefined) {
+              this.set(trait.name, attrs[trait.name]);
             }
           });
         }
-        this.on('change:chart-color change:chart-title', this.renderReactChart);
+
+        // Synchronize trait property changes to attributes (do not remove top-level property)
+        if (Array.isArray(config.traits)) {
+          config.traits.forEach(trait => {
+            this.on(`change:${trait.name}`, () => {
+              const attrs = { ...(this.get('attributes') || {}) };
+              attrs[trait.name] = this.get(trait.name);
+              this.set('attributes', attrs);
+              // Re-render chart if color or title changes
+              if (trait.name === 'chart-color' || trait.name === 'chart-title') {
+                this.renderReactChart();
+              }
+            });
+          });
+        }
 
         // Update data-source trait with fresh class options (called dynamically when component is initialized)
         const dataSourceTrait = traits.where({ name: 'data-source' })[0];
@@ -62,43 +90,40 @@ export const registerChartComponent = (editor: any, config: ChartConfig) => {
         };
 
         // On init, if a class is already selected, set the options
-        const selectedClass = this.get('data-source');
+        const selectedClass = this.get('attributes')?.['data-source'];
         if (selectedClass) {
           updateFieldOptions(selectedClass);
         }
 
         // Listen for changes to data-source (class selection) to update attribute/relationship options
-        this.on('change:data-source', () => {
-          const classId = this.get('data-source');
+        this.on('change:attributes', () => {
+          const classId = this.get('attributes')?.['data-source'];
           updateFieldOptions(classId);
         });
       },
       renderReactChart(this: any) {
-        const color = this.get('chart-color') || config.defaultColor;
-        const title = this.get('chart-title') || config.defaultTitle;
-        
+        const attrs = this.get('attributes') || {};
+        const color = attrs['chart-color'] || config.defaultColor;
+        const title = attrs['chart-title'] || config.defaultTitle;
         const view = this.getView();
         if (view && view.el) {
           const container = view.el;
           container.innerHTML = '';
-          
           const root = ReactDOM.createRoot(container);
           const props: any = { title };
           if (color) props.color = color;
-          
           root.render(React.createElement(config.component, props));
         }
       },
     },
     view: {
       onRender({ el, model }: any) {
-        const color = model.get('chart-color') || config.defaultColor;
-        const title = model.get('chart-title') || config.defaultTitle;
-        
+        const attrs = model.get('attributes') || {};
+        const color = attrs['chart-color'] || config.defaultColor;
+        const title = attrs['chart-title'] || config.defaultTitle;
         const root = ReactDOM.createRoot(el);
         const props: any = { title };
         if (color) props.color = color;
-        
         root.render(React.createElement(config.component, props));
       },
     },

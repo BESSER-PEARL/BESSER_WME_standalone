@@ -1,0 +1,502 @@
+{
+  "project": {
+    "id": "2ea59409-f14c-457b-92ba-acb9143390e3",
+    "type": "Project",
+    "name": "test",
+    "description": "New project",
+    "owner": "User",
+    "createdAt": "2025-10-10T17:20:10.644Z",
+    "currentDiagramType": "ClassDiagram",
+    "diagrams": {
+      "ClassDiagram": {
+        "id": "6018924e-2176-4381-96ef-b21940c3db9b",
+        "title": "Class Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "ClassDiagram",
+          "size": {
+            "width": 1320,
+            "height": 600
+          },
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "elements": {
+            "7e405108-fc0e-484c-a999-345622f038fd": {
+              "id": "7e405108-fc0e-484c-a999-345622f038fd",
+              "name": "Measure",
+              "type": "Class",
+              "owner": null,
+              "bounds": {
+                "x": -640,
+                "y": -280,
+                "width": 160,
+                "height": 100
+              },
+              "attributes": [
+                "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                "47893063-e931-4a0f-93ec-1cb184791d6e"
+              ],
+              "methods": []
+            },
+            "22628dd7-c5db-4226-8aec-1915a0ab5f6f": {
+              "id": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+              "name": "+ value: int",
+              "type": "ClassAttribute",
+              "owner": "7e405108-fc0e-484c-a999-345622f038fd",
+              "bounds": {
+                "x": -639.5,
+                "y": -239.5,
+                "width": 159,
+                "height": 30
+              }
+            },
+            "47893063-e931-4a0f-93ec-1cb184791d6e": {
+              "id": "47893063-e931-4a0f-93ec-1cb184791d6e",
+              "name": "+ day: date",
+              "type": "ClassAttribute",
+              "owner": "7e405108-fc0e-484c-a999-345622f038fd",
+              "bounds": {
+                "x": -639.5,
+                "y": -209.5,
+                "width": 159,
+                "height": 30
+              }
+            }
+          },
+          "relationships": {},
+          "assessments": {}
+        },
+        "lastUpdate": "2025-10-15T09:02:38.337Z"
+      },
+      "ObjectDiagram": {
+        "id": "dbd0622a-c506-4cba-b598-cb61bfc0bd25",
+        "title": "Object Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "ObjectDiagram",
+          "size": {
+            "width": 1400,
+            "height": 740
+          },
+          "elements": {},
+          "relationships": {},
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "assessments": {}
+        },
+        "lastUpdate": "2025-10-10T17:20:10.644Z"
+      },
+      "StateMachineDiagram": {
+        "id": "1dd46a39-8581-4f4e-a6be-0049b09e8de5",
+        "title": "State Machine Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "StateMachineDiagram",
+          "size": {
+            "width": 1400,
+            "height": 740
+          },
+          "elements": {},
+          "relationships": {},
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "assessments": {}
+        },
+        "lastUpdate": "2025-10-10T17:20:10.644Z"
+      },
+      "AgentDiagram": {
+        "id": "809eff66-667b-43a4-9724-da17d3840e81",
+        "title": "Agent Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "AgentDiagram",
+          "size": {
+            "width": 1400,
+            "height": 740
+          },
+          "elements": {},
+          "relationships": {},
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "assessments": {}
+        },
+        "lastUpdate": "2025-10-10T17:20:10.644Z"
+      },
+      "GUINoCodeDiagram": {
+        "id": "af3ddc89-71ba-495c-a90c-9062dca5cc32",
+        "title": "GUI Diagram",
+        "guiModel": {
+          "assets": [],
+          "styles": [
+            {
+              "selectors": [
+                "#igof"
+              ],
+              "style": {
+                "padding": "10px",
+                "color": "#e43d3d"
+              }
+            },
+            {
+              "selectors": [
+                "#iz8g"
+              ],
+              "style": {
+                "width": "100%",
+                "min-height": "400px"
+              }
+            },
+            {
+              "selectors": [
+                "#i9ji"
+              ],
+              "style": {
+                "width": "100%",
+                "min-height": "400px"
+              }
+            },
+            {
+              "selectors": [
+                "bar-chart-component"
+              ],
+              "style": {
+                "font-family": "Arial, Helvetica, sans-serif",
+                "font-size": "14px"
+              }
+            },
+            {
+              "selectors": [
+                "#iinf"
+              ],
+              "style": {
+                "width": "100%",
+                "min-height": "400px"
+              }
+            },
+            {
+              "selectors": [
+                "pie-chart-component"
+              ],
+              "style": {
+                "text-align": "center"
+              }
+            },
+            {
+              "selectors": [
+                {
+                  "name": "gjs-row",
+                  "private": 1
+                }
+              ],
+              "style": {
+                "display": "table",
+                "padding-top": "10px",
+                "padding-right": "10px",
+                "padding-bottom": "10px",
+                "padding-left": "10px",
+                "width": "100%"
+              }
+            },
+            {
+              "selectors": [
+                {
+                  "name": "gjs-cell",
+                  "private": 1
+                }
+              ],
+              "style": {
+                "width": "100%",
+                "display": "block"
+              },
+              "mediaText": "(max-width: 768px)",
+              "atRuleType": "media"
+            },
+            {
+              "selectors": [
+                "gjs-cell30"
+              ],
+              "style": {
+                "width": "100%",
+                "display": "block"
+              },
+              "mediaText": "(max-width: 768px)",
+              "atRuleType": "media"
+            },
+            {
+              "selectors": [
+                "gjs-cell70"
+              ],
+              "style": {
+                "width": "100%",
+                "display": "block"
+              },
+              "mediaText": "(max-width: 768px)",
+              "atRuleType": "media"
+            },
+            {
+              "selectors": [
+                {
+                  "name": "gjs-cell",
+                  "private": 1
+                }
+              ],
+              "style": {
+                "width": "8%",
+                "display": "table-cell",
+                "height": "75px"
+              }
+            }
+          ],
+          "pages": [
+            {
+              "name": "Home",
+              "frames": [
+                {
+                  "component": {
+                    "type": "wrapper",
+                    "stylable": [
+                      "background",
+                      "background-color",
+                      "background-image",
+                      "background-repeat",
+                      "background-attachment",
+                      "background-position",
+                      "background-size"
+                    ],
+                    "attributes": {
+                      "id": "ioz3"
+                    },
+                    "components": [
+                      {
+                        "type": "text",
+                        "attributes": {
+                          "id": "igof"
+                        },
+                        "components": [
+                          {
+                            "type": "textnode",
+                            "content": "Insert your text here"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "line-chart",
+                        "style": "",
+                        "classes": [
+                          "line-chart-component"
+                        ],
+                        "attributes": {
+                          "chart-color": "#4CAF50",
+                          "chart-title": "Sales Over Time",
+                          "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                          "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                          "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                          "id": "iz8g"
+                        },
+                        "chart-color": "#4CAF50",
+                        "chart-title": "Sales Over Time",
+                        "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                        "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                        "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e"
+                      },
+                      {
+                        "type": "bar-chart",
+                        "style": "",
+                        "classes": [
+                          "bar-chart-component"
+                        ],
+                        "attributes": {
+                          "chart-color": "#3498db",
+                          "chart-title": "Revenue by Category",
+                          "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                          "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                          "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                          "id": "i9ji"
+                        },
+                        "chart-color": "#3498db",
+                        "chart-title": "Revenue by Category",
+                        "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                        "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                        "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e"
+                      },
+                      {
+                        "type": "pie-chart",
+                        "style": "",
+                        "classes": [
+                          "pie-chart-component"
+                        ],
+                        "attributes": {
+                          "chart-title": "Traffic Distribution",
+                          "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                          "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                          "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                          "id": "iinf"
+                        },
+                        "chart-title": "Traffic Distribution",
+                        "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                        "label-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                        "data-field": "47893063-e931-4a0f-93ec-1cb184791d6e"
+                      }
+                    ],
+                    "head": {
+                      "type": "head"
+                    },
+                    "docEl": {
+                      "tagName": "html"
+                    }
+                  },
+                  "id": "UnNf68OcEIDztkHN"
+                }
+              ],
+              "id": "JIM7Za7PKmJhtNzh"
+            }
+          ],
+          "symbols": []
+        },
+        "lastUpdate": "2025-10-15T16:07:42.858Z",
+        "model": {
+          "pages": [
+            {
+              "frames": [
+                {
+                  "component": {
+                    "type": "wrapper",
+                    "stylable": [
+                      "background",
+                      "background-color",
+                      "background-image",
+                      "background-repeat",
+                      "background-attachment",
+                      "background-position",
+                      "background-size"
+                    ],
+                    "attributes": {
+                      "id": "ic1i"
+                    },
+                    "components": [
+                      {
+                        "type": "text",
+                        "attributes": {
+                          "id": "ib5p"
+                        },
+                        "components": [
+                          {
+                            "type": "textnode",
+                            "content": "Sales Overview"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "line-chart",
+                        "style": "",
+                        "classes": [
+                          "line-chart-component"
+                        ],
+                        "attributes": {
+                          "chart-color": "#4CAF50",
+                          "chart-title": "Sales Over Time",
+                          "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                          "label-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                          "data-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                          "id": "iit2"
+                        },
+                        "chart-color": "#4CAF50",
+                        "chart-title": "Sales Over Time",
+                        "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                        "label-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                        "data-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f"
+                      },
+                      {
+                        "type": "bar-chart",
+                        "style": "",
+                        "classes": [
+                          "bar-chart-component"
+                        ],
+                        "attributes": {
+                          "chart-color": "#3498db",
+                          "chart-title": "Revenue by Category",
+                          "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                          "label-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                          "data-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f",
+                          "id": "iyqj"
+                        },
+                        "chart-color": "#3498db",
+                        "chart-title": "Revenue by Category",
+                        "data-source": "7e405108-fc0e-484c-a999-345622f038fd",
+                        "label-field": "47893063-e931-4a0f-93ec-1cb184791d6e",
+                        "data-field": "22628dd7-c5db-4226-8aec-1915a0ab5f6f"
+                      }
+                    ],
+                    "head": {
+                      "type": "head"
+                    },
+                    "docEl": {
+                      "tagName": "html"
+                    }
+                  },
+                  "id": "iQawrSZoA4l2vV96"
+                }
+              ],
+              "type": "main",
+              "id": "8L7fC9wW2DUYl7tT"
+            }
+          ],
+          "styles": [
+            {
+              "selectors": [
+                "#ib5p"
+              ],
+              "style": {
+                "padding": "10px",
+                "color": "#c12828",
+                "float": "none",
+                "position": "relative",
+                "top": "10px",
+                "right": "10px",
+                "left": "10px",
+                "bottom": "10px",
+                "text-align": "center"
+              }
+            },
+            {
+              "selectors": [
+                "#iit2"
+              ],
+              "style": {
+                "width": "100%",
+                "min-height": "400px"
+              }
+            },
+            {
+              "selectors": [
+                "#iyqj"
+              ],
+              "style": {
+                "width": "100%",
+                "min-height": "400px"
+              }
+            }
+          ],
+          "assets": [],
+          "symbols": [],
+          "version": "0.21.13"
+        }
+      }
+    },
+    "settings": {
+      "defaultDiagramType": "ClassDiagram",
+      "autoSave": true,
+      "collaborationEnabled": false
+    }
+  },
+  "exportedAt": "2025-10-16T10:49:56.934Z",
+  "version": "2.0.0"
+}
