@@ -18,7 +18,6 @@ import { HomeModal } from './components/home/HomeModal';
 import { ProjectSettingsScreen } from './components/project/ProjectSettingsScreen';
 import { TeamPage } from './components/team/TeamPage';
 import { useProject } from './hooks/useProject';
-import { IfmlEditor } from './components/ifml-editor/IfmlEditor';
 import { UMLBotWidget } from './components/uml-bot-widget/UMLBotWidgetRefactored';
 
 const postHogOptions = {
@@ -35,8 +34,7 @@ function AppContentInner() {
   // Check if current path contains a token (collaboration route)
   const hasTokenInUrl = location.pathname !== '/' && 
                        location.pathname !== '/project-settings' && 
-                       location.pathname !== '/teampage' &&
-                       location.pathname !== '/ifml';
+                       location.pathname !== '/teampage';
   
   const handleSetEditor = (newEditor: ApollonEditor) => {
     setEditor(newEditor);
@@ -128,15 +126,6 @@ function AppContentInner() {
           } 
         />
                 
-        {/* IFML Editor route */}
-        <Route 
-        path="/ifml"
-          element={
-            <SidebarLayout>
-              <IfmlEditor />
-            </SidebarLayout>
-          } 
-        />
 
         {/* Project settings route */}
         <Route 

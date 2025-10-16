@@ -69,6 +69,13 @@ export class UMLModelingService {
   }
 
   /**
+   * Update editor reference (important for when editor gets recreated)
+   */
+  updateEditorReference(editor: any) {
+    this.editor = editor;
+  }
+
+  /**
    * Update the current model reference
    */
   updateCurrentModel(model: ApollonModel) {
@@ -209,15 +216,28 @@ export class UMLModelingService {
           throw new Error(`Unknown update type: ${update.type}`);
       }
 
-      // Update Redux store
-      this.dispatch(updateDiagramThunk({
+      console.log('🔄 Injecting model update...', {
+        type: update.type,
+        elementCount: Object.keys(updatedModel.elements || {}).length,
+        hasEditor: !!this.editor
+      });
+
+      // CRITICAL FIX: Await Redux store update to ensure persistence
+      await this.dispatch(updateDiagramThunk({
         model: updatedModel as any,
         lastUpdate: new Date().toISOString()
-      }));
+      })).unwrap();
+      console.log('✅ Redux persistence complete');
 
-      // Update editor if available
+      // CRITICAL FIX: Update editor AFTER Redux persistence completes
+      // Use nextRender to ensure proper editor update cycle
       if (this.editor) {
+        await this.editor.nextRender;
         this.editor.model = { ...updatedModel };
+        await this.editor.nextRender;
+        console.log('✅ Editor model updated and rendered');
+      } else {
+        console.warn('⚠️ No editor reference available - model saved to Redux only');
       }
 
       // Update our current model reference
@@ -225,17 +245,71 @@ export class UMLModelingService {
 
       return true;
     } catch (error) {
-      console.error('Error injecting to editor:', error);
-      return false;
+      console.error('❌ Error injecting to editor:', error);
+      throw error; // Re-throw to let caller handle it
     }
+  }
+
+  async replaceModel(model: Partial<ApollonModel>): Promise<boolean> {
+    if (!model || typeof model !== 'object') {
+      throw new Error('Invalid model payload');
+    }
+
+    const currentModel = this.getCurrentModel();
+    const mergedModel: ApollonModel = {
+      ...currentModel,
+      ...model,
+      version: typeof model.version === 'string' ? model.version : currentModel.version || '3.0.0',
+      type: typeof model.type === 'string' ? model.type : currentModel.type || this.currentDiagramType,
+      size: model.size || currentModel.size,
+      elements: model.elements || currentModel.elements || {},
+      relationships: model.relationships || currentModel.relationships || {},
+      interactive: model.interactive || currentModel.interactive || { elements: {}, relationships: {} },
+      assessments: model.assessments || currentModel.assessments || {}
+    };
+
+    if (!mergedModel.elements || typeof mergedModel.elements !== 'object' || Array.isArray(mergedModel.elements)) {
+      throw new Error('Model elements must be provided as a keyed object');
+    }
+
+    if (Object.keys(mergedModel.elements).length === 0) {
+      throw new Error('Model payload does not include any elements to render');
+    }
+
+    console.log('🔄 Replacing model...', {
+      elementCount: Object.keys(mergedModel.elements).length,
+      hasEditor: !!this.editor
+    });
+
+    // CRITICAL FIX: Await Redux store update to ensure persistence
+    await this.dispatch(updateDiagramThunk({
+      model: mergedModel as any,
+      lastUpdate: new Date().toISOString()
+    })).unwrap();
+    console.log('✅ Redux persistence complete');
+
+    // CRITICAL FIX: Update editor AFTER Redux persistence completes
+    if (this.editor) {
+      await this.editor.nextRender;
+      this.editor.model = { ...mergedModel };
+      await this.editor.nextRender;
+      console.log('✅ Editor model replaced and rendered');
+    } else {
+      console.warn('⚠️ No editor reference available - model saved to Redux only');
+    }
+
+    this.updateCurrentModel(mergedModel);
+
+    return true;
   }
 
   /**
    * Merge single element into existing model
    */
   private mergeElementIntoModel(currentModel: ApollonModel, elementData: any): ApollonModel {
-    const updatedElements = { ...currentModel.elements };
-    
+    const updatedElements = { ...(currentModel.elements || {}) };
+    const updatedRelationships = { ...(currentModel.relationships || {}) };
+
     // Handle different diagram types - each has different main element
     // ClassDiagram: class, attributes, methods
     // ObjectDiagram: object, attributes
@@ -261,14 +335,19 @@ export class UMLModelingService {
     if (elementData.methods) {
       Object.assign(updatedElements, elementData.methods);
     }
-    
+
     if (elementData.bodies) {
       Object.assign(updatedElements, elementData.bodies);
     }
 
+    if (elementData.relationships) {
+      Object.assign(updatedRelationships, elementData.relationships);
+    }
+
     return {
       ...currentModel,
-      elements: updatedElements
+      elements: updatedElements,
+      relationships: updatedRelationships
     };
   }
 

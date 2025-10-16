@@ -4,9 +4,10 @@ import { ApollonEditorContext } from '../apollon-editor-component/apollon-editor
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 // Import our new services
-import { UMLModelingService, ClassSpec, SystemSpec, ModelModification } from './services/UMLModelingService';
-import { WebSocketService, ChatMessage, InjectionCommand } from './services/WebSocketService';
+import { UMLModelingService, ClassSpec, SystemSpec, ModelModification, ApollonModel, ModelUpdate } from './services/UMLModelingService';
+import { WebSocketService, ChatMessage, InjectionCommand, SendStatus } from './services/WebSocketService';
 import { UIService } from './services/UIService';
+import { UML_BOT_WS_URL } from '../../constant';
 
 // Styled Components
 const ChatWidgetContainer = styled.div`
@@ -233,6 +234,8 @@ const Message = styled.div<{ isUser: boolean }>`
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
     border: ${props => props.isUser ? 'none' : '1px solid #e2e8f0'};
     position: relative;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     
     /* Message tail */
     &::before {
@@ -336,6 +339,8 @@ const TypingIndicator = styled.div`
   }
 `;
 
+type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'closed' | 'closing' | 'unknown';
+
 const StatusBar = styled.div`
   padding: 8px 20px;
   background: #f8fafc;
@@ -345,20 +350,13 @@ const StatusBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  
+
   .status-left {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  
-  .connection-status {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #4CAF50;
-  }
-  
+
   .diagram-type-badge {
     padding: 4px 8px;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -368,6 +366,24 @@ const StatusBar = styled.div`
     font-weight: 600;
     margin-left: 8px;
   }
+`;
+
+const ConnectionStatusDot = styled.span<{ status: ConnectionStatus }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${({ status }) => {
+    switch (status) {
+      case 'connected':
+        return '#4CAF50';
+      case 'connecting':
+      case 'closing':
+        return '#FF9800';
+      default:
+        return '#f44336';
+    }
+  }};
+  transition: background 0.2s ease;
 `;
 
 /**
@@ -382,9 +398,10 @@ export const UMLBotWidget: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const [currentDiagramType, setCurrentDiagramType] = useState<string>('ClassDiagram');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
 
   // Services
-  const [wsService] = useState(() => new WebSocketService());
+  const [wsService] = useState(() => new WebSocketService(UML_BOT_WS_URL));
   const [uiService] = useState(() => new UIService());
   const [modelingService, setModelingService] = useState<UMLModelingService | null>(null);
 
@@ -394,12 +411,22 @@ export const UMLBotWidget: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentDiagram = useAppSelector(state => state.diagram);
 
+  useEffect(() => {
+    return () => {
+      wsService.clearHandlers();
+      wsService.disconnect({ allowReconnect: false, clearQueue: true });
+    };
+  }, [wsService]);
+
   // Initialize services when editor is available
   useEffect(() => {
     if (editor && dispatch && !modelingService) {
       const service = new UMLModelingService(editor, dispatch);
       setModelingService(service);
       // console.log('✅ UML Modeling Service initialized');
+    } else if (editor && modelingService) {
+      // CRITICAL FIX: Update editor reference when editor changes
+      modelingService.updateEditorReference(editor);
     }
   }, [editor, dispatch, modelingService]);
 
@@ -415,128 +442,141 @@ export const UMLBotWidget: React.FC = () => {
     }
   }, [modelingService, currentDiagram]);
 
+  // Reset connection when widget is hidden
+  useEffect(() => {
+    if (!isVisible) {
+      wsService.clearHandlers();
+      wsService.disconnect({ allowReconnect: false, clearQueue: true });
+      setIsTyping(false);
+      setHasShownWelcome(false);
+      setConnectionStatus('disconnected');
+    }
+  }, [isVisible, wsService]);
+
   // Initialize WebSocket connection
   useEffect(() => {
-    const initializeWebSocket = async () => {
-      if (!modelingService) {
-        return;
-      }
+    if (!modelingService || !isVisible) {
+      return;
+    }
 
-      if (!isVisible) {
-        wsService.disconnect();
-        setIsTyping(false);
-        setHasShownWelcome(false);
+    const handleMessage = (message: ChatMessage) => {
+      setMessages((prev) => [...prev, message]);
+    };
+
+    const handleConnection = (connected: boolean) => {
+      const state = connected ? 'connected' : (wsService.connectionState as ConnectionStatus);
+      setConnectionStatus(state);
+
+      if (connected && !hasShownWelcome) {
+        // const welcomeMessage: ChatMessage = {
+        //   id: uiService.generateId('msg'),
+        //   action: 'agent_reply_str',
+        //   message: `🎨 Hello! I'm your Enhanced UML Assistant!\n\nCurrently working on: **${currentDiagramType.replace('Diagram', '')}**\nAsk me to add or modify elements, and I'll update the diagram for you.`,
+        //   isUser: false,
+        //   timestamp: new Date(),
+        //   diagramType: currentDiagramType,
+        // };
+        // setMessages((prev) => [...prev, welcomeMessage]);
+        setMessages((prev) => [...prev]);
+        setHasShownWelcome(true);
+      }
+    };
+
+    const handleTyping = (typing: boolean) => {
+      setIsTyping(typing);
+    };
+
+    const handleInjection = async (command: InjectionCommand) => {
+      if (!modelingService) {
+        uiService.showToast('Modeling service not ready', 'error');
         return;
       }
 
       try {
-        // Set up event handlers
-        wsService.onMessage((message: ChatMessage) => {
-          setMessages(prev => [...prev, message]);
-        });
+        let successMessage: string | undefined;
+        let update: ModelUpdate | null = null;
 
-        wsService.onConnection((connected: boolean) => {
-          if (connected && !hasShownWelcome) {
-            // const welcomeMessage: ChatMessage = {
-            //   id: uiService.generateId('msg'),
-            //   action: 'agent_reply_str',
-            //   message: `🎨 Hello! I'm your Enhanced UML Assistant!\n\nI can help you with:\n• ➕ **Class Diagrams** - Create classes, attributes, methods\n• 🔷 **Object Diagrams** - Define object instances\n• � **State Machine Diagrams** - Model state transitions\n•  **Agent Diagrams** - Design agent systems\n\n📊 Currently working on: **${currentDiagramType}**\n\nWhat would you like to build today?`,
-            //   isUser: false,
-            //   timestamp: new Date(),
-            //   diagramType: currentDiagramType
-            // };
-            // setMessages(prev => [...prev, welcomeMessage]);
-            setMessages(prev => [...prev]);
-            setHasShownWelcome(true);
-          }
-        });
-
-        wsService.onTyping((typing: boolean) => {
-          setIsTyping(typing);
-        });
-
-        wsService.onInjection(async (command: InjectionCommand) => {
-          if (!modelingService) {
-            uiService.showToast('Modeling service not ready', 'error');
-            return;
-          }
-
-          try {
-            let update;
-            let successMessage;
-
-            switch (command.action) {
-              case 'inject_element':
-                if (command.element) {
-                  update = modelingService.processSimpleClassSpec(command.element as ClassSpec, command.diagramType);
-                  successMessage = `✅ Added ${command.element.className} class successfully!`;
-                }
-                break;
-
-              case 'inject_complete_system':
-                if (command.systemSpec) {
-                  update = modelingService.processSystemSpec(command.systemSpec as SystemSpec, command.diagramType);
-                  successMessage = `✅ Created ${command.systemSpec.systemName} system successfully!`;
-                }
-                break;
-
-              case 'modify_model':
-                if (command.modification) {
-                  update = modelingService.processModelModification(command.modification as ModelModification);
-                  successMessage = `✅ Applied modification successfully!`;
-                }
-                break;
-
-              default:
-                throw new Error(`Unknown injection action: ${command.action}`);
+        switch (command.action) {
+          case 'inject_element':
+            if (command.element) {
+              update = modelingService.processSimpleClassSpec(command.element as ClassSpec, command.diagramType);
+              const label = command.element.className || command.element.name || command.element.id || 'element';
+              successMessage = `✅ Added ${label} successfully!`;
             }
-
-            if (update) {
-              const success = await modelingService.injectToEditor(update);
-              
-              if (success) {
-                const successChatMessage: ChatMessage = {
-                  id: uiService.generateId('msg'),
-                  action: 'agent_reply_str',
-                  message: command.message || successMessage || 'Operation completed successfully!',
-                  isUser: false,
-                  timestamp: new Date()
-                };
-                setMessages(prev => [...prev, successChatMessage]);
-                uiService.showToast('Model updated successfully!', 'success');
-              } else {
-                throw new Error('Failed to inject to editor');
-              }
+            break;
+          case 'inject_complete_system':
+            if (command.systemSpec) {
+              update = modelingService.processSystemSpec(command.systemSpec as SystemSpec, command.diagramType);
+              const systemName = command.systemSpec.systemName || command.systemSpec.name || 'system';
+              successMessage = `✅ Created ${systemName} successfully!`;
             }
-          } catch (error) {
-            // console.error('❌ Injection failed:', error);
-            const errorMessage: ChatMessage = {
-              id: uiService.generateId('msg'),
-              action: 'agent_reply_str',
-              message: `❌ ${uiService.getFriendlyErrorMessage(error)}`,
-              isUser: false,
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, errorMessage]);
-            uiService.showToast('Operation failed', 'error');
+            break;
+          case 'modify_model':
+            if (command.modification) {
+              update = modelingService.processModelModification(command.modification as ModelModification);
+              const actionLabel = command.modification.action || 'modification';
+              successMessage = `✅ Applied ${actionLabel} successfully!`;
+            }
+            break;
+          default:
+            throw new Error(`Unknown injection action: ${command.action}`);
+        }
+
+        if (update) {
+          const success = await modelingService.injectToEditor(update);
+          if (!success) {
+            throw new Error('Failed to inject to editor');
           }
-        });
+        } else if (command.model) {
+          await modelingService.replaceModel(command.model as Partial<ApollonModel>);
+          successMessage = successMessage || '✅ Imported model update from assistant.';
+        } else {
+          throw new Error('Assistant did not provide a valid update payload');
+        }
 
-        // Connect to WebSocket
-        await wsService.connect();
+        const finalMessage = typeof command.message === 'string' && command.message.trim().length > 0
+          ? command.message
+          : successMessage || 'Operation completed successfully!';
 
+        const successChatMessage: ChatMessage = {
+          id: uiService.generateId('msg'),
+          action: 'agent_reply_str',
+          message: finalMessage,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, successChatMessage]);
+        uiService.showToast('Model updated successfully!', 'success');
       } catch (error) {
-        console.error('❌ Failed to initialize WebSocket:', error);
-        uiService.showToast('Failed to connect to AI assistant', 'error');
+        const friendlyError = uiService.getFriendlyErrorMessage(error);
+        const errorMessage: ChatMessage = {
+          id: uiService.generateId('msg'),
+          action: 'agent_reply_str',
+          message: `❌ ${friendlyError}`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        uiService.showToast(friendlyError, 'error');
       }
     };
 
-    initializeWebSocket();
+    wsService.onMessage(handleMessage);
+    wsService.onConnection(handleConnection);
+    wsService.onTyping(handleTyping);
+    wsService.onInjection(handleInjection);
+
+    const state = wsService.connectionState as ConnectionStatus;
+    setConnectionStatus(state === 'connected' ? 'connected' : 'connecting');
+
+    wsService.connect().catch((error) => {
+      console.error('❌ Failed to initialize WebSocket:', error);
+      uiService.showToast('Failed to connect to AI assistant', 'error');
+      setConnectionStatus('disconnected');
+    });
 
     return () => {
-      if (!isVisible) {
-        wsService.disconnect();
-      }
+      wsService.clearHandlers();
     };
   }, [wsService, uiService, hasShownWelcome, modelingService, isVisible, currentDiagramType]);
 
@@ -568,10 +608,21 @@ export const UMLBotWidget: React.FC = () => {
 
     // Send message with diagram type and current model context
     const modelSnapshot = modelingService?.getCurrentModel();
-    const success = wsService.sendMessage(inputValue, currentDiagramType, modelSnapshot);
+    const sendResult: SendStatus = wsService.sendMessage(inputValue, currentDiagramType, modelSnapshot);
 
-    if (!success) {
+    if (sendResult === 'error') {
       uiService.showToast('Failed to send message', 'error');
+      setMessages(prev => prev.filter(message => message.id !== userMessage.id));
+      return;
+    }
+
+    if (sendResult === 'queued') {
+      uiService.showToast('Connection unavailable — queued your request for retry.', 'info');
+      const state = wsService.connectionState as ConnectionStatus;
+      setConnectionStatus(state === 'connected' ? 'connected' : 'connecting');
+      if (state === 'disconnected') {
+        wsService.connect().catch(() => setConnectionStatus('disconnected'));
+      }
     }
 
     setInputValue('');
@@ -586,7 +637,7 @@ export const UMLBotWidget: React.FC = () => {
 
   const renderMessage = (message: ChatMessage) => {
     const content = uiService.formatMessageContent(message);
-    
+
     // Check if message contains importable model
     const hasImportableModel = uiService.containsImportableModel(content);
     
@@ -602,16 +653,35 @@ export const UMLBotWidget: React.FC = () => {
           {content}
           
           {hasImportableModel && (
-            <button 
+            <button
               className="model-import-button"
-              onClick={() => {
-                const jsonBlocks = uiService.extractJsonBlocks(content);
-                if (jsonBlocks.length > 0) {
-                  // Import the first valid JSON block
-                  // This could be enhanced to show a selection dialog
-                  // console.log('Importing model:', jsonBlocks[0].json);
-                  uiService.showToast('Model import functionality coming soon!', 'info');
+              onClick={async () => {
+                if (!modelingService) {
+                  uiService.showToast('Modeling service not ready', 'error');
+                  return;
                 }
+
+                const jsonBlocks = uiService.extractJsonBlocks(content);
+                for (const block of jsonBlocks) {
+                  try {
+                    const parsed = JSON.parse(block.json) as Partial<ApollonModel>;
+                    await modelingService.replaceModel(parsed);
+                    uiService.showToast('Imported model into editor', 'success');
+                    const confirmationMessage: ChatMessage = {
+                      id: uiService.generateId('msg'),
+                      action: 'agent_reply_str',
+                      message: '✅ Imported the suggested model into the editor.',
+                      isUser: false,
+                      timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, confirmationMessage]);
+                    return;
+                  } catch (error) {
+                    // Try next block if available
+                  }
+                }
+
+                uiService.showToast('No valid model payload available to import.', 'error');
               }}
             >
               📥 Import to Editor
@@ -627,6 +697,26 @@ export const UMLBotWidget: React.FC = () => {
       </Message>
     );
   };
+
+  const formatConnectionStatusLabel = (status: ConnectionStatus): string => {
+    switch (status) {
+      case 'connected':
+        return 'Connected';
+      case 'connecting':
+        return 'Connecting…';
+      case 'closing':
+        return 'Closing…';
+      case 'closed':
+      case 'disconnected':
+        return 'Disconnected';
+      default:
+        return 'Status unknown';
+    }
+  };
+
+  const messageCountLabel = `${messages.length} message${messages.length === 1 ? '' : 's'}`;
+  const isInputDisabled = connectionStatus === 'closing';
+  const isSendDisabled = inputValue.trim().length === 0 || connectionStatus === 'closing';
 
   return (
     <ChatWidgetContainer>
@@ -669,42 +759,42 @@ export const UMLBotWidget: React.FC = () => {
           <div ref={messagesEndRef} />
         </ChatMessages>
         
-        <StatusBar>
-          <div className="status-left">
-            <div className="connection-status"></div>
-            <span>Connected • {wsService.connectionState}</span>
-            <div className="diagram-type-badge">
-              📊 {currentDiagramType.replace('Diagram', '')}
+          <StatusBar>
+            <div className="status-left">
+              <ConnectionStatusDot status={connectionStatus} />
+              <span>{formatConnectionStatusLabel(connectionStatus)}</span>
+              <div className="diagram-type-badge">
+                📊 {currentDiagramType.replace('Diagram', '')}
+              </div>
             </div>
-          </div>
-          <span>{messages.length} messages</span>
-        </StatusBar>
-        
-        <ChatInput>
-          <div className="input-container">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Describe what you want to create or modify..."
-              disabled={!wsService.connected}
-            />
-          </div>
-          
-          <button
-            className="send-button"
-            onClick={sendMessage}
-            disabled={!wsService.connected || !inputValue.trim()}
-          >
-            Send
-          </button>
-        </ChatInput>
-      </ChatWindow>
-      
-      <CircleButton isOpen={isVisible} onClick={() => setIsVisible(!isVisible)}>
-  {isVisible ? '✕' : <img src="/img/agent_back.png" alt="Agent" style={{ width: 45, height: 45, borderRadius: '50%', filter: 'invert(0)' }} />} 
-      </CircleButton>
+            <span>{messageCountLabel}</span>
+          </StatusBar>
+
+          <ChatInput>
+            <div className="input-container">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Describe what you want to create or modify..."
+                disabled={isInputDisabled}
+              />
+            </div>
+
+            <button
+              className="send-button"
+              onClick={sendMessage}
+              disabled={isSendDisabled}
+            >
+              Send
+            </button>
+          </ChatInput>
+        </ChatWindow>
+
+        <CircleButton isOpen={isVisible} onClick={() => setIsVisible(!isVisible)}>
+          {isVisible ? '✕' : <img src="/img/agent_back.png" alt="Agent" style={{ width: 45, height: 45, borderRadius: '50%', filter: 'invert(0)' }} />}
+        </CircleButton>
     </ChatWidgetContainer>
   );
 };

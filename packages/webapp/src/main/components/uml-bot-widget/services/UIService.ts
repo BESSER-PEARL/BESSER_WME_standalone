@@ -50,33 +50,38 @@ export class UIService {
   extractJsonBlocks(content: string): Array<{ json: string; language: string }> {
     const jsonBlocks: Array<{ json: string; language: string }> = [];
     
-    // Look for ```json blocks
-    const jsonRegex = /```json\n([\s\S]*?)\n```/g;
+    // Look for fenced code blocks first (```json ... ```)
+    const jsonRegex = /```(?:json)?\s*([\s\S]*?)```/gi;
     let match;
-    
+
     while ((match = jsonRegex.exec(content)) !== null) {
       jsonBlocks.push({
-        json: match[1],
+        json: match[1].trim(),
         language: 'json'
       });
     }
 
-    // Look for standalone JSON objects
-    const standaloneJsonRegex = /(\{[\s\S]*?\})/g;
-    const standaloneMatches = content.match(standaloneJsonRegex);
-    
-    if (standaloneMatches) {
-      standaloneMatches.forEach(jsonStr => {
-        try {
-          JSON.parse(jsonStr); // Validate it's valid JSON
-          jsonBlocks.push({
-            json: jsonStr,
-            language: 'json'
-          });
-        } catch (e) {
-          // Not valid JSON, ignore
-        }
-      });
+    if (jsonBlocks.length === 0) {
+      // Look for standalone JSON objects only if no fenced block was found
+      const standaloneJsonRegex = /(\{[\s\S]*?\})/g;
+      const standaloneMatches = content.match(standaloneJsonRegex);
+
+      if (standaloneMatches) {
+        standaloneMatches.forEach(jsonStr => {
+          try {
+            const trimmed = jsonStr.trim();
+            const parsed = JSON.parse(trimmed);
+            if (this.isValidUMLModel(parsed)) {
+              jsonBlocks.push({
+                json: trimmed,
+                language: 'json'
+              });
+            }
+          } catch (e) {
+            // Not valid JSON, ignore
+          }
+        });
+      }
     }
 
     return jsonBlocks;
@@ -102,9 +107,28 @@ export class UIService {
    * Validate if object is a valid UML model
    */
   private isValidUMLModel(obj: any): boolean {
-    return obj && 
-           typeof obj === 'object' &&
-           (obj.elements || obj.class || obj.type === 'ClassDiagram');
+    if (!obj || typeof obj !== 'object') {
+      return false;
+    }
+
+    if (obj.elements && typeof obj.elements === 'object') {
+      return true;
+    }
+
+    if (obj.relationships && typeof obj.relationships === 'object') {
+      return true;
+    }
+
+    const elementLike = obj.class || obj.object || obj.state || obj.intent;
+    if (elementLike && typeof elementLike === 'object') {
+      return true;
+    }
+
+    if (typeof obj.type === 'string' && obj.type.endsWith('Diagram') && obj.class) {
+      return true;
+    }
+
+    return false;
   }
 
   /**

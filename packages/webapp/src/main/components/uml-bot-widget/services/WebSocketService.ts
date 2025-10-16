@@ -36,13 +36,24 @@ export type InjectionHandler = (command: InjectionCommand) => void;
 /**
  * WebSocket service for managing bot communication
  */
+export type SendStatus = 'sent' | 'queued' | 'error';
+
+interface QueuedMessage {
+  preparedMessage: string;
+  diagramType: string;
+  model?: any;
+}
+
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private isConnected: boolean = false;
+  private connectingPromise: Promise<void> | null = null;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 3000;
-  private messageQueue: Array<{ message: string; diagramType: string; model?: any }> = [];
+  private messageQueue: QueuedMessage[] = [];
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private shouldReconnect: boolean = true;
 
   // Event handlers
   private onMessageHandler: MessageHandler | null = null;
@@ -56,75 +67,121 @@ export class WebSocketService {
    * Connect to WebSocket server
    */
   connect(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    if (this.isConnected) {
+      return Promise.resolve();
+    }
+
+    if (this.ws && this.ws.readyState === WebSocket.CONNECTING && this.connectingPromise) {
+      return this.connectingPromise;
+    }
+
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.isConnected = true;
+      return Promise.resolve();
+    }
+
+    this.shouldReconnect = true;
+
+    this.connectingPromise = new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
-          // console.log('✅ Connected to UML Bot WebSocket');
           this.isConnected = true;
           this.reconnectAttempts = 0;
+          if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+          }
           this.onConnectionHandler?.(true);
-          
+
           // Send queued messages
           this.processMessageQueue();
-          
+
+          this.connectingPromise = null;
           resolve();
         };
 
         this.ws.onclose = () => {
           this.isConnected = false;
+          this.connectingPromise = null;
           this.onConnectionHandler?.(false);
-          
-          // Attempt to reconnect
-          this.attemptReconnect();
+
+          if (this.shouldReconnect) {
+            this.attemptReconnect();
+          } else {
+            this.reconnectAttempts = 0;
+          }
         };
 
         this.ws.onerror = (error) => {
           console.error('🔥 WebSocket error:', error);
           this.isConnected = false;
+          this.connectingPromise = null;
           this.onConnectionHandler?.(false);
+
+          if (this.shouldReconnect) {
+            this.attemptReconnect();
+          }
+
           reject(error);
         };
 
         this.ws.onmessage = (event) => {
           this.handleMessage(event);
         };
-
       } catch (error) {
         console.error('Failed to create WebSocket connection:', error);
+        this.connectingPromise = null;
         reject(error);
       }
     });
+
+    return this.connectingPromise;
   }
 
   /**
    * Disconnect from WebSocket server
    */
-  disconnect(): void {
+  disconnect(options: { allowReconnect?: boolean; clearQueue?: boolean } = {}): void {
+    this.shouldReconnect = options.allowReconnect ?? false;
     if (this.ws) {
-      this.ws.close();
+      try {
+        this.ws.close();
+      } catch (error) {
+        console.warn('Error closing WebSocket connection', error);
+      }
       this.ws = null;
     }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    this.connectingPromise = null;
     this.isConnected = false;
+    this.reconnectAttempts = 0;
+    if (options.clearQueue) {
+      this.messageQueue = [];
+    }
+    this.onConnectionHandler?.(false);
   }
 
   /**
    * Send message to bot with diagram type
    * CRITICAL: Sends text message FIRST for intent detection, then JSON payload after delay
    */
-  sendMessage(message: string, diagramType?: string, model?: any): boolean {
+  sendMessage(message: string, diagramType?: string, model?: any): SendStatus {
     const type = diagramType || 'ClassDiagram';
     const messageWithPrefix = `[DIAGRAM_TYPE:${type}] ${message}`;
 
     if (!this.isConnected || !this.ws) {
       console.warn('[ws] WebSocket not connected, queuing message');
       this.messageQueue.push({
-        message: messageWithPrefix,
+        preparedMessage: messageWithPrefix,
         diagramType: type,
         model
       });
-      return false;
+      return 'queued';
     }
 
     try {
@@ -141,10 +198,10 @@ export class WebSocketService {
         }, 500); // 500ms delay to ensure intent is detected first
       }
 
-      return true;
+      return 'sent';
     } catch (error) {
       console.error('Failed to send message:', error);
-      return false;
+      return 'error';
     }
   }
   /**
@@ -156,7 +213,7 @@ export class WebSocketService {
     if (!this.isConnected || !this.ws) {
       // console.warn('[ws] WebSocket not connected, queuing context payload');
       this.messageQueue.push({
-        message,
+        preparedMessage: message,
         diagramType: type,
         model
       });
@@ -217,23 +274,11 @@ export class WebSocketService {
       // console.log('📨 Received message:', payload);
 
       // Check if this is an injection command
-      if (payload.action === 'agent_reply_str' && typeof payload.message === 'string') {
-        const messageStr = payload.message.trim();
-        
-        // Check if the message is a JSON injection command
-        if (messageStr.startsWith('{')) {
-          try {
-            const injectionData = JSON.parse(messageStr) as InjectionCommand;
-            
-            if (this.isInjectionCommand(injectionData)) {
-              // console.log('🎯 Injection command detected:', injectionData);
-              this.onInjectionHandler?.(injectionData);
-              return;
-            }
-          } catch (e) {
-            console.log('📝 Not a JSON injection command, treating as normal message');
-          }
-        }
+      const injectionCommand = this.extractInjectionCommand(payload);
+
+      if (injectionCommand) {
+        this.onInjectionHandler?.(injectionCommand);
+        return;
       }
 
       // Handle as normal chat message
@@ -256,24 +301,104 @@ export class WebSocketService {
    * Check if response is an injection command
    */
   private isInjectionCommand(data: any): data is InjectionCommand {
-    return data && 
-           typeof data.action === 'string' && 
+    return data &&
+           typeof data.action === 'string' &&
            ['inject_element', 'inject_complete_system', 'modify_model'].includes(data.action);
+  }
+
+  private extractInjectionCommand(payload: BotResponse): InjectionCommand | null {
+    const { action, message, diagramType } = payload;
+
+    // Direct object payload
+    if (this.isInjectionCommand(message)) {
+      return {
+        ...message,
+        diagramType: message.diagramType || diagramType
+      };
+    }
+
+    if (typeof message !== 'string') {
+      return null;
+    }
+
+    const trimmed = message.trim();
+    const candidates = this.extractJsonCandidates(trimmed);
+
+    for (const candidate of candidates) {
+      try {
+        const parsed = JSON.parse(candidate);
+        if (this.isInjectionCommand(parsed)) {
+          return {
+            ...parsed,
+            diagramType: parsed.diagramType || diagramType,
+            message: typeof parsed.message === 'string' ? parsed.message : message
+          };
+        }
+      } catch (error) {
+        // Ignore parse errors - continue to next candidate
+      }
+    }
+
+    // Some backends may signal injection with a dedicated action
+    if (action === 'agent_reply_json') {
+      try {
+        const parsed = typeof message === 'string' ? JSON.parse(message) : message;
+        if (this.isInjectionCommand(parsed)) {
+          return {
+            ...parsed,
+            diagramType: parsed.diagramType || diagramType
+          };
+        }
+      } catch (error) {
+        console.error('Failed to parse agent_reply_json payload', error);
+      }
+    }
+
+    return null;
+  }
+
+  private extractJsonCandidates(content: string): string[] {
+    const candidates: string[] = [];
+
+    // Look for fenced code blocks first
+    const fenceRegex = /```(?:json)?\s*([\s\S]*?)```/gi;
+    let match: RegExpExecArray | null;
+    while ((match = fenceRegex.exec(content)) !== null) {
+      if (match[1]) {
+        candidates.push(match[1].trim());
+      }
+    }
+
+    // Fall back to detecting raw JSON objects
+    if (content.startsWith('{') && content.endsWith('}')) {
+      candidates.push(content);
+    }
+
+    return candidates;
   }
 
   /**
    * Attempt to reconnect to WebSocket
    */
   private attemptReconnect(): void {
+    if (!this.shouldReconnect) {
+      return;
+    }
+
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('🚫 Max reconnection attempts reached');
+      return;
+    }
+
+    if (this.reconnectTimeout) {
       return;
     }
 
     this.reconnectAttempts++;
     console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
-    setTimeout(() => {
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
       this.connect().catch(error => {
         console.error('Reconnection failed:', error);
       });
@@ -298,12 +423,12 @@ export class WebSocketService {
       try {
         // Send text message first
         setTimeout(() => {
-          this.sendTextMessage(item.message, item.diagramType);
-          
+          this.sendTextMessage(item.preparedMessage, item.diagramType);
+
           // Send model context after delay
           if (item.model) {
             setTimeout(() => {
-              this.sendModelContext(item.model, item.message, item.diagramType);
+              this.sendModelContext(item.model, item.preparedMessage, item.diagramType);
             }, 500);
           }
         }, index * 1000); // Stagger multiple queued messages
@@ -328,6 +453,13 @@ export class WebSocketService {
 
   onInjection(handler: InjectionHandler): void {
     this.onInjectionHandler = handler;
+  }
+
+  clearHandlers(): void {
+    this.onMessageHandler = null;
+    this.onConnectionHandler = null;
+    this.onTypingHandler = null;
+    this.onInjectionHandler = null;
   }
 
   // Getters
