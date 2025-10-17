@@ -45,6 +45,16 @@ export const registerButtonComponent = (editor: any) => {
       init(this: any) {
         this.refreshTraits();
         
+        // Initialize components array with textnode for label extraction
+        const label = this.get('button-label') || 'Button';
+        const components = this.get('components');
+        if (!components || components.length === 0) {
+          this.components([{
+            type: 'textnode',
+            content: label
+          }]);
+        }
+        
         // Dynamic trait visibility
         this.on('change:action-type', this.updateTraitVisibility);
         this.on('change:button-label change:button-style change:action-type', this.updateButton);
@@ -187,19 +197,36 @@ export const registerButtonComponent = (editor: any) => {
         const confirmRequired = this.get('confirmation-required') || false;
         const confirmMessage = this.get('confirmation-message') || 'Are you sure?';
         
-        // Update content
+        // Update content with the label
         this.set('content', label);
+        
+        // Set components array with textnode for parser extraction
+        const components = this.get('components');
+        if (!components || components.length === 0) {
+          this.components([{
+            type: 'textnode',
+            content: label
+          }]);
+        } else {
+          // Update existing textnode if present
+          const firstComp = components.at(0);
+          if (firstComp && firstComp.get('type') === 'textnode') {
+            firstComp.set('content', label);
+          }
+        }
         
         // Update attributes
         const attrs: any = {
           'data-action-type': actionType,
           'data-confirmation': confirmRequired ? 'true' : 'false',
           'data-confirmation-message': confirmMessage,
+          'button-label': label, // Store label in attributes
         };
         
         if (actionType === 'navigate' && targetScreen) {
           const pageId = targetScreen.startsWith('page:') ? targetScreen.replace('page:', '') : targetScreen;
           attrs['data-target-screen'] = pageId;
+          attrs['target-screen'] = targetScreen; // Keep original format too
         } else if (actionType === 'submit-form' && targetForm) {
           attrs['data-target-form'] = targetForm;
         } else if (['create', 'update', 'delete'].includes(actionType) && crudEntity) {

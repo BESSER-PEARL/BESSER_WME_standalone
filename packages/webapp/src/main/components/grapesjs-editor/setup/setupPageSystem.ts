@@ -4,6 +4,12 @@ import { Editor } from 'grapesjs';
  * Setup page management system with Studio SDK styling
  */
 export function setupPageSystem(editor: Editor) {
+  // Check if Pages API is available
+  if (!editor.Pages) {
+    console.warn('Pages API is not available in this GrapesJS version. Skipping page system setup.');
+    return;
+  }
+  
   const pagesManager = editor.Pages;
   let accordionExpanded = true;
   
@@ -537,6 +543,12 @@ export function setupPageSystem(editor: Editor) {
  * Load default pages (Home, About, Contact)
  */
 export function loadDefaultPages(editor: Editor) {
+  // Check if Pages API is available
+  if (!editor.Pages) {
+    console.warn('Pages API is not available. Cannot load default pages.');
+    return;
+  }
+  
   const defaultPages = [
     {
       name: 'Home',
