@@ -1,20 +1,21 @@
 import { getPageOptions } from '../utils/pageUtils';
+import { getClassOptions } from '../diagram-helpers';
 
 /**
- * Register the button component with link/page navigation functionality
+ * Register enhanced button component with actions (navigation, CRUD operations)
  * @param editor - GrapesJS editor instance
  */
 export const registerButtonComponent = (editor: any) => {
-  editor.Components.addType('link-button', {
+  // Enhanced Action Button
+  editor.Components.addType('action-button', {
     model: {
       defaults: {
-        tagName: 'a',
+        tagName: 'button',
         draggable: true,
         droppable: false,
         attributes: { 
-          class: 'link-button-component',
-          href: '#',
-          'data-page-id': ''
+          class: 'action-button-component',
+          type: 'button',
         },
         style: {
           display: 'inline-block',
@@ -30,163 +31,254 @@ export const registerButtonComponent = (editor: any) => {
           transition: 'all 0.3s ease',
         },
         content: 'Button',
-        'button-text': 'Button',
-        'button-link-type': '',
-        'button-link': '#',
-        'button-target': '_self',
-        'button-bg-color': '#3498db',
-        'button-text-color': '#ffffff',
+        'button-label': 'Button',
+        'action-type': 'navigate',
+        'button-style': 'primary',
+        'target-screen': '',
+        'target-form': '',
+        'crud-entity': '',
+        'confirmation-required': false,
+        'confirmation-message': 'Are you sure?',
+        'on-success-action': 'none',
+        'success-message': 'Action completed successfully',
       },
       init(this: any) {
+        this.refreshTraits();
+        
+        // Dynamic trait visibility
+        this.on('change:action-type', this.updateTraitVisibility);
+        this.on('change:button-label change:button-style change:action-type', this.updateButton);
+        this.updateTraitVisibility();
+      },
+      refreshTraits(this: any) {
         const traits = this.get('traits');
         const pageOptions = getPageOptions(editor);
+        const classOptions = getClassOptions();
         
         traits.reset([
           {
             type: 'text',
-            label: 'Button Text',
-            name: 'button-text',
+            label: 'Button Label',
+            name: 'button-label',
             value: 'Button',
             changeProp: 1,
           },
           {
             type: 'select',
-            label: 'Link Type',
-            name: 'button-link-type',
+            label: 'Action Type',
+            name: 'action-type',
+            value: 'navigate',
+            changeProp: 1,
+            options: [
+              { value: 'navigate', label: 'Navigate to Screen' },
+              { value: 'submit-form', label: 'Submit Form' },
+              { value: 'create', label: 'Create Entity' },
+              { value: 'update', label: 'Update Entity' },
+              { value: 'delete', label: 'Delete Entity' },
+              { value: 'custom', label: 'Custom Action' },
+            ],
+          },
+          {
+            type: 'select',
+            label: 'Button Style',
+            name: 'button-style',
+            value: 'primary',
+            changeProp: 1,
+            options: [
+              { value: 'primary', label: 'Primary' },
+              { value: 'secondary', label: 'Secondary' },
+              { value: 'success', label: 'Success' },
+              { value: 'danger', label: 'Danger' },
+              { value: 'warning', label: 'Warning' },
+              { value: 'info', label: 'Info' },
+            ],
+          },
+          {
+            type: 'select',
+            label: 'Target Screen',
+            name: 'target-screen',
             value: '',
             changeProp: 1,
             options: pageOptions,
           },
           {
             type: 'text',
-            label: 'Custom URL',
-            name: 'button-link',
-            value: '#',
+            label: 'Target Form ID',
+            name: 'target-form',
+            value: '',
             changeProp: 1,
-            placeholder: 'https://example.com or #section-id',
+            placeholder: 'Form element ID',
           },
           {
             type: 'select',
-            label: 'Open In',
-            name: 'button-target',
-            value: '_self',
+            label: 'CRUD Entity',
+            name: 'crud-entity',
+            value: '',
+            changeProp: 1,
+            options: classOptions,
+          },
+          {
+            type: 'checkbox',
+            label: 'Require Confirmation',
+            name: 'confirmation-required',
+            value: false,
+            changeProp: 1,
+          },
+          {
+            type: 'text',
+            label: 'Confirmation Message',
+            name: 'confirmation-message',
+            value: 'Are you sure?',
+            changeProp: 1,
+          },
+          {
+            type: 'select',
+            label: 'On Success Action',
+            name: 'on-success-action',
+            value: 'none',
             changeProp: 1,
             options: [
-              { value: '_self', label: 'Same Tab' },
-              { value: '_blank', label: 'New Tab' },
+              { value: 'none', label: 'None' },
+              { value: 'navigate', label: 'Navigate' },
+              { value: 'show-message', label: 'Show Message' },
+              { value: 'refresh', label: 'Refresh Page' },
             ],
           },
           {
-            type: 'color',
-            label: 'Background Color',
-            name: 'button-bg-color',
-            value: '#3498db',
-            changeProp: 1,
-          },
-          {
-            type: 'color',
-            label: 'Text Color',
-            name: 'button-text-color',
-            value: '#ffffff',
+            type: 'text',
+            label: 'Success Message',
+            name: 'success-message',
+            value: 'Action completed successfully',
             changeProp: 1,
           },
         ]);
 
-        this.on('change:button-text change:button-link-type change:button-link change:button-target change:button-bg-color change:button-text-color', 
-          this.updateButton);
+        // Refresh options when pages change
+        editor.on('component:add component:remove', () => {
+          setTimeout(() => this.refreshTraits(), 100);
+        });
+      },
+      updateTraitVisibility(this: any) {
+        const actionType = this.get('action-type');
+        const traits = this.get('traits');
+        
+        const targetScreenTrait = traits.where({ name: 'target-screen' })[0];
+        const targetFormTrait = traits.where({ name: 'target-form' })[0];
+        const crudEntityTrait = traits.where({ name: 'crud-entity' })[0];
+        
+        // Show/hide traits based on action type
+        if (targetScreenTrait) {
+          targetScreenTrait.set('visible', actionType === 'navigate');
+        }
+        if (targetFormTrait) {
+          targetFormTrait.set('visible', actionType === 'submit-form');
+        }
+        if (crudEntityTrait) {
+          crudEntityTrait.set('visible', ['create', 'update', 'delete'].includes(actionType));
+        }
       },
       updateButton(this: any) {
-        const text = this.get('button-text') || 'Button';
-        const linkType = this.get('button-link-type') || '';
-        const customLink = this.get('button-link') || '#';
-        const target = this.get('button-target') || '_self';
-        const bgColor = this.get('button-bg-color') || '#3498db';
-        const textColor = this.get('button-text-color') || '#ffffff';
+        const label = this.get('button-label') || 'Button';
+        const buttonStyle = this.get('button-style') || 'primary';
+        const actionType = this.get('action-type') || 'navigate';
+        const targetScreen = this.get('target-screen') || '';
+        const targetForm = this.get('target-form') || '';
+        const crudEntity = this.get('crud-entity') || '';
+        const confirmRequired = this.get('confirmation-required') || false;
+        const confirmMessage = this.get('confirmation-message') || 'Are you sure?';
         
-        let finalLink = '#';
-        let pageId = '';
+        // Update content
+        this.set('content', label);
         
-        // Determine the final link based on link type
-        if (linkType.startsWith('page:')) {
-          // Extract page ID
-          pageId = linkType.replace('page:', '');
-          
-          // Get the page name for the final link
-          const page = editor.Pages.get(pageId);
-          const pageName = page ? page.getName().toLowerCase().replace(/\s+/g, '-') : pageId;
-          
-          // For page navigation: use page name for exported site
-          // Format: pagename.html (for multi-page export)
-          finalLink = `${pageName}.html`;
-          
-          // Add click handler for page navigation (works in both editor and export)
-          this.addAttributes({ 
-            href: finalLink,
-            target: '_self',
-            'data-page-id': pageId,
-            'data-page-name': pageName,
-            'onclick': `event.preventDefault(); if (window.editor) { const page = window.editor.Pages.get('${pageId}'); if (page) { window.editor.Pages.select(page); } } else { window.location.href = '${finalLink}'; }`,
-          });
-        } else if (linkType === 'custom') {
-          // Use custom URL
-          finalLink = customLink;
-          this.addAttributes({ 
-            href: finalLink,
-            target: target,
-            'data-page-id': '',
-            'onclick': '',
-          });
-        } else {
-          // Default or empty
-          finalLink = '#';
-          this.addAttributes({ 
-            href: finalLink,
-            target: '_self',
-            'data-page-id': '',
-            'onclick': '',
-          });
+        // Update attributes
+        const attrs: any = {
+          'data-action-type': actionType,
+          'data-confirmation': confirmRequired ? 'true' : 'false',
+          'data-confirmation-message': confirmMessage,
+        };
+        
+        if (actionType === 'navigate' && targetScreen) {
+          const pageId = targetScreen.startsWith('page:') ? targetScreen.replace('page:', '') : targetScreen;
+          attrs['data-target-screen'] = pageId;
+        } else if (actionType === 'submit-form' && targetForm) {
+          attrs['data-target-form'] = targetForm;
+        } else if (['create', 'update', 'delete'].includes(actionType) && crudEntity) {
+          attrs['data-crud-entity'] = crudEntity;
         }
         
-        this.set('content', text);
+        this.addAttributes(attrs);
+        
+        // Update styling based on button style
+        const styleColors: Record<string, {bg: string, text: string}> = {
+          primary: { bg: '#3498db', text: '#ffffff' },
+          secondary: { bg: '#95a5a6', text: '#ffffff' },
+          success: { bg: '#27ae60', text: '#ffffff' },
+          danger: { bg: '#e74c3c', text: '#ffffff' },
+          warning: { bg: '#f39c12', text: '#ffffff' },
+          info: { bg: '#3498db', text: '#ffffff' },
+        };
+        
+        const colors = styleColors[buttonStyle] || styleColors.primary;
         this.setStyle({
-          background: bgColor,
-          color: textColor,
+          background: colors.bg,
+          color: colors.text,
         });
       },
     },
     view: {
       onRender({ model, el }: any) {
-        // Store editor globally for page navigation
+        // Store editor globally
         (window as any).editor = editor;
-        
-        // Handle page navigation in editor
-        el.addEventListener('click', (e: Event) => {
-          e.preventDefault();
-          const pageId = model.getAttributes()['data-page-id'];
-          
-          if (pageId) {
-            // Navigate to the page in the editor
-            const page = editor.Pages.get(pageId);
-            if (page) {
-              editor.Pages.select(page);
-              console.log(`Navigating to page: ${page.getName()}`);
-            }
-          }
-        });
       },
     },
     isComponent: (el: any) => {
-      if (el.classList && el.classList.contains('link-button-component')) {
-        return { type: 'link-button' };
+      if (el.classList && el.classList.contains('action-button-component')) {
+        return { type: 'action-button' };
       }
     },
   });
 
-  // Add block to Block Manager
+  // Link Button (original)
+  editor.Components.addType('link-button', {
+    model: {
+      defaults: {
+        tagName: 'a',
+        draggable: true,
+        droppable: false,
+        attributes: { 
+          class: 'link-button-component',
+          href: '#',
+        },
+        style: {
+          display: 'inline-block',
+          padding: '12px 24px',
+          background: '#3498db',
+          color: '#ffffff',
+          'text-decoration': 'none',
+          'border-radius': '6px',
+          'font-size': '16px',
+          'font-weight': 'bold',
+          cursor: 'pointer',
+          border: 'none',
+          transition: 'all 0.3s ease',
+        },
+        content: 'Link',
+      },
+    },
+  });
+
+  // Add blocks to Block Manager
+  editor.BlockManager.add('action-button', {
+    label: '⚡ Action Button',
+    category: 'Basic',
+    content: { type: 'action-button' },
+    media: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/></svg>',
+  });
+  
   editor.BlockManager.add('link-button', {
-    label: '🔗 Link Button',
+    label: '🔗 Link',
     category: 'Basic',
     content: { type: 'link-button' },
-    media: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2C6.47,2 2,6.47 2,12C2,17.53 6.47,22 12,22C17.53,22 22,17.53 22,12C22,6.47 17.53,2 12,2M10,9.5H14V12.5H10V9.5Z"/></svg>',
+    media: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/></svg>',
   });
 };

@@ -22,6 +22,8 @@ import { mapConfig } from './configs/mapConfig';
 import { registerChartComponent } from './component-registrars/registerChartComponent';
 import { registerMapComponent } from './component-registrars/registerMapComponent';
 import { registerButtonComponent } from './component-registrars/registerButtonComponent';
+import { registerFormComponents } from './component-registrars/registerFormComponents';
+import { registerLayoutComponents } from './component-registrars/registerLayoutComponents';
 import { setupPageSystem, loadDefaultPages } from './setup/setupPageSystem';
 import { setupLayoutBlocks } from './setup/setupLayoutBlocks';
 import { ProjectStorageRepository } from '../../services/storage/ProjectStorageRepository';
@@ -136,8 +138,14 @@ export const GrapesJsEditor: React.FC = () => {
     // Register map component
     registerMapComponent(editor, mapConfig);
 
-    // Register button component with link functionality
+    // Register button components (action-button and link-button)
     registerButtonComponent(editor);
+
+    // Register enhanced form components
+    registerFormComponents(editor);
+
+    // Register layout components (flex, grid, card)
+    registerLayoutComponents(editor);
 
     // Load storage after everything is initialized
     editor.on('load', () => {

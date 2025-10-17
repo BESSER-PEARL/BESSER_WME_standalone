@@ -37,11 +37,24 @@ export const chartConfigs: ChartConfig[] = [
     dataSource: '',
     icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M3 3v18h18v-2H5V3H3zm2 12l3-4 3 3 5-6 4 5v2l-4-5-5 6-3-3-3 4z"/></svg>',
     traits: [
-      { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#4CAF50', changeProp: 1 },
+      { type: 'color', label: 'Line Color', name: 'chart-color', value: '#4CAF50', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Sales Over Time', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Label Field', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Data Field', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'number', label: 'Line Width', name: 'line-width', value: 2, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Grid', name: 'show-grid', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Legend', name: 'show-legend', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Tooltip', name: 'show-tooltip', value: true, changeProp: 1 },
+      { type: 'select', label: 'Curve Type', name: 'curve-type', value: 'monotone', 
+        options: [
+          { value: 'linear', label: 'Linear' },
+          { value: 'monotone', label: 'Monotone' },
+          { value: 'step', label: 'Step' },
+          { value: 'stepBefore', label: 'Step Before' },
+          { value: 'stepAfter', label: 'Step After' }
+        ], changeProp: 1 },
+      { type: 'checkbox', label: 'Animate', name: 'animate', value: true, changeProp: 1 },
     ],
   },
   {
@@ -53,11 +66,20 @@ export const chartConfigs: ChartConfig[] = [
     dataSource: '',
     icon: '<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="currentColor" d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/></svg>',
     traits: [
-      { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#3498db', changeProp: 1 },
+      { type: 'color', label: 'Bar Color', name: 'chart-color', value: '#3498db', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Revenue by Category', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Label Field', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Data Field', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'number', label: 'Bar Width', name: 'bar-width', value: 30, changeProp: 1 },
+      { type: 'select', label: 'Orientation', name: 'orientation', value: 'vertical',
+        options: [
+          { value: 'vertical', label: 'Vertical' },
+          { value: 'horizontal', label: 'Horizontal' }
+        ], changeProp: 1 },
+      { type: 'checkbox', label: 'Show Grid', name: 'show-grid', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Legend', name: 'show-legend', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Stacked', name: 'stacked', value: false, changeProp: 1 },
     ],
   },
   {
@@ -71,8 +93,23 @@ export const chartConfigs: ChartConfig[] = [
     traits: [
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Traffic Distribution', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Label Field', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Data Field', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'checkbox', label: 'Show Legend', name: 'show-legend', value: true, changeProp: 1 },
+      { type: 'select', label: 'Legend Position', name: 'legend-position', value: 'right',
+        options: [
+          { value: 'top', label: 'Top' },
+          { value: 'right', label: 'Right' },
+          { value: 'bottom', label: 'Bottom' },
+          { value: 'left', label: 'Left' }
+        ], changeProp: 1 },
+      { type: 'checkbox', label: 'Show Labels', name: 'show-labels', value: true, changeProp: 1 },
+      { type: 'select', label: 'Label Position', name: 'label-position', value: 'inside',
+        options: [
+          { value: 'inside', label: 'Inside' },
+          { value: 'outside', label: 'Outside' }
+        ], changeProp: 1 },
+      { type: 'number', label: 'Padding Angle', name: 'padding-angle', value: 0, changeProp: 1 },
     ],
   },
   {
@@ -87,8 +124,11 @@ export const chartConfigs: ChartConfig[] = [
       { type: 'color', label: 'Chart Color', name: 'chart-color', value: '#8884d8', changeProp: 1 },
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Performance Metrics', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Label Field', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Data Field', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'checkbox', label: 'Show Grid', name: 'show-grid', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Tooltip', name: 'show-tooltip', value: true, changeProp: 1 },
+      { type: 'checkbox', label: 'Show Radius Axis', name: 'show-radius-axis', value: true, changeProp: 1 },
     ],
   },
   {
@@ -102,8 +142,10 @@ export const chartConfigs: ChartConfig[] = [
     traits: [
       { type: 'text', label: 'Chart Title', name: 'chart-title', value: 'Customer Satisfaction', changeProp: 1 },
       { type: 'select', label: 'Data Source', name: 'data-source', value: '', options: getClassOptions(), changeProp: 1 },
-      { type: 'select', label: 'Categories', name: 'label-field', value: '', options: [], changeProp: 1 },
-      { type: 'select', label: 'Values', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Label Field', name: 'label-field', value: '', options: [], changeProp: 1 },
+      { type: 'select', label: 'Data Field', name: 'data-field', value: '', options: [], changeProp: 1 },
+      { type: 'number', label: 'Start Angle', name: 'start-angle', value: 90, changeProp: 1 },
+      { type: 'number', label: 'End Angle', name: 'end-angle', value: 450, changeProp: 1 },
     ],
   },
 ];
