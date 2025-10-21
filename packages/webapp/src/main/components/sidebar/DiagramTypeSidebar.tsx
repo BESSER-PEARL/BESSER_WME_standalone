@@ -155,7 +155,7 @@ export const DiagramTypeSidebar: React.FC = () => {
     }
   };
 
-  const handleAgentMenuSelect = (choice: 'diagram' | 'config') => {
+  const handleAgentMenuSelect = (choice: 'diagram' | 'config' | 'personalization') => {
     setShowAgentMenu(false);
     if (choice === 'diagram') {
       // Switch to Agent Diagram as usual
@@ -170,6 +170,9 @@ export const DiagramTypeSidebar: React.FC = () => {
     } else if (choice === 'config') {
       // Navigate to agent config editor (replace with your actual path)
       navigate('/agent-config');
+    } else if (choice === 'personalization') {
+      // Navigate to agent personalization editor (replace with your actual path)
+      navigate('/agent-personalization');
     }
   };
 
@@ -264,6 +267,13 @@ export const DiagramTypeSidebar: React.FC = () => {
               onClick={() => handleAgentMenuSelect('config')}
             >
               Agent Configuration
+            </Button>
+            <Button
+              variant={location.pathname === '/agent-personalization' ? 'primary' : 'outline-primary'}
+              style={{ width: '100%', marginTop: 8 }}
+              onClick={() => handleAgentMenuSelect('personalization')}
+            >
+              Agent Personalization
             </Button>
             <Button
               variant="link"
