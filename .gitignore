@@ -110,6 +110,7 @@ build
 
 # Agent
 ModelingAgent/venv/
-ModelingAgent/saved/
 ModelingAgent/config.ini
 ModelingAgent/diagram_handlers/__pycache__/
+ModelingAgent/__pycache__/
+ModelingAgent/tests/__pycache__/
