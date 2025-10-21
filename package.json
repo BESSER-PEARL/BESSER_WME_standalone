@@ -15,7 +15,8 @@
   "workspaces": [
     "packages/shared",
     "packages/server",
-    "packages/webapp"
+    "packages/webapp",
+    "packages/editor"
   ],
   "scripts": {
     "dev": "concurrently \"npm run start:webapp\" \"npm run start:server\"",
@@ -43,7 +44,7 @@
     "crypto-js": "4.2.0"
   },
   "dependencies": {
-    "@besser/wme": "2.4.0",
+    "@besser/wme": "*",
     "@sentry/node": "8.55.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1"

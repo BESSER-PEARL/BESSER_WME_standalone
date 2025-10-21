@@ -17,6 +17,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
+    alias: {
+      '@besser/wme': path.resolve(__dirname, '../../editor/src/main/index.ts'),
+    },
   },
   performance: {
     hints: false,
@@ -25,7 +28,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?/,
-        exclude: /\/node_modules\//,
+        exclude: /\/node_modules\/(?!@besser\/wme)/,
         use: [
           {
             loader: 'ts-loader',
