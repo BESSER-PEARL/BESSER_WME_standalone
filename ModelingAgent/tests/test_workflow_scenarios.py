@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ModelingAgent import uml_bot_enhanced as bot
+from ModelingAgent import modeling_agent as bot
 from besser.agent.core.session import Session
 from besser.agent.library.transition.events.base_events import ReceiveJSONEvent
 
